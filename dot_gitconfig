@@ -1,0 +1,47 @@
+[user]
+	name  = {{ .name }}
+	email = {{ .email }}
+
+[core]
+	editor       = code --wait
+	excludesfile = ~/.gitignore_global
+	pager        = less -FRX
+
+[pull]
+	rebase = false
+
+[push]
+	autoSetupRemote = true
+
+[fetch]
+	prune = true
+
+[init]
+	defaultBranch = main
+
+[credential]
+	helper = osxkeychain
+
+[alias]
+	# Shortcuts (most are also in 03-git.zsh — these work in any shell)
+	st  = status
+	co  = checkout
+	br  = branch
+	lg  = log --oneline --graph --decorate -20
+	lga = log --oneline --graph --decorate --all
+	unstage = reset HEAD --
+
+[color]
+	ui = auto
+
+[merge]
+	conflictstyle = diff3
+
+[diff]
+	colorMoved = zebra
+
+[rerere]
+	enabled = true
+
+[help]
+	autocorrect = prompt

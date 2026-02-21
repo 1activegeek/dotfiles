@@ -1,0 +1,23 @@
+# .chezmoiignore
+# Files/patterns to exclude from chezmoi management.
+# Supports Go template syntax for conditional exclusion.
+
+# Always ignore these
+README.md
+LICENSE
+.DS_Store
+
+# Exclude non-macOS files on macOS (and vice versa)
+{{- if ne .chezmoi.os "darwin" }}
+dot_zshrc.d/11-kube-ps1.zsh
+dot_config/ghostty/
+{{- end }}
+
+# Profile-based exclusions
+{{- if eq .profile "minimal" }}
+# Minimal profile: skip heavyweight K8s and cloud tooling
+dot_zshrc.d/10-kubectl.zsh
+dot_zshrc.d/11-kube-ps1.zsh
+dot_zshrc.d/12-kubectx.zsh
+dot_config/k9s/
+{{- end }}
