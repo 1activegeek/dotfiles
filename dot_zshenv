@@ -1,0 +1,14 @@
+# ~/.zshenv - Sourced for ALL zsh sessions (interactive, non-interactive, scripts)
+# Keep this minimal — only things that must be available everywhere.
+
+# ============================================
+# 1Password SSH Agent
+# ============================================
+# Force SSH_AUTH_SOCK to the 1Password agent for ALL processes.
+# Without this, non-interactive subshells (scripts, IDE tools, Claude Code)
+# inherit the empty macOS launchd agent socket and SSH auth fails silently.
+_1P_AGENT="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+if [[ -S "$_1P_AGENT" ]]; then
+  export SSH_AUTH_SOCK="$_1P_AGENT"
+fi
+unset _1P_AGENT
