@@ -9,6 +9,13 @@
 #   z -        — go to previous directory
 
 if command -v zoxide &>/dev/null; then
+  # Echo the matched directory before switching (shows where you're going)
+  export _ZO_ECHO=1
+
+  # Resolve symlinks to real paths (fixes macOS case-sensitivity quirk)
+  # https://github.com/ajeetdsouza/zoxide/issues/114
+  export _ZO_RESOLVE_SYMLINKS=1
+
   # Initialise zoxide, replacing cd with z
   eval "$(zoxide init zsh)"
 
