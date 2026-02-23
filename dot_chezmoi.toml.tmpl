@@ -5,7 +5,7 @@
 # These prompts run ONCE on init. Answers are stored in chezmoi.toml.
 # To change: edit ~/.config/chezmoi/chezmoi.toml directly.
 
-{{- $profile := promptStringOnce . "profile" "Machine profile (personal/work/homelab/minimal)" | default "personal" -}}
+{{- $profile := promptStringOnce . "profile" "Profile overlay: 'default' for all extras, or leave blank for base Brewfile only" | default "default" -}}
 {{- $name    := promptStringOnce . "name"    "Git full name" -}}
 {{- $email   := promptStringOnce . "email"   "Git email address" -}}
 
