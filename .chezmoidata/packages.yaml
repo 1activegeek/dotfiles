@@ -1,0 +1,163 @@
+# packages.yaml - YAML-driven package catalog for chezmoi
+# Replaces Brewfile + package-catalog.sh from bootstrap-mac-os.
+#
+# Packages without a `profiles` key install on ALL profiles.
+# profiles: [personal] = personal/homelab only
+# profiles: [work]     = work machines only
+
+taps:
+  - hashicorp/tap
+  - anomalyco/tap
+  - oven-sh/bun
+  - name: fluxcd/tap
+    profiles: [personal]
+  - name: go-task/tap
+    profiles: [personal]
+
+packages:
+  # ── Core ──
+  - { ref: 1password, type: cask, module: core }
+  - { ref: 1password-cli, type: cask, module: core }
+  - { ref: brave-browser, type: cask, module: core }
+  - { ref: chezmoi, type: brew, module: core }
+  - { ref: font-jetbrains-mono-nerd-font, type: cask, module: core }
+  - { ref: gh, type: brew, module: core }
+  - { ref: ghostty, type: cask, module: core }
+  - { ref: handy, type: cask, module: core }
+  - { ref: mas, type: brew, module: core }
+  - { ref: raycast, type: cask, module: core }
+
+  # ── Developer CLI ──
+  - { ref: anomalyco/tap/opencode, type: brew, module: dev-cli }
+  - { ref: atuin, type: brew, module: dev-cli }
+  - { ref: bat, type: brew, module: dev-cli }
+  - { ref: bat-extras, type: brew, module: dev-cli }
+  - { ref: carapace, type: brew, module: dev-cli }
+  - { ref: chroma, type: brew, module: dev-cli }
+  - { ref: dockutil, type: brew, module: dev-cli }
+  - { ref: duti, type: brew, module: dev-cli }
+  - { ref: eza, type: brew, module: dev-cli }
+  - { ref: fastfetch, type: brew, module: dev-cli }
+  - { ref: fd, type: brew, module: dev-cli }
+  - { ref: fzf, type: brew, module: dev-cli }
+  - { ref: oven-sh/bun/bun, type: brew, module: dev-cli }
+  - { ref: pygments, type: brew, module: dev-cli }
+  - { ref: starship, type: brew, module: dev-cli }
+  - { ref: switchaudio-osx, type: brew, module: dev-cli }
+  - { ref: tmux, type: brew, module: dev-cli }
+  - { ref: watch, type: brew, module: dev-cli }
+  - { ref: yt-dlp, type: brew, module: dev-cli }
+  - { ref: zellij, type: brew, module: dev-cli }
+  - { ref: zoxide, type: brew, module: dev-cli }
+  - { ref: zsh-autosuggestions, type: brew, module: dev-cli }
+  - { ref: zsh-syntax-highlighting, type: brew, module: dev-cli }
+
+  # ── Developer GUI ──
+  - { ref: antigravity, type: cask, module: dev-gui }
+  - { ref: claude, type: cask, module: dev-gui }
+  - { ref: claude-code, type: cask, module: dev-gui }
+  - { ref: codex, type: cask, module: dev-gui }
+  - { ref: docker, type: cask, module: dev-gui }
+  - { ref: gcloud-cli, type: cask, module: dev-gui }
+  - { ref: opencode-desktop, type: cask, module: dev-gui }
+  - { ref: orbstack, type: cask, module: dev-gui }
+  - { ref: visual-studio-code, type: cask, module: dev-gui }
+  - { ref: yaak, type: cask, module: dev-gui }
+
+  # ── Browsers ──
+  - { ref: google-chrome, type: cask, module: browsers }
+  - { ref: tor-browser, type: cask, module: browsers }
+
+  # ── Communication ──
+  - { ref: discord, type: cask, module: communication }
+  - { ref: microsoft-teams, type: cask, module: communication, profiles: [work] }
+  - { ref: slack, type: cask, module: communication }
+  - { ref: zoom, type: cask, module: communication }
+
+  # ── AI ──
+  - { ref: chatgpt, type: cask, module: ai }
+  - { ref: fabric-ai, type: brew, module: ai }
+  - { ref: gemini-cli, type: brew, module: ai }
+  - { ref: lm-studio, type: cask, module: ai }
+  - { ref: ollama, type: cask, module: ai }
+  - { ref: superwhisper, type: cask, module: ai }
+
+  # ── Media ──
+  - { ref: ffmpeg, type: brew, module: media }
+  - { ref: handbrake, type: cask, module: media }
+  - { ref: kap, type: cask, module: media }
+  - { ref: obs, type: cask, module: media }
+  - { ref: vlc, type: cask, module: media }
+
+  # ── Utilities ──
+  - { ref: appcleaner, type: cask, module: utilities }
+  - { ref: balenaetcher, type: cask, module: utilities }
+  - { ref: browserosaurus, type: cask, module: utilities }
+  - { ref: disk-inventory-x, type: cask, module: utilities }
+  - { ref: flux, type: cask, module: utilities }
+  - { ref: home-assistant, type: cask, module: utilities }
+  - { ref: keka, type: cask, module: utilities }
+  - { ref: keyboard-cowboy, type: cask, module: utilities }
+  - { ref: leader-key, type: cask, module: utilities }
+  - { ref: lunar, type: cask, module: utilities }
+  - { ref: mactracker, type: cask, module: utilities }
+  - { ref: obsidian, type: cask, module: utilities }
+  - { ref: shottr, type: cask, module: utilities }
+  - { ref: tailscale, type: cask, module: utilities }
+  - { ref: thaw, type: cask, module: utilities }
+  - { ref: the-unarchiver, type: cask, module: utilities }
+
+  # ── Infra / Kubernetes ──
+  - { ref: age, type: brew, module: infra }
+  - { ref: awscli, type: brew, module: infra }
+  - { ref: azure-cli, type: brew, module: infra, profiles: [work] }
+  - { ref: direnv, type: brew, module: infra, profiles: [personal] }
+  - { ref: fluxcd/tap/flux, type: brew, module: infra, profiles: [personal] }
+  - { ref: go-task/tap/go-task, type: brew, module: infra, profiles: [personal] }
+  - { ref: hashicorp/tap/terraform, type: brew, module: infra }
+  - { ref: helm, type: brew, module: infra }
+  - { ref: ipcalc, type: brew, module: infra, profiles: [personal] }
+  - { ref: jq, type: brew, module: infra, profiles: [personal] }
+  - { ref: k9s, type: brew, module: infra }
+  - { ref: kube-ps1, type: brew, module: infra }
+  - { ref: kubectx, type: brew, module: infra }
+  - { ref: kubernetes-cli, type: brew, module: infra }
+  - { ref: kustomize, type: brew, module: infra, profiles: [personal] }
+  - { ref: mole, type: brew, module: infra }
+  - { ref: pre-commit, type: brew, module: infra, profiles: [personal] }
+  - { ref: sops, type: brew, module: infra, profiles: [personal] }
+  - { ref: yamllint, type: brew, module: infra, profiles: [personal] }
+
+  # ── 3D Printing / CAD ──
+  - { ref: bambu-studio, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: eufymake-studio, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: openscad@snapshot, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: orcaslicer, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: prusaslicer, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: shapr3d, type: cask, module: printing3d, profiles: [personal] }
+  - { ref: thumbhost3mf, type: cask, module: printing3d, profiles: [personal] }
+
+  # ── Security ──
+  - { ref: blockblock, type: cask, module: security }
+  - { ref: knockknock, type: cask, module: security }
+  - { ref: lulu, type: cask, module: security }
+  - { ref: taskexplorer, type: cask, module: security }
+
+  # ── Mac App Store ──
+  - { ref: "1453273600", type: mas, module: mas, name: "Data Jar" }
+  - { ref: "1472777122", type: mas, module: mas, name: "PayPal Honey" }
+  - { ref: "1482920575", type: mas, module: mas, name: "DuckDuckGo Privacy Essentials" }
+  - { ref: "1532579087", type: mas, module: mas, name: "The Camelizer" }
+  - { ref: "1544743900", type: mas, module: mas, name: "Hush" }
+  - { ref: "1546729687", type: mas, module: mas, name: "Auto HD FPS for YouTube" }
+  - { ref: "1569813296", type: mas, module: mas, name: "1Password for Safari" }
+  - { ref: "1586435171", type: mas, module: mas, name: "Actions" }
+  - { ref: "1463298887", type: mas, module: mas, name: "Userscripts" }
+  - { ref: "1295203466", type: mas, module: mas, name: "Microsoft Remote Desktop" }
+  - { ref: "490179405", type: mas, module: mas, name: "Okta Verify", profiles: [work] }
+  - { ref: "497799835", type: mas, module: mas, name: "Xcode" }
+  - { ref: "663592361", type: mas, module: mas, name: "DuckDuckGo" }
+  - { ref: "6714467650", type: mas, module: mas, name: "Perplexity" }
+  - { ref: "6720708363", type: mas, module: mas, name: "Obsidian Web Clipper" }
+  - { ref: "6738274497", type: mas, module: mas, name: "Raycast Companion" }
+  - { ref: "6745342698", type: mas, module: mas, name: "uBlock Origin Lite" }
