@@ -1,0 +1,47 @@
+#!/bin/bash
+# run_once_before_01-install-homebrew.sh.tmpl
+# Ensures Xcode CLI Tools and Homebrew are installed.
+# Runs once per machine (chezmoi tracks this).
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+echo ""
+echo "══════════════════════════════════════════════"
+echo "  PRE-INSTALL CHECKLIST"
+echo "══════════════════════════════════════════════"
+echo ""
+echo "  Before continuing, please ensure:"
+echo "  [ ] Signed into Apple ID"
+echo "  [ ] Signed into Mac App Store"
+echo "  [ ] iCloud sync complete (Documents/Desktop)"
+echo ""
+
+# Xcode Command Line Tools
+if ! xcode-select -p &>/dev/null; then
+  echo "==> Installing Xcode Command Line Tools..."
+  xcode-select --install
+  echo "    Waiting for installation to complete..."
+  until xcode-select -p &>/dev/null; do sleep 5; done
+fi
+echo "==> Xcode CLI Tools: OK"
+
+# Homebrew
+if ! command -v brew &>/dev/null; then
+  echo "==> Installing Homebrew..."
+  NONINTERACTIVE=1 /bin/bash -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+echo "==> Disabling Homebrew analytics..."
+brew analytics off
+
+echo "==> Updating Homebrew..."
+brew update --quiet
+
+echo "==> Homebrew: OK"
+
+{{ end -}}
