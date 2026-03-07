@@ -1,0 +1,51 @@
+#!/bin/bash
+# run_onchange_before_03-brew-bundle.sh.tmpl
+# Generates a Brewfile from .chezmoidata/packages.yaml and runs brew bundle.
+# Re-runs automatically when the package list changes (chezmoi hashes template output).
+
+set -euo pipefail
+
+{{- if eq .chezmoi.os "darwin" }}
+
+eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || true)"
+
+BREWFILE="$(mktemp)"
+trap 'rm -f "$BREWFILE"' EXIT
+
+{
+  echo "# Auto-generated Brewfile — profile: {{ .profile }}"
+  echo ""
+  echo "# Taps"
+{{- range .taps }}
+{{- if kindIs "string" . }}
+  echo 'tap "{{ . }}"'
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+  echo 'tap "{{ .name }}"'
+{{- end }}
+{{- end }}
+  echo ""
+  echo "# Packages"
+{{- range .packages }}
+{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+{{- if eq .type "brew" }}
+  echo 'brew "{{ .ref }}"'
+{{- else if eq .type "cask" }}
+  echo 'cask "{{ .ref }}"'
+{{- else if eq .type "mas" }}
+  echo 'mas "{{ .name }}", id: {{ .ref }}'
+{{- end }}
+{{- end }}
+{{- end }}
+} > "$BREWFILE"
+
+echo "==> Running brew bundle install (profile: {{ .profile }})..."
+brew bundle install --file="$BREWFILE" --no-lock || {
+  echo "    WARNING: Some packages failed to install. Continuing..."
+}
+
+echo "==> Cleaning up..."
+brew cleanup --prune=all -q 2>/dev/null || true
+
+echo "==> Brew bundle: OK"
+
+{{- end }}
