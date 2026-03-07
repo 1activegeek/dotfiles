@@ -6,6 +6,10 @@
 README.md
 LICENSE
 .DS_Store
+bootstrap.sh
+docs/
+TODO.md
+Brewfile.current
 
 # Exclude non-macOS files on macOS (and vice versa)
 {{- if ne .chezmoi.os "darwin" }}
