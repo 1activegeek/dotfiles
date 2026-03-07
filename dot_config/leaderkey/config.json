@@ -1,0 +1,79 @@
+{
+  "actions" : [
+    {
+      "actions" : [
+        {
+          "key" : "e",
+          "type" : "application",
+          "value" : "/System/Applications/Mail.app"
+        },
+        {
+          "key" : "i",
+          "type" : "application",
+          "value" : "/System/Applications/Music.app"
+        },
+        {
+          "key" : "m",
+          "type" : "application",
+          "value" : "/System/Applications/Messages.app"
+        },
+        {
+          "key" : "s",
+          "type" : "application",
+          "value" : "/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app"
+        }
+      ],
+      "key" : "o",
+      "type" : "group"
+    },
+    {
+      "actions" : [
+        {
+          "key" : "c",
+          "type" : "url",
+          "value" : "raycast://extensions/raycast/system/open-camera"
+        },
+        {
+          "key" : "e",
+          "type" : "url",
+          "value" : "raycast://extensions/raycast/emoji-symbols/search-emoji-symbols"
+        },
+        {
+          "actions" : [
+            {
+              "key" : "u",
+              "type" : "application",
+              "value" : "/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app"
+            }
+          ],
+          "key" : "t",
+          "type" : "group"
+        }
+      ],
+      "key" : "r",
+      "label" : "Raycast",
+      "type" : "group"
+    },
+    {
+      "key" : "t",
+      "type" : "application",
+      "value" : "/System/Applications/Utilities/Terminal.app"
+    },
+    {
+      "key" : "p",
+      "label" : "Party",
+      "type" : "url",
+      "value" : "raycast://confetti"
+    },
+    {
+      "actions" : [
+
+      ],
+      "iconPath" : "uiwindow.split.2x1",
+      "key" : "w",
+      "label" : "Window Management",
+      "type" : "group"
+    }
+  ],
+  "type" : "group"
+}
