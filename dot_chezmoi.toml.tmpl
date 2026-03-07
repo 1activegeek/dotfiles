@@ -1,11 +1,4 @@
-# ~/.chezmoi.toml.tmpl
-# chezmoi configuration template
-# Processed during `chezmoi init` to generate ~/.config/chezmoi/chezmoi.toml
-#
-# These prompts run ONCE on init. Answers are stored in chezmoi.toml.
-# To change: edit ~/.config/chezmoi/chezmoi.toml directly.
-
-{{- $profile := promptStringOnce . "profile" "Profile overlay: 'default' for all extras, or leave blank for base Brewfile only" | default "default" -}}
+{{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "personal" "work") -}}
 {{- $name    := promptStringOnce . "name"    "Git full name" -}}
 {{- $email   := promptStringOnce . "email"   "Git email address" -}}
 
@@ -14,15 +7,12 @@
   name    = {{ $name    | quote }}
   email   = {{ $email   | quote }}
 
-# 1Password CLI integration for secret templates
 [onepassword]
   command = "op"
 
-# Use VS Code to edit managed files
 [edit]
   command = "code"
   args    = ["--wait"]
 
-# Always show diff before applying
 [diff]
   pager = "less -R"
