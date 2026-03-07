@@ -1,0 +1,45 @@
+#!/bin/bash
+# run_once_before_02-install-core.sh.tmpl
+# Installs core packages needed before chezmoi can deploy secrets.
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || true)"
+
+echo "==> Installing core packages..."
+
+CORE_FORMULAE=(chezmoi gh mas)
+CORE_CASKS=(1password 1password-cli brave-browser ghostty handy raycast)
+
+for formula in "${CORE_FORMULAE[@]}"; do
+  if ! brew list --formula "$formula" &>/dev/null; then
+    echo "    Installing formula: $formula"
+    brew install "$formula" || echo "    WARNING: Failed to install $formula"
+  fi
+done
+
+for cask in "${CORE_CASKS[@]}"; do
+  if ! brew list --cask "$cask" &>/dev/null; then
+    echo "    Installing cask: $cask"
+    HOMEBREW_CASK_OPTS="--no-quarantine" brew install --cask "$cask" || echo "    WARNING: Failed to install $cask"
+  fi
+done
+
+echo "==> Core packages: OK"
+
+echo ""
+echo "══════════════════════════════════════════════"
+echo "  1PASSWORD SETUP"
+echo "══════════════════════════════════════════════"
+echo ""
+echo "  To deploy SSH keys and secrets, you need to:"
+echo "  1. Open 1Password and sign in"
+echo "  2. Enable CLI integration (Settings > Developer > CLI)"
+echo "  3. Run: op signin"
+echo ""
+echo "  Then re-run: chezmoi apply"
+echo ""
+
+{{ end -}}
