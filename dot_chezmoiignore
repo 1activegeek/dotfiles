@@ -11,9 +11,14 @@ docs/
 TODO.md
 Brewfile.current
 
-# Exclude non-macOS files on macOS (and vice versa)
+# Exclude non-macOS files on non-macOS
 {{- if ne .chezmoi.os "darwin" }}
 dot_zshrc.d/11-kube-ps1.zsh
 dot_config/ghostty/
 {{- end }}
 
+# Profile-conditional ignores
+{{- if eq .profile "work" }}
+# Skip personal-only app configs on work machines
+# (add specific paths here as personal-only configs are added)
+{{- end }}
