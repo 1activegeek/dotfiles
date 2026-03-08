@@ -87,7 +87,7 @@ step "Applying dotfiles..."
 CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
-  CHEZMOI_OUT=$(chezmoi apply 2>&1)
+  CHEZMOI_OUT=$(chezmoi update 2>&1)
   CHEZMOI_EXIT=$?
 else
   CHEZMOI_OUT=$(chezmoi init --apply "$DOTFILES_REPO" 2>&1)
