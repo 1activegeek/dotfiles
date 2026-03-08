@@ -87,11 +87,45 @@ step "Applying dotfiles..."
 CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
-  # The source dir is fully managed — always sync it to origin exactly.
-  # Reset any local state (e.g. from a failed previous run) before pulling.
   git -C "$CHEZMOI_SOURCE" fetch origin 2>&1 \
     || fail "Failed to reach origin. Check your network connection and re-run."
-  git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
+
+  # Check if the source dir has local changes or is in a conflicted state
+  if ! git -C "$CHEZMOI_SOURCE" diff --quiet 2>/dev/null \
+      || ! git -C "$CHEZMOI_SOURCE" diff --cached --quiet 2>/dev/null \
+      || [[ -n "$(git -C "$CHEZMOI_SOURCE" ls-files --unmerged 2>/dev/null)" ]]; then
+    echo ""
+    echo "════════════════════════════════════════════════════"
+    echo "  WARNING — Local changes detected in source dir"
+    echo "════════════════════════════════════════════════════"
+    echo ""
+    echo "  $CHEZMOI_SOURCE"
+    echo "  has uncommitted or conflicted changes:"
+    echo ""
+    git -C "$CHEZMOI_SOURCE" status --short | sed 's/^/    /'
+    echo ""
+    echo "  This usually means a previous run failed mid-way."
+    echo "  Resetting will discard these local changes and sync"
+    echo "  the source dir to match origin/main exactly."
+    echo ""
+    echo "  If you have intentional changes here, press N and"
+    echo "  resolve them manually in:"
+    echo "    $CHEZMOI_SOURCE"
+    echo ""
+    read -r -p "  Reset source dir and continue? [y/N] " confirm
+    echo ""
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      echo "  Aborted. Resolve the changes above, then re-run:"
+      echo ""
+      echo "    $BOOTSTRAP_CMD"
+      echo ""
+      exit 1
+    fi
+    git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
+  else
+    git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
+  fi
+
   CHEZMOI_OUT=$(chezmoi apply 2>&1)
   CHEZMOI_EXIT=$?
 else
