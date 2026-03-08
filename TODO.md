@@ -34,4 +34,5 @@ LAstly something else we need to do, is identify the best way to install all the
 
 # 2026-03-08 Updates
 - Need to run appcleaner to enable autoclean setting
+- Setup symlinks (~/projects -> iCloud/1 Projects - but based on personal/work different behavior)
 - 

@@ -247,3 +247,6 @@ echo "  Dotfiles applied. Restart your shell to continue:"
 echo ""
 echo "    exec zsh -l"
 echo ""
+echo "  (copied to clipboard — just paste and hit enter)"
+echo "exec zsh -l" | pbcopy
+echo ""

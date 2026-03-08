@@ -1,0 +1,143 @@
+#!/bin/bash
+# run_once_after_12-post-install.sh.tmpl
+# Post-install report: package status, system summary, tasks, and notes.
+# Runs once per machine (chezmoi tracks this).
+
+[[ "$(uname)" != "Darwin" ]] && exit 0
+
+BUNDLE_LOG="${HOME}/.local/log/dotfiles-brew-bundle.log"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+PKG_PASS=0
+PKG_FAIL=0
+
+check_pkg() {
+  local type="$1" ref="$2" display="$3"
+  local brew_name="${ref##*/}"   # strip tap prefix: foo/tap/bar → bar
+  local installed=false err=""
+
+  case "$type" in
+    brew) brew list --formula "$brew_name" &>/dev/null && installed=true ;;
+    cask) brew list --cask "$ref" &>/dev/null && installed=true ;;
+    mas)  mas list 2>/dev/null | awk '{print $1}' | grep -qx "$ref" && installed=true ;;
+  esac
+
+  if $installed; then
+    printf "  ✓  [%-14s]  %s\n" "$type" "$display"
+    PKG_PASS=$((PKG_PASS + 1))
+  else
+    if [[ -f "$BUNDLE_LOG" ]]; then
+      err=$(grep -iF "$brew_name" "$BUNDLE_LOG" 2>/dev/null \
+            | grep -iE "error|warning|failed|not installed|no cask|no available" \
+            | head -1 \
+            | sed 's/^[[:space:]]*//' \
+            | cut -c1-80)
+    fi
+    if [[ -n "$err" ]]; then
+      printf "  ✗  [%-14s]  %-38s  → %s\n" "$type" "$display" "$err"
+    else
+      printf "  ✗  [%-14s]  %s\n" "$type" "$display"
+    fi
+    PKG_FAIL=$((PKG_FAIL + 1))
+  fi
+}
+
+section() {
+  echo ""
+  echo "  ── $1 ──"
+}
+
+# ── Header ────────────────────────────────────────────────────────────────────
+
+DOTFILES_DATE="$(git -C "$(chezmoi source-path 2>/dev/null)" log -1 --format="%ci" 2>/dev/null | cut -d' ' -f1 || echo 'unknown')"
+
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "  POST-INSTALL REPORT"
+echo "══════════════════════════════════════════════════════════════"
+echo ""
+echo "  System:"
+printf "  %-22s %s\n" "Hostname:"        "$(scutil --get ComputerName 2>/dev/null || echo unknown)"
+printf "  %-22s %s\n" "macOS:"           "$(sw_vers -productVersion)"
+printf "  %-22s %s\n" "Profile:"         "{{ .profile }}"
+printf "  %-22s %s\n" "Dotfiles date:"   "${DOTFILES_DATE}"
+printf "  %-22s %s\n" "Chezmoi:"         "$(chezmoi --version 2>/dev/null | head -1 || echo n/a)"
+printf "  %-22s %s files\n" "Managed files:" "$(chezmoi managed 2>/dev/null | wc -l | tr -d ' ')"
+
+# ── Package Status ────────────────────────────────────────────────────────────
+
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "  PACKAGE STATUS"
+echo "══════════════════════════════════════════════════════════════"
+
+{{- $profile := .profile -}}
+
+{{- $modules := list "core" "dev" "browsers" "communication" "ai" "media" "utilities" "infra" "printing3d" "security" "mas" -}}
+{{- $moduleNames := dict "core" "Core" "dev" "Dev" "browsers" "Browsers" "communication" "Communication" "ai" "AI" "media" "Media" "utilities" "Utilities" "infra" "Infra / Kubernetes" "printing3d" "3D Printing / CAD" "security" "Security" "mas" "Mac App Store" -}}
+
+{{ range $mod := $modules -}}
+{{- $hasItems := false -}}
+{{- range $.packages -}}
+  {{- if and (eq .module $mod) (or (not (hasKey . "profiles")) (has $profile .profiles)) -}}
+    {{- $hasItems = true -}}
+  {{- end -}}
+{{- end -}}
+{{- if $hasItems }}
+section "{{ index $moduleNames $mod }}"
+{{ range $.packages -}}
+{{- if and (eq .module $mod) (or (not (hasKey . "profiles")) (has $profile .profiles)) -}}
+{{- if eq .type "mas" }}
+check_pkg "mas" "{{ .ref }}" "{{ .name }}"
+{{ else }}
+check_pkg "{{ .type }}" "{{ .ref }}" "{{ .ref }}"
+{{ end -}}
+{{- end -}}
+{{- end }}
+{{- end -}}
+{{- end }}
+
+echo ""
+echo "  ──────────────────────────────────────────────────────────"
+echo "  ${PKG_PASS} installed  |  ${PKG_FAIL} not installed / failed"
+
+# ── Manual Tasks ──────────────────────────────────────────────────────────────
+
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "  MANUAL TASKS"
+echo "══════════════════════════════════════════════════════════════"
+echo ""
+{{ range .post_install_tasks -}}
+echo "  [ ] {{ . }}"
+{{ end }}
+
+# ── Notes ─────────────────────────────────────────────────────────────────────
+
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "  APP NOTES"
+echo "══════════════════════════════════════════════════════════════"
+{{ range .post_install_notes }}
+echo ""
+echo "  {{ .category }}"
+{{ range .items -}}
+echo "      • {{ . }}"
+{{ end -}}
+{{ end }}
+
+# ── fastfetch ─────────────────────────────────────────────────────────────────
+
+if command -v fastfetch &>/dev/null; then
+  echo ""
+  fastfetch
+fi
+
+echo ""

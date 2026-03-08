@@ -1,0 +1,11 @@
+post_install_tasks:
+  - "Open 1Password — verify SSH agent is working (ssh -T git@github.com)"
+  - "Sign into iCloud and verify Obsidian vault synced"
+  - "Open Raycast and import settings backup"
+  - "Open Atuin and log in: atuin login"
+  - "Sign into Mac App Store (required for MAS apps)"
+  - "Set desktop wallpaper — System Settings > Wallpaper"
+  - "Set mouse cursor color — Accessibility > Display"
+  - "Configure Kap — set global shortcut Cmd+Shift+3"
+  - "Configure app-specific settings (Slack workspaces, Discord)"
+  - "Restart to finalize all system changes"

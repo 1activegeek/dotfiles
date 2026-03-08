@@ -1,0 +1,52 @@
+post_install_notes:
+  - category: "Raycast"
+    items:
+      - "Settings > Advanced > Import — restore settings backup"
+      - "Re-enable extensions after import (some require re-auth)"
+
+  - category: "VS Code"
+    items:
+      - "Settings Sync — sign in with GitHub to restore extensions/settings"
+
+  - category: "Ghostty"
+    items:
+      - "Managed by chezmoi (~/.config/ghostty/config) — no action needed"
+
+  - category: "Zellij"
+    items:
+      - "Managed by chezmoi (~/.config/zellij/config.kdl) — no action needed"
+
+  - category: "Atuin"
+    items:
+      - "Run: atuin login — to sync shell history across machines"
+
+  - category: "1Password"
+    items:
+      - "Verify SSH agent: ssh -T git@github.com"
+      - "CLI integration must be enabled: Settings > Developer > CLI"
+
+  - category: "Slack"
+    items:
+      - "File > Sign into another workspace for each workspace"
+
+  - category: "Discord"
+    items:
+      - "Sign in — servers rejoin automatically"
+
+  - category: "Obsidian"
+    items:
+      - "Open vault from iCloud Drive — wait for full sync before opening"
+      - "Verify community plugins re-enable correctly after vault open"
+
+  - category: "Home Assistant"
+    items:
+      - "Sign in — companion app links to existing instance automatically"
+
+  - category: "Tailscale"
+    items:
+      - "Sign in and verify homelab nodes are reachable"
+
+  - category: "Security Tools"
+    items:
+      - "LuLu, BlockBlock, KnockKnock — grant Full Disk Access in System Settings > Privacy"
+      - "These will prompt on first launch — approve each one"
