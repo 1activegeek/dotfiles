@@ -34,8 +34,7 @@ All packages are defined in `.chezmoidata/packages.yaml` and installed via `brew
 | Category | Tools |
 |---|---|
 | Core | chezmoi, 1Password, Brave, Ghostty, Raycast |
-| Dev CLI | atuin, bat, eza, fd, fzf, starship, zellij, zoxide |
-| Dev GUI | VS Code, Docker, OrbStack, Claude, Codex |
+| Dev | atuin, bat, eza, fzf, starship, zellij, VS Code, Docker, OrbStack, Claude, Codex |
 | Browsers | Chrome, Tor |
 | Communication | Slack, Discord, Zoom |
 | AI | ChatGPT, Ollama, LM Studio |
@@ -90,7 +89,7 @@ SSH keys and SOPS age keys are stored in 1Password and deployed via chezmoi temp
 3. Run `eval $(op signin)`
 4. Run `chezmoi apply`
 
-If 1Password isn't ready, chezmoi skips secret-templated files and continues — re-run `chezmoi apply` after signing in.
+If 1Password isn't ready, chezmoi will error when it hits a secret template. The bootstrap script detects this and prints next steps — re-run bootstrap after signing in and it will pick up where it left off.
 
 ## Structure
 
@@ -112,7 +111,41 @@ dotfiles/
 ├── dot_zprofile                     # → ~/.zprofile
 ├── dot_zshenv                       # → ~/.zshenv
 ├── dot_gitconfig                    # → ~/.gitconfig
-├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, etc.)
-├── private_dot_config/              # → ~/.config/ (SOPS age key — secret)
+├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, SOPS age key, etc.)
 └── private_dot_ssh/                 # → ~/.ssh/ (SSH config + keys via 1Password)
 ```
+
+## Troubleshooting
+
+### Package install failures (Homebrew / MAS)
+
+Individual package failures during `brew bundle install` are **non-fatal** — the installer warns and continues to the next package. chezmoi will not abort. After bootstrap completes, check the output for any `WARNING:` lines to see what was skipped.
+
+Common causes:
+- **MAS packages** — require being signed into the Mac App Store. If not signed in, all `mas` installs will silently fail. Sign in via the App Store app, then re-run bootstrap.
+- **Cask name mismatch** — if a cask was renamed upstream, brew will error on that entry only. Update the name in `.chezmoidata/packages.yaml` and re-run.
+- **Network / rate limiting** — transient failures. Re-running bootstrap will re-attempt the brew bundle since `run_onchange_` re-runs whenever packages.yaml changes.
+
+### Forcing `run_once_` scripts to re-run
+
+chezmoi marks `run_once_` scripts as done after their first successful execution and never re-runs them, even if you fix a bug in them. To force a re-run:
+
+```bash
+# Reset all run_once script state (they will all re-run on next apply)
+chezmoi state delete-bucket --bucket=scriptState
+
+# Then re-apply
+chezmoi apply
+```
+
+To reset a single script, you can delete just its state entry by name using `chezmoi state` — run `chezmoi state dump` to see the current entries.
+
+### bootstrap.sh re-run
+
+The bootstrap command is always safe to re-run:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)"
+```
+
+It detects existing state, pulls the latest dotfiles from origin, and picks up where it left off.
