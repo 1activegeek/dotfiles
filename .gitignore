@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/*.log
+*.swp
+*.swo
+
+# chezmoi
+.chezmoi*.toml
