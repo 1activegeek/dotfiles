@@ -54,6 +54,28 @@ incomplete() {
   exit 1
 }
 
+# ── Pre-flight checklist ──────────────────────────────────────────────────────
+
+echo ""
+echo "════════════════════════════════════════════════════"
+echo "  BEFORE YOU CONTINUE"
+echo "════════════════════════════════════════════════════"
+echo ""
+echo "  Please ensure the following are done first:"
+echo "    [ ] Signed into Apple ID (System Settings)"
+echo "    [ ] Signed into Mac App Store"
+echo "    [ ] iCloud sync complete (Documents/Desktop)"
+echo "    [ ] 1Password installed, signed in, and CLI"
+echo "        integration enabled (Settings → Developer)"
+echo ""
+read -r -p "  Ready to continue? [y/N] " preflight
+echo ""
+if [[ ! "$preflight" =~ ^[Yy]$ ]]; then
+  echo "  Complete the steps above and re-run when ready."
+  echo ""
+  exit 0
+fi
+
 # ── Xcode CLI Tools ───────────────────────────────────────────────────────────
 
 step "Checking Xcode Command Line Tools..."
@@ -71,9 +93,17 @@ if ! command -v brew &>/dev/null; then
   NONINTERACTIVE=1 /bin/bash -c \
     "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
     || fail "Homebrew installation failed."
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
 else
-  eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || true)"
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
 fi
 ok "Homebrew"
 
