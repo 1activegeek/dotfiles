@@ -9,12 +9,15 @@ set -uo pipefail
 
 DOTFILES_REPO="https://github.com/1activegeek/dotfiles.git"
 BOOTSTRAP_CMD="/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)\""
+CHEZMOI_CONFIG="$HOME/.config/chezmoi/chezmoi.toml"
+CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
+CHEZMOI_LOG=$(mktemp)
+trap 'rm -f "$CHEZMOI_LOG"' EXIT
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-step()  { echo ""; echo "==> $*"; }
-ok()    { echo "    ✓ $*"; }
-warn()  { echo "    ⚠ $*"; }
+step() { echo ""; echo "==> $*"; }
+ok()   { echo "    ✓ $*"; }
 
 fail() {
   echo ""
@@ -80,17 +83,72 @@ step "Checking chezmoi..."
 brew install chezmoi 2>/dev/null || fail "Failed to install chezmoi via Homebrew."
 ok "chezmoi"
 
+# ── Machine configuration ─────────────────────────────────────────────────────
+
+step "Checking machine configuration..."
+
+if [[ -f "$CHEZMOI_CONFIG" ]]; then
+  ok "Configuration already exists — skipping prompts"
+else
+  echo ""
+  echo "  Let's configure this machine before applying dotfiles."
+  echo ""
+
+  # Profile
+  while true; do
+    read -r -p "  Machine profile (personal/work) [personal]: " PROFILE
+    PROFILE="${PROFILE:-personal}"
+    if [[ "$PROFILE" == "personal" || "$PROFILE" == "work" ]]; then
+      break
+    fi
+    echo "  Please enter 'personal' or 'work'."
+  done
+
+  # Git name
+  while true; do
+    read -r -p "  Git full name: " GIT_NAME
+    [[ -n "$GIT_NAME" ]] && break
+    echo "  Name is required."
+  done
+
+  # Git email
+  while true; do
+    read -r -p "  Git email: " GIT_EMAIL
+    [[ -n "$GIT_EMAIL" ]] && break
+    echo "  Email is required."
+  done
+
+  mkdir -p "$(dirname "$CHEZMOI_CONFIG")"
+  cat > "$CHEZMOI_CONFIG" << TOML
+[data]
+  profile = "$PROFILE"
+  name    = "$GIT_NAME"
+  email   = "$GIT_EMAIL"
+
+[onepassword]
+  command = "op"
+
+[edit]
+  command = "code"
+  args    = ["--wait"]
+
+[diff]
+  pager = "less -R"
+TOML
+
+  echo ""
+  ok "Configuration saved (profile: $PROFILE, name: $GIT_NAME, email: $GIT_EMAIL)"
+fi
+
 # ── Apply dotfiles ────────────────────────────────────────────────────────────
 
 step "Applying dotfiles..."
-
-CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
   git -C "$CHEZMOI_SOURCE" fetch origin 2>&1 \
     || fail "Failed to reach origin. Check your network connection and re-run."
 
-  # Check if the source dir has local changes or is in a conflicted state
+  # Warn before discarding any local state in the source dir
   if ! git -C "$CHEZMOI_SOURCE" diff --quiet 2>/dev/null \
       || ! git -C "$CHEZMOI_SOURCE" diff --cached --quiet 2>/dev/null \
       || [[ -n "$(git -C "$CHEZMOI_SOURCE" ls-files --unmerged 2>/dev/null)" ]]; then
@@ -121,23 +179,18 @@ if [[ -d "$CHEZMOI_SOURCE" ]]; then
       echo ""
       exit 1
     fi
-    git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
-  else
-    git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
   fi
 
-  CHEZMOI_OUT=$(chezmoi apply 2>&1)
-  CHEZMOI_EXIT=$?
+  git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
+  chezmoi apply 2>&1 | tee "$CHEZMOI_LOG"
+  CHEZMOI_EXIT=${PIPESTATUS[0]}
 else
-  CHEZMOI_OUT=$(chezmoi init --apply "$DOTFILES_REPO" 2>&1)
-  CHEZMOI_EXIT=$?
+  chezmoi init --apply "$DOTFILES_REPO" 2>&1 | tee "$CHEZMOI_LOG"
+  CHEZMOI_EXIT=${PIPESTATUS[0]}
 fi
 
 if [[ $CHEZMOI_EXIT -ne 0 ]]; then
-  # Surface the raw error for context
-  echo ""
-  echo "  chezmoi output:"
-  echo "$CHEZMOI_OUT" | sed 's/^/    /'
+  CHEZMOI_OUT=$(cat "$CHEZMOI_LOG")
 
   # 1Password / op auth is the most common first-run blocker
   if echo "$CHEZMOI_OUT" | grep -qiE "1password|op: |biometric|sign in|not found|unauthorized"; then
@@ -149,7 +202,7 @@ if [[ $CHEZMOI_EXIT -ne 0 ]]; then
       "  3. Run:  op signin"
   fi
 
-  # Generic fallback
+  # Generic fallback — output already shown via tee above
   incomplete "chezmoi exited with an error (see output above)."
 fi
 
