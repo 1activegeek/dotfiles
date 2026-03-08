@@ -87,10 +87,11 @@ step "Applying dotfiles..."
 CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
-  # Pull latest explicitly before apply so the source dir is always
-  # up to date before chezmoi reads it (avoids stale-state errors).
-  git -C "$CHEZMOI_SOURCE" pull --ff-only 2>&1 \
-    || fail "Failed to pull latest dotfiles from origin. Resolve any git conflicts in $CHEZMOI_SOURCE and re-run."
+  # The source dir is fully managed — always sync it to origin exactly.
+  # Reset any local state (e.g. from a failed previous run) before pulling.
+  git -C "$CHEZMOI_SOURCE" fetch origin 2>&1 \
+    || fail "Failed to reach origin. Check your network connection and re-run."
+  git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
   CHEZMOI_OUT=$(chezmoi apply 2>&1)
   CHEZMOI_EXIT=$?
 else
