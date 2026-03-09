@@ -54,4 +54,4 @@ post_install_notes:
   - category: "Symlinks"
     items:
       - "Create ~/projects → iCloud 1 Projects:"
-      - "  ln -s \"$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/1 Projects\" ~/projects"
+      - "  ln -s ~/Library/Mobile\\ Documents/com~apple~CloudDocs/Documents/1\\ Projects ~/projects"
