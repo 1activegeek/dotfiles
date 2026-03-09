@@ -1,0 +1,64 @@
+#!/bin/bash
+# run_once_after_13-symlinks.sh.tmpl
+# Creates personal-profile symlinks. Runs once per machine.
+
+[[ "$(uname)" != "Darwin" ]] && exit 0
+
+{{ if eq .profile "personal" -}}
+
+# ── ~/projects → iCloud Documents/1 Projects ─────────────────────────────────
+#
+# Uses $HOME to be username-agnostic. Checks the canonical iCloud path:
+#   ~/Library/Mobile Documents/com~apple~CloudDocs/Documents
+# This path is stable across all macOS versions — it is the raw container
+# path used by the OS itself, not a symlink or CloudStorage alias.
+
+ICLOUD_DOCS="${HOME}/Library/Mobile Documents/com~apple~CloudDocs/Documents"
+PROJECTS_FOLDER="${ICLOUD_DOCS}/1 Projects"
+SYMLINK="${HOME}/projects"
+
+echo "==> Setting up ~/projects symlink..."
+
+# Verify iCloud is accessible at all
+if [[ ! -d "$ICLOUD_DOCS" ]]; then
+  echo "    ⚠ iCloud Documents not found at:"
+  echo "      $ICLOUD_DOCS"
+  echo "    Make sure iCloud Drive is enabled and synced."
+  echo "    Re-run after iCloud syncs:  chezmoi apply"
+  exit 0
+fi
+
+# Verify the specific projects folder exists
+if [[ ! -d "$PROJECTS_FOLDER" ]]; then
+  echo "    ⚠ Projects folder not found at:"
+  echo "      $PROJECTS_FOLDER"
+  echo "    If the folder was renamed, update PROJECTS_FOLDER in:"
+  echo "      run_once_after_13-symlinks.sh.tmpl"
+  echo "    Then re-run:  chezmoi state delete-bucket --bucket=scriptState && chezmoi apply"
+  exit 0
+fi
+
+# Remove any existing symlink or warn if it's a real directory
+if [[ -L "$SYMLINK" ]]; then
+  current_target="$(readlink "$SYMLINK")"
+  if [[ "$current_target" == "$PROJECTS_FOLDER" ]]; then
+    echo "    ✓ ~/projects already points to the correct location"
+    exit 0
+  fi
+  echo "    Updating symlink (was: $current_target)"
+  rm "$SYMLINK"
+elif [[ -d "$SYMLINK" ]]; then
+  echo "    ⚠ ~/projects exists as a real directory — not replacing it."
+  echo "    Remove or rename it manually, then re-run:"
+  echo "      chezmoi state delete-bucket --bucket=scriptState && chezmoi apply"
+  exit 1
+fi
+
+ln -s "$PROJECTS_FOLDER" "$SYMLINK"
+echo "    ✓ ~/projects → $PROJECTS_FOLDER"
+
+{{ else -}}
+
+echo "==> Skipping personal symlinks (profile: {{ .profile }})"
+
+{{ end -}}
