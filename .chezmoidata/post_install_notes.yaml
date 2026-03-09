@@ -50,3 +50,8 @@ post_install_notes:
     items:
       - "LuLu, BlockBlock, KnockKnock — grant Full Disk Access in System Settings > Privacy"
       - "These will prompt on first launch — approve each one"
+
+  - category: "Symlinks"
+    items:
+      - "Create ~/projects → iCloud 1 Projects:"
+      - "  ln -s \"$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/1 Projects\" ~/projects"
