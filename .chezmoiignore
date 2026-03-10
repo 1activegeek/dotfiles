@@ -19,6 +19,7 @@ dot_config/ghostty/
 
 # Profile-conditional ignores
 {{- if eq .profile "work" }}
-# Skip personal-only app configs on work machines
-# (add specific paths here as personal-only configs are added)
+# SSH config is managed separately on work machines — don't overwrite it.
+# To pull from 1Password manually: op read 'op://Private/SSH Config/notesPlain' > ~/.ssh/config
+.ssh/config
 {{- end }}
