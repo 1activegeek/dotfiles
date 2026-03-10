@@ -80,33 +80,6 @@ chezmoi update                      # Pull latest from git and apply
 chezmoi cd                          # Open the chezmoi source directory
 ```
 
-## SSH Config
-
-`~/.ssh/config` is stored as a Secure Note in 1Password (`op://Private/SSH Config/notesPlain`) but is **not** deployed by chezmoi — it's a manual pull operation. This keeps the config out of the repo while making it easy to restore or update on any machine.
-
-### Restore SSH config on a new machine
-
-```bash
-op read 'op://Private/SSH Config/notesPlain' > ~/.ssh/config
-chmod 600 ~/.ssh/config
-```
-
-### Update SSH config
-
-Edit `~/.ssh/config` locally as needed, then push the updated version back to the vault:
-
-```bash
-op item edit "SSH Config" --vault Private notesPlain="$(cat ~/.ssh/config)"
-```
-
-Verify it round-trips correctly:
-
-```bash
-op read 'op://Private/SSH Config/notesPlain'
-```
-
----
-
 ## Secrets
 
 SSH keys and SOPS age keys are stored in 1Password and deployed via chezmoi templates. Before running `chezmoi apply` on a fresh machine:
@@ -117,6 +90,31 @@ SSH keys and SOPS age keys are stored in 1Password and deployed via chezmoi temp
 4. Run `chezmoi apply`
 
 If 1Password isn't ready, chezmoi will error when it hits a secret template. The bootstrap script detects this and prints next steps — re-run bootstrap after signing in and it will pick up where it left off.
+
+## SSH Config
+
+`~/.ssh/config` is managed via a Secure Note in 1Password (`op://Private/SSH Config/notesPlain`) and deployed by chezmoi as a private file (600). The vault item is the source of truth — chezmoi just pulls and applies it.
+
+### Sync after updating SSH config
+
+When you need to add or change a host entry:
+
+1. Edit the **SSH Config** Secure Note in 1Password directly
+2. Pull the change to your machine:
+
+```bash
+chezmoi apply ~/.ssh/config
+```
+
+### Verify the vault item is readable
+
+```bash
+op read 'op://Private/SSH Config/notesPlain'
+```
+
+### Initial setup on a new machine
+
+On a fresh machine, `chezmoi apply` handles this automatically once 1Password CLI is authenticated. No manual step needed — the config will be deployed along with everything else.
 
 ## Structure
 
@@ -138,7 +136,8 @@ dotfiles/
 ├── dot_zprofile                     # → ~/.zprofile
 ├── dot_zshenv                       # → ~/.zshenv
 ├── dot_gitconfig                    # → ~/.gitconfig
-└── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, SOPS age key, etc.)
+├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, SOPS age key, etc.)
+└── private_dot_ssh/                 # → ~/.ssh/ (SSH config + keys via 1Password)
 ```
 
 ## Troubleshooting
