@@ -10,3 +10,6 @@
 
 # chezmoi
 .chezmoi*.toml
+
+# local worktrees
+.worktrees/
