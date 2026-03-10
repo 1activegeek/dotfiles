@@ -17,7 +17,6 @@ echo "    Dock settings"
 
 # Icon size (normal and magnified)
 defaults write com.apple.dock tilesize          -float 60
-defaults write com.apple.dock largesize         -float 80
 
 # Minimize to app icon (not separate tile)
 defaults write com.apple.dock minimize-to-application -bool true
@@ -48,7 +47,7 @@ defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 
 # Tracking speed
-defaults write NSGlobalDomain com.apple.trackpad.scaling -float 1.5
+defaults write NSGlobalDomain com.apple.trackpad.scaling -float 2.5
 
 # Enable three-finger drag
 defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
@@ -168,6 +167,12 @@ fi
 if ! defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true; then
   echo "    ⚠ Safari defaults skipped: could not set ShowFullURLInSmartSearchField"
 fi
+if ! defaults write com.apple.Safari AutoOpenSafeDownloads -bool false; then
+  echo "    ⚠ Safari defaults skipped: could not set AutoOpenSafeDownloads"
+fi
+if ! defaults write com.apple.Safari AlwaysRestoreSessionAtLaunch -bool true; then
+  echo "    ⚠ Safari defaults skipped: could not set AlwaysRestoreSessionAtLaunch"
+fi
 
 # ============================================
 # Audio
@@ -176,6 +181,40 @@ echo "    Audio settings"
 
 # Play feedback sound when volume is changed
 defaults write NSGlobalDomain com.apple.sound.beep.feedback -int 1
+
+# ============================================
+# Appearance
+# ============================================
+echo "    Appearance settings"
+
+# Dark mode
+defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+
+# Green button = Fill (not Full Screen)
+defaults write NSGlobalDomain NSZoomButtonMenuOption -int 2
+
+# Disable double-click titlebar to minimize
+defaults write NSGlobalDomain AppleMiniaturizeOnDoubleClick -bool false
+
+# Small sidebar icon size (1=small, 2=medium, 3=large)
+defaults write NSGlobalDomain NSTableViewDefaultSizeMode -int 1
+
+# ============================================
+# Window Manager
+# ============================================
+echo "    Window Manager settings"
+
+# Disable click wallpaper to show desktop
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
+
+# No margins between tiled windows
+defaults write com.apple.WindowManager EnableTiledWindowMargins -bool false
+
+# Disable window tiling by dragging to screen edge
+defaults write com.apple.WindowManager EnableTilingByEdgeDrag -bool false
+
+# Hide desktop items when clicking wallpaper
+defaults write com.apple.WindowManager HideDesktop -bool true
 
 # ============================================
 # Menu Bar / UI
@@ -195,6 +234,34 @@ defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
 
 # Disable the "Are you sure you want to open this application?" dialog
 defaults write com.apple.LaunchServices LSQuarantine -bool false
+
+# ============================================
+# Menu Bar Clock
+# ============================================
+echo "    Menu bar clock settings"
+
+# Hide date from menu bar clock
+defaults write com.apple.menuextra.clock ShowDate -int 0
+
+# Hide day of week from menu bar clock
+defaults write com.apple.menuextra.clock ShowDayOfWeek -int 0
+
+# ============================================
+# Control Center / Menu Bar Icons
+# ============================================
+echo "    Control Center settings"
+
+# Hide battery from menu bar
+defaults write com.apple.controlcenter "NSStatusItem Visible Battery" -bool false
+
+# Hide WiFi from menu bar
+defaults write com.apple.controlcenter "NSStatusItem Visible WiFi" -bool false
+
+# Hide Focus modes from menu bar
+defaults write com.apple.controlcenter "NSStatusItem Visible FocusModes" -bool false
+
+# Hide Now Playing from menu bar
+defaults write com.apple.controlcenter "NSStatusItem Visible NowPlaying" -bool false
 
 # ============================================
 # Activity Monitor
