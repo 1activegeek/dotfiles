@@ -41,6 +41,7 @@ packages:
   - { ref: fastfetch, type: brew, module: dev }
   - { ref: fd, type: brew, module: dev }
   - { ref: fzf, type: brew, module: dev }
+  - { ref: neovim, type: brew, module: dev }
   - { ref: opencode-desktop, type: cask, module: dev }
   - { ref: orbstack, type: cask, module: dev }
   - { ref: oven-sh/bun/bun, type: brew, module: dev }
