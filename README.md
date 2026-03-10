@@ -112,6 +112,18 @@ chezmoi apply ~/.ssh/config
 op read 'op://Private/SSH Config/notesPlain'
 ```
 
+### Manual one-off copy from 1Password (work machines)
+
+Work machines don't have `~/.ssh/config` managed by chezmoi. To pull the personal config from the vault temporarily (e.g. to diff and merge host entries):
+
+```bash
+cp ~/.ssh/config ~/.ssh/config.bak
+op read 'op://Private/SSH Config/notesPlain' > ~/.ssh/config
+diff ~/.ssh/config.bak ~/.ssh/config
+# Manually merge any work-specific entries back in, then restore:
+cp ~/.ssh/config.bak ~/.ssh/config
+```
+
 ### Initial setup on a new machine
 
 On a fresh machine, `chezmoi apply` handles this automatically once 1Password CLI is authenticated. No manual step needed — the config will be deployed along with everything else.
