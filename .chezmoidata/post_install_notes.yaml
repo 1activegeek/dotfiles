@@ -86,6 +86,24 @@ post_install_notes:
       - ""
       - "Note: Replace 'id_github' etc. with the exact item title shown by op item list."
 
+  - category: "SSH Config (1Password)"
+    items:
+      - "~/.ssh/config is managed via 1Password. On a new machine, chezmoi will"
+      - "pull it automatically — but first you must store your config in the vault."
+      - ""
+      - "── Store SSH config in 1Password (one-time setup) ──"
+      - "  1. Copy your current ~/.ssh/config content"
+      - "  2. In 1Password, create a new Secure Note:"
+      - "       Title:  SSH Config"
+      - "       Vault:  Private"
+      - "       Notes:  (paste your full ~/.ssh/config content here)"
+      - "  3. Verify chezmoi can read it:"
+      - "       op read 'op://Private/SSH Config/notesPlain'"
+      - ""
+      - "── After storing, apply with chezmoi ──"
+      - "  chezmoi apply ~/.ssh/config"
+      - "  cat ~/.ssh/config   # verify contents look correct"
+
   - category: "Symlinks"
     items:
       - "Create ~/projects → iCloud 1 Projects:"
