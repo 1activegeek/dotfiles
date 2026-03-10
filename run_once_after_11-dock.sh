@@ -11,83 +11,43 @@ fi
 echo "==> Configuring Dock..."
 
 # ============================================
-# Remove unwanted items
+# Wipe existing Dock and rebuild from scratch
 # ============================================
-echo "    Removing unwanted Dock items"
-
-DOCK_REMOVE=(
-  "Launchpad"
-  "Maps"
-  "FaceTime"
-  "Contacts"
-  "Notes"
-  "Freeform"
-  "TV"
-  "News"
-  "Numbers"
-  "Keynote"
-  "Pages"
-  "App Store"
-  "System Settings"
-  "Google Chrome"
-  "Firefox"
-  "Microsoft Outlook"
-  "Microsoft Word"
-  "Microsoft Excel"
-  "Microsoft PowerPoint"
-  "Microsoft OneNote"
-  "Self Service"
-  "Terminal"
-)
-
-for item in "${DOCK_REMOVE[@]}"; do
-  if dockutil --find "$item" &>/dev/null 2>&1; then
-    dockutil --remove "$item" --no-restart
-    echo "    Removed: $item"
-  fi
-done
+echo "    Clearing existing Dock items"
+dockutil --remove all --no-restart
 
 # ============================================
-# Add desired items in order
+# Add apps in exact order
 # ============================================
 echo "    Adding Dock items"
 
-# Format: "AppName|/path/to/App.app"
-# Apps are added left-to-right (each appended to end of apps section)
-DOCK_ADD=(
-  "Safari|/System/Applications/Safari.app"
+# Format: "Label|/path/to/App.app"
+DOCK_APPS=(
+  "Microsoft Teams|/Applications/Microsoft Teams.app"
   "Brave Browser|/Applications/Brave Browser.app"
+  "Safari|/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app"
   "Mail|/System/Applications/Mail.app"
   "Messages|/System/Applications/Messages.app"
   "Calendar|/System/Applications/Calendar.app"
   "Reminders|/System/Applications/Reminders.app"
-  "zoom.us|/Applications/zoom.us.app"
-  "Slack|/Applications/Slack.app"
   "Obsidian|/Applications/Obsidian.app"
   "Discord|/Applications/Discord.app"
   "Music|/System/Applications/Music.app"
   "Claude|/Applications/Claude.app"
+  "ChatGPT|/Applications/ChatGPT.app"
   "Perplexity|/Applications/Perplexity.app"
   "OpenCode|/Applications/OpenCode.app"
   "Visual Studio Code|/Applications/Visual Studio Code.app"
   "Ghostty|/Applications/Ghostty.app"
 )
 
-for entry in "${DOCK_ADD[@]}"; do
+for entry in "${DOCK_APPS[@]}"; do
   IFS='|' read -r name path <<< "$entry"
-
-  # Try the exact path first; if Safari lives in an alternate location, handle it
-  if [[ ! -e "$path" ]] && [[ "$name" == "Safari" ]]; then
-    path="/Applications/Safari.app"
-  fi
-
   if [[ -e "$path" ]]; then
-    if ! dockutil --find "$name" &>/dev/null 2>&1; then
-      dockutil --add "$path" --label "$name" --section apps --no-restart
-      echo "    Added: $name"
-    fi
+    dockutil --add "$path" --label "$name" --section apps --no-restart
+    echo "    Added: $name"
   else
-    echo "    ⚠ App not found, skipping Dock entry: $name ($path)"
+    echo "    ⚠ App not found, skipping: $name ($path)"
   fi
 done
 
@@ -96,29 +56,25 @@ done
 # ============================================
 echo "    Adding Dock folder items"
 
-# Applications folder — grid view
-if ! dockutil --find "Applications" &>/dev/null 2>&1; then
-  dockutil --add "/Applications" \
-    --label "Applications" \
-    --view grid \
-    --display folder \
-    --sort name \
-    --section others \
-    --no-restart
-  echo "    Added: Applications folder"
-fi
+# Applications folder — grid view, sorted by name
+dockutil --add "/Applications" \
+  --label "Applications" \
+  --view grid \
+  --display folder \
+  --sort name \
+  --section others \
+  --no-restart
+echo "    Added: Applications folder"
 
-# Downloads folder — list view
-if ! dockutil --find "Downloads" &>/dev/null 2>&1; then
-  dockutil --add "${HOME}/Downloads" \
-    --label "Downloads" \
-    --view list \
-    --display folder \
-    --sort dateadded \
-    --section others \
-    --no-restart
-  echo "    Added: Downloads folder"
-fi
+# Downloads folder — list view, sorted by date added
+dockutil --add "${HOME}/Downloads" \
+  --label "Downloads" \
+  --view list \
+  --display folder \
+  --sort dateadded \
+  --section others \
+  --no-restart
+echo "    Added: Downloads folder"
 
 # ============================================
 # Single Dock restart (apply all changes at once)
