@@ -116,6 +116,23 @@ op read 'op://Private/SSH Config/notesPlain'
 
 On a fresh machine, `chezmoi apply` handles this automatically once 1Password CLI is authenticated. No manual step needed — the config will be deployed along with everything else.
 
+## Comparing macOS Defaults
+
+`dump-macos-defaults.sh` exports the current state of ~35 key macOS preference domains (Dock, Finder, Trackpad, Keyboard, Screenshots, Safari, Accessibility, etc.) into a diffable text file. Run it on a fresh macOS install and on your configured Mac to identify every customization:
+
+```bash
+# Fresh Tahoe install
+./dump-macos-defaults.sh > defaults-fresh.txt
+
+# Configured Mac
+./dump-macos-defaults.sh > defaults-current.txt
+
+# Compare
+diff -u defaults-fresh.txt defaults-current.txt
+```
+
+This helps discover settings you've changed manually but haven't yet captured in `run_once_after_10-macos-defaults.sh`.
+
 ## Structure
 
 ```
