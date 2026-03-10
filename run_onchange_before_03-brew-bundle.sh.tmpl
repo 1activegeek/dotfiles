@@ -47,7 +47,7 @@ mkdir -p "$LOG_DIR"
 BUNDLE_LOG="${LOG_DIR}/dotfiles-brew-bundle.log"
 
 echo "==> Running brew bundle install (profile: {{ .profile }})..."
-brew bundle install --file="$BREWFILE" --no-lock 2>&1 | tee "$BUNDLE_LOG" || true
+brew bundle install --file="$BREWFILE" 2>&1 | tee "$BUNDLE_LOG" || true
 
 if grep -qiE "^Error:" "$BUNDLE_LOG" 2>/dev/null; then
   echo "    ⚠ Some packages had errors — details in $BUNDLE_LOG"
