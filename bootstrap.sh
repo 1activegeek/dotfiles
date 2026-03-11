@@ -89,6 +89,8 @@ ok "Xcode CLI Tools"
 
 step "Checking Homebrew..."
 if ! command -v brew &>/dev/null; then
+  echo "    Homebrew installation requires administrator access."
+  sudo -v || fail "sudo authentication failed — ensure your account has administrator privileges."
   NONINTERACTIVE=1 /bin/bash -c \
     "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
     || fail "Homebrew installation failed."
