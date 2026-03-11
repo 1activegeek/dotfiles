@@ -11,7 +11,6 @@ taps:
   - oven-sh/bun
   - fluxcd/tap
   - go-task/tap
-  - AlexStrNik/Browserino
 
 packages:
   # ── Core ──
@@ -89,7 +88,7 @@ packages:
   # ── Utilities ──
   - { ref: appcleaner, type: cask, module: utilities }
   - { ref: balenaetcher, type: cask, module: utilities }
-  - { ref: browserino, type: cask, module: utilities }
+  - { ref: alexstrnik/browserino/browserino, type: cask, module: utilities }
   - { ref: disk-inventory-x, type: cask, module: utilities }
   - { ref: flux-app, type: cask, module: utilities }
   - { ref: home-assistant, type: cask, module: utilities }
