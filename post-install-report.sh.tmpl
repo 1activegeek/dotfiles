@@ -1,7 +1,7 @@
 #!/bin/bash
-# run_once_after_12-post-install.sh.tmpl
+# post-install-report.sh.tmpl
 # Post-install report: package status, system summary, tasks, and notes.
-# Runs once per machine (chezmoi tracks this).
+# Rendered and run by bootstrap.sh at the end of every bootstrap run.
 
 [[ "$(uname)" != "Darwin" ]] && exit 0
 

@@ -232,13 +232,6 @@ fi
 
 # ── Apply dotfiles ────────────────────────────────────────────────────────────
 
-# Snapshot state before apply so we can tell if chezmoi runs the report itself.
-if chezmoi state dump --format=json 2>/dev/null | grep -q "run_once_after_12"; then
-  REPORT_IN_STATE_BEFORE=true
-else
-  REPORT_IN_STATE_BEFORE=false
-fi
-
 step "Applying dotfiles..."
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
@@ -304,22 +297,9 @@ if [[ $CHEZMOI_EXIT -ne 0 ]]; then
 fi
 
 # ── Post-install report ───────────────────────────────────────────────────────
-# Run the report explicitly unless chezmoi just ran it during this apply session
-# (i.e. it was absent from state before apply but present after — meaning chezmoi
-# ran it and the output already appeared inline). In all other cases run it here
-# so it always appears at the end of bootstrap output where it's easy to see.
 
-if chezmoi state dump --format=json 2>/dev/null | grep -q "run_once_after_12"; then
-  REPORT_IN_STATE_AFTER=true
-else
-  REPORT_IN_STATE_AFTER=false
-fi
-
-REPORT_TMPL="$CHEZMOI_SOURCE/.chezmoiscripts/run_once_after_12-post-install.sh.tmpl"
-# Skip only if chezmoi ran it during THIS apply (was absent before, present after)
-if [[ "$REPORT_IN_STATE_BEFORE" == "false" && "$REPORT_IN_STATE_AFTER" == "true" ]]; then
-  : # chezmoi ran it inline during apply — no need to repeat
-elif [[ -f "$REPORT_TMPL" ]]; then
+REPORT_TMPL="$CHEZMOI_SOURCE/post-install-report.sh.tmpl"
+if [[ -f "$REPORT_TMPL" ]]; then
   chezmoi execute-template < "$REPORT_TMPL" | bash || true
 fi
 
