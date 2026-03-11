@@ -118,7 +118,7 @@ printf "  %-22s %s\n" "Chezmoi:"         "$(chezmoi --version 2>/dev/null | head
 
 echo ""
 echo "  Managed files:"
-chezmoi managed 2>/dev/null | sort | awk -F'/' '
+chezmoi managed --exclude=scripts 2>/dev/null | sort | awk -F'/' '
   {
     dir = (NF > 1) ? $1 : "(root)"
     files[dir] = files[dir] "\n    │  " $0
