@@ -64,8 +64,6 @@ echo ""
 echo "  Please ensure the following are done first:"
 echo "    [ ] Signed into Apple ID (System Settings)"
 echo "    [ ] Signed into Mac App Store"
-echo "    [ ] 1Password installed, signed in, and CLI"
-echo "        integration enabled (Settings → Developer)"
 echo ""
 read -r -p "  Ready to continue? [y/N] " preflight
 echo ""
@@ -118,6 +116,43 @@ if ! brew list --formula chezmoi &>/dev/null; then
   brew install chezmoi || fail "Failed to install chezmoi via Homebrew."
 fi
 ok "chezmoi"
+
+# ── 1Password ─────────────────────────────────────────────────────────────────
+
+step "Setting up 1Password..."
+
+if ! brew list --cask 1password &>/dev/null; then
+  echo "    Installing 1Password..."
+  HOMEBREW_CASK_OPTS="--no-quarantine" brew install --cask 1password \
+    || fail "Failed to install 1Password."
+fi
+
+if ! brew list --cask 1password-cli &>/dev/null; then
+  echo "    Installing 1Password CLI..."
+  HOMEBREW_CASK_OPTS="--no-quarantine" brew install --cask 1password-cli \
+    || fail "Failed to install 1Password CLI."
+fi
+
+# Pause and guide the user through CLI authentication if not already set up
+if ! op account list &>/dev/null 2>&1; then
+  echo ""
+  echo "════════════════════════════════════════════════════"
+  echo "  ACTION REQUIRED — Authenticate 1Password CLI"
+  echo "════════════════════════════════════════════════════"
+  echo ""
+  echo "  1Password is now installed. Complete these steps:"
+  echo ""
+  echo "    1. Open 1Password and sign into your account"
+  echo "    2. Go to Settings → Developer"
+  echo "    3. Enable 'Integrate with 1Password CLI'"
+  echo ""
+  read -r -p "  Press Enter when ready..." _
+  echo ""
+  if ! op account list &>/dev/null 2>&1; then
+    fail "1Password CLI is not authenticated. Complete the steps above and re-run."
+  fi
+fi
+ok "1Password"
 
 # ── Machine configuration ─────────────────────────────────────────────────────
 
