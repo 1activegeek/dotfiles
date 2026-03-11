@@ -137,12 +137,13 @@ dotfiles/
 ├── dot_chezmoiignore                # Files excluded from home directory deployment
 ├── .chezmoidata/
 │   └── packages.yaml                # All packages (brew/cask/mas) with profile tags
-├── run_once_before_01-*             # Installs Homebrew (runs once)
-├── run_once_before_02-*             # Installs core packages (runs once)
-├── run_onchange_before_03-*         # Runs brew bundle (re-runs when packages change)
-├── run_once_after_10-*              # Applies macOS defaults (runs once)
-├── run_once_after_11-*              # Configures Dock (runs once)
-├── run_once_after_12-*              # Post-install checklist (runs once)
+├── .chezmoiscripts/
+│   ├── run_once_before_01-*         # Installs Homebrew (runs once)
+│   ├── run_once_before_02-*         # Installs core packages (runs once)
+│   ├── run_onchange_before_03-*     # Runs brew bundle (re-runs when packages change)
+│   ├── run_once_after_10-*          # Applies macOS defaults (runs once)
+│   ├── run_once_after_11-*          # Configures Dock (runs once)
+│   └── run_once_after_12-*          # Post-install checklist (runs once)
 ├── dot_zshrc                        # → ~/.zshrc
 ├── dot_zshrc.d/                     # → ~/.zshrc.d/ (modular ZSH config)
 ├── dot_zprofile                     # → ~/.zprofile
