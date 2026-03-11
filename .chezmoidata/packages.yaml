@@ -11,6 +11,7 @@ taps:
   - oven-sh/bun
   - fluxcd/tap
   - go-task/tap
+  - AlexStrNik/Browserino
 
 packages:
   # ── Core ──

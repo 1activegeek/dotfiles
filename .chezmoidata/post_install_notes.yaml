@@ -51,6 +51,11 @@ post_install_notes:
       - "LuLu, BlockBlock, KnockKnock — grant Full Disk Access in System Settings > Privacy"
       - "These will prompt on first launch — approve each one"
 
+  - category: "Symlinks"
+    items:
+      - "Create ~/projects → iCloud 1 Projects:"
+      - "  ln -s ~/Library/Mobile\\ Documents/com~apple~CloudDocs/Documents/1\\ Projects ~/projects"
+
   - category: "SSH Keys"
     items:
       - "Keys used with IdentityAgent none (explicit file on disk) MUST be exported."
@@ -65,28 +70,4 @@ post_install_notes:
       - "  chmod 600 ~/.ssh/id_github && chmod 644 ~/.ssh/id_github.pub"
       - "  ssh -T git@github.com   # should say: Hi 1activegeek!"
       - ""
-      - "── id_gitea (self-hosted Gitea) ──"
-      - "  op read 'op://Private/id_gitea/private key' > ~/.ssh/id_gitea"
-      - "  op read 'op://Private/id_gitea/public key'  > ~/.ssh/id_gitea.pub"
-      - "  chmod 600 ~/.ssh/id_gitea && chmod 644 ~/.ssh/id_gitea.pub"
-      - "  ssh -T git@git.thegeekybits.com"
-      - ""
-      - "── id_ed25519 (personal servers) ──"
-      - "  op read 'op://Private/id_ed25519/private key' > ~/.ssh/id_ed25519"
-      - "  op read 'op://Private/id_ed25519/public key'  > ~/.ssh/id_ed25519.pub"
-      - "  chmod 600 ~/.ssh/id_ed25519 && chmod 644 ~/.ssh/id_ed25519.pub"
-      - "  ssh atlantis   # verify homelab access"
-      - ""
-      - "── Generate a brand new key and store in 1Password ──"
-      - "  ssh-keygen -t ed25519 -C 'your@email.com' -f ~/.ssh/id_newkey"
-      - "  op item create --category 'SSH Key' --title 'id_newkey' --vault Private \\"
-      - "    'private key[concealed]=$(cat ~/.ssh/id_newkey)' \\"
-      - "    'public key=$(cat ~/.ssh/id_newkey.pub)'"
-      - "  Then add the public key to GitHub/Gitea via their web UI."
-      - ""
       - "Note: Replace 'id_github' etc. with the exact item title shown by op item list."
-
-  - category: "Symlinks"
-    items:
-      - "Create ~/projects → iCloud 1 Projects:"
-      - "  ln -s ~/Library/Mobile\\ Documents/com~apple~CloudDocs/Documents/1\\ Projects ~/projects"

@@ -13,6 +13,9 @@ elif [[ -x /usr/local/bin/brew ]]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
 
+# Bypass Gatekeeper for cask installs (same as dot_zprofile)
+export HOMEBREW_CASK_OPTS="--no-quarantine"
+
 BREWFILE="$(mktemp)"
 trap 'rm -f "$BREWFILE"' EXIT
 

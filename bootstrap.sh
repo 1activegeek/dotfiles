@@ -243,10 +243,12 @@ echo "════════════════════════�
 echo "  ALL DONE"
 echo "════════════════════════════════════════════════════"
 echo ""
-echo "  Dotfiles applied. Restart your shell to continue:"
+echo "  Dotfiles applied successfully."
 echo ""
-echo "    exec zsh -l"
+echo "  ► Reloading your shell now for a clean session..."
 echo ""
-echo "  (copied to clipboard — just paste and hit enter)"
 echo "exec zsh -l" | pbcopy
-echo ""
+
+# Replace the current interactive shell with a fresh login zsh.
+# This sources .zprofile + .zshrc as if opening a brand-new terminal.
+exec zsh -l
