@@ -281,7 +281,7 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 echo "    Miscellaneous settings"
 
 # Disable automatic capitalization
-defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool true
 
 # Disable smart dashes
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false

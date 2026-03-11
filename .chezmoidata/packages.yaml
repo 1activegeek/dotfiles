@@ -80,7 +80,7 @@ packages:
 
   # ── Media ──
   - { ref: ffmpeg, type: brew, module: media }
-  - { ref: handbrake, type: cask, module: media }
+  - { ref: handbrake-app, type: cask, module: media }
   - { ref: kap, type: cask, module: media }
   - { ref: obs, type: cask, module: media }
   - { ref: vlc, type: cask, module: media }
@@ -90,7 +90,7 @@ packages:
   - { ref: balenaetcher, type: cask, module: utilities }
   - { ref: browserino, type: cask, module: utilities }
   - { ref: disk-inventory-x, type: cask, module: utilities }
-  - { ref: flux, type: cask, module: utilities }
+  - { ref: flux-app, type: cask, module: utilities }
   - { ref: home-assistant, type: cask, module: utilities }
   - { ref: keka, type: cask, module: utilities }
   - { ref: keyboard-cowboy, type: cask, module: utilities }
@@ -99,7 +99,7 @@ packages:
   - { ref: mactracker, type: cask, module: utilities }
   - { ref: obsidian, type: cask, module: utilities }
   - { ref: shottr, type: cask, module: utilities }
-  - { ref: tailscale, type: cask, module: utilities }
+  - { ref: tailscale-app, type: cask, module: utilities }
   - { ref: thaw, type: cask, module: utilities }
   - { ref: the-unarchiver, type: cask, module: utilities }
 
@@ -144,7 +144,6 @@ packages:
   - { ref: "1453273600", type: mas, module: mas, name: "Data Jar" }
   - { ref: "1463298887", type: mas, module: mas, name: "Userscripts" }
   - { ref: "1472777122", type: mas, module: mas, name: "PayPal Honey" }
-  - { ref: "1482920575", type: mas, module: mas, name: "DuckDuckGo Privacy Essentials" }
   - { ref: "1532579087", type: mas, module: mas, name: "The Camelizer" }
   - { ref: "1544743900", type: mas, module: mas, name: "Hush" }
   - { ref: "1546729687", type: mas, module: mas, name: "Auto HD FPS for YouTube" }

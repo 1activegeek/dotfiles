@@ -2,18 +2,6 @@
 # Loads modular config files from ~/.zshrc.d/ then initialises tools.
 
 # ============================================
-# Modular configuration loader
-# ============================================
-# Files are sourced in alphanumeric order (01-history first, 15-zoxide last)
-if [[ -d "${HOME}/.zshrc.d" ]]; then
-  for _zsh_config in "${HOME}/.zshrc.d"/*.zsh(N); do
-    # shellcheck source=/dev/null
-    source "$_zsh_config"
-  done
-  unset _zsh_config
-fi
-
-# ============================================
 # Homebrew ZSH completions
 # Must come before compinit
 # ============================================
@@ -23,6 +11,7 @@ fi
 
 # ============================================
 # ZSH completions
+# Must run before .zshrc.d/ so compdef is available
 # ============================================
 autoload -Uz compinit
 # Regenerate dump file only once per day
@@ -30,6 +19,18 @@ if [[ -n "${ZDOTDIR:-${HOME}}/.zcompdump"(N.mh+24) ]]; then
   compinit
 else
   compinit -C
+fi
+
+# ============================================
+# Modular configuration loader
+# ============================================
+# Files are sourced in alphanumeric order (01-history first, 17-brew-helpers last)
+if [[ -d "${HOME}/.zshrc.d" ]]; then
+  for _zsh_config in "${HOME}/.zshrc.d"/*.zsh(N); do
+    # shellcheck source=/dev/null
+    source "$_zsh_config"
+  done
+  unset _zsh_config
 fi
 
 # ============================================
