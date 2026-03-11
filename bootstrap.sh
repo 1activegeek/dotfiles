@@ -133,6 +133,22 @@ else
     echo "  Please enter 'personal' or 'work'."
   done
 
+  # Hostname (personal only)
+  HOSTNAME_SET=false
+  if [[ "$PROFILE" == "personal" ]]; then
+    read -r -p "  Set a custom hostname? [y/N] " set_hn
+    if [[ "$set_hn" =~ ^[Yy]$ ]]; then
+      read -r -p "  Hostname (e.g. shawns-macbook): " HOSTNAME_VAL
+      if [[ -n "$HOSTNAME_VAL" ]]; then
+        sudo scutil --set ComputerName  "$HOSTNAME_VAL"
+        sudo scutil --set HostName      "$HOSTNAME_VAL"
+        sudo scutil --set LocalHostName "$HOSTNAME_VAL"
+        ok "Hostname set to: $HOSTNAME_VAL"
+        HOSTNAME_SET=true
+      fi
+    fi
+  fi
+
   # Git name
   while true; do
     read -r -p "  Git full name: " GIT_NAME

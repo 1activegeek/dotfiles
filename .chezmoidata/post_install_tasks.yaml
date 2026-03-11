@@ -10,3 +10,4 @@ post_install_tasks:
   - "Configure app-specific settings (Slack workspaces, Discord)"
   - "Install Outlook PWA via Brave Browser, then add to Dock manually"
   - "Restart to finalize all system changes"
+  - "AppCleaner - open app and then enable auto-uninstall function"

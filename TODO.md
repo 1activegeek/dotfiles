@@ -33,6 +33,5 @@ Additionally, some dotfiles I need to ADD to this repo:
 LAstly something else we need to do, is identify the best way to install all the skills, commands, agents, etc that we watn to use for various AI CLIs, in a .agents folder, andh ave that properly linked for each of the various agents (.opencode .claude .codex) etc so that that those subfolders in those dotfile locations can be synced. This one might require external tooling ot add in here, but the goal is it should ease the burden of installing these toolings in various places, I'd rather just as simple as a symlink for exmaple from .claude/skills -> .agents/skills. We need to be aware of formatting issues between agents though. Let me know if this one is too difficult to do in the initila pass and we can do this later. 
 
 # 2026-03-08 Updates
-- Need to run appcleaner to enable autoclean setting
-- Setup symlinks (~/projects -> iCloud/1 Projects - but based on personal/work different behavior)
-- 
+- [x] Need to run appcleaner to enable autoclean setting - add to post install tasks
+- [x] Setup symlinks (~/projects -> iCloud/1 Projects - but based on personal/work different behavior)
