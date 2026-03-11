@@ -16,8 +16,16 @@ fi
 # Bypass Gatekeeper for cask installs (same as dot_zprofile)
 export HOMEBREW_CASK_OPTS="--no-quarantine"
 
+# Pre-authenticate sudo so pkg-based cask installs don't stall mid-run
+echo "  Some packages require administrator access."
+echo "  Enter your password now so the install can proceed unattended."
+sudo -v
+# Refresh sudo every 50s for the lifetime of this script
+( while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
+SUDO_KEEPALIVE=$!
+
 BREWFILE="$(mktemp)"
-trap 'rm -f "$BREWFILE"' EXIT
+trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; rm -f "$BREWFILE"' EXIT
 
 {
   echo "# Auto-generated Brewfile — profile: {{ .profile }}"

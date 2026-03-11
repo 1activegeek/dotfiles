@@ -109,7 +109,9 @@ ok "Homebrew"
 # ── chezmoi ───────────────────────────────────────────────────────────────────
 
 step "Checking chezmoi..."
-brew install chezmoi 2>/dev/null || fail "Failed to install chezmoi via Homebrew."
+if ! brew list --formula chezmoi &>/dev/null; then
+  brew install chezmoi || fail "Failed to install chezmoi via Homebrew."
+fi
 ok "chezmoi"
 
 # ── Machine configuration ─────────────────────────────────────────────────────
