@@ -81,9 +81,12 @@ if ! xcode-select -p &>/dev/null; then
   xcode-select --install
   until xcode-select -p &>/dev/null; do sleep 5; done
 fi
-# Accept the Xcode license — required before any build tools (including brew) work.
-# Runs silently if already accepted.
-sudo xcodebuild -license accept 2>/dev/null || true
+# Accept the license only if it hasn't been accepted yet (fresh install or OS update).
+# xcodebuild -version exits non-zero and mentions "license" if acceptance is needed.
+if xcodebuild -version 2>&1 | grep -qi "license"; then
+  echo "    Accepting Xcode license agreement..."
+  sudo xcodebuild -license accept || fail "Failed to accept Xcode license."
+fi
 ok "Xcode CLI Tools"
 
 # ── Homebrew ──────────────────────────────────────────────────────────────────
