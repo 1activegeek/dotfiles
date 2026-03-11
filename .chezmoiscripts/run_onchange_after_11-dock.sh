@@ -1,6 +1,6 @@
 #!/bin/bash
-# run_once_after_11-dock.sh
-# Configures the macOS Dock via dockutil. Runs once per machine.
+# run_onchange_after_11-dock.sh
+# Configures the macOS Dock via dockutil. Re-runs whenever this file changes.
 set -euo pipefail
 [[ "$(uname)" != "Darwin" ]] && exit 0
 if ! command -v dockutil &>/dev/null; then
@@ -44,7 +44,8 @@ DOCK_APPS=(
 for entry in "${DOCK_APPS[@]}"; do
   IFS='|' read -r name path <<< "$entry"
   if [[ -e "$path" ]]; then
-    dockutil --add "$path" --label "$name" --section apps --no-restart
+    dockutil --add "$path" --label "$name" --section apps --no-restart || \
+      echo "    ⚠ Failed to add: $name"
     echo "    Added: $name"
   else
     echo "    ⚠ App not found, skipping: $name ($path)"
@@ -63,7 +64,7 @@ dockutil --add "/Applications" \
   --display folder \
   --sort name \
   --section others \
-  --no-restart
+  --no-restart || echo "    ⚠ Failed to add: Applications folder"
 echo "    Added: Applications folder"
 
 # Downloads folder — list view, sorted by date added
@@ -73,7 +74,7 @@ dockutil --add "${HOME}/Downloads" \
   --display folder \
   --sort dateadded \
   --section others \
-  --no-restart
+  --no-restart || echo "    ⚠ Failed to add: Downloads folder"
 echo "    Added: Downloads folder"
 
 # ============================================
