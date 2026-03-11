@@ -23,7 +23,7 @@ echo "  Note: App Store apps and apps with system extensions will still"
 echo "  prompt individually — that is a macOS security requirement."
 sudo -v
 # Refresh sudo every 50s for the lifetime of this script
-( while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
+( while true; do sudo -n true 2>/dev/null; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
 SUDO_KEEPALIVE=$!
 
 BREWFILE="$(mktemp)"
