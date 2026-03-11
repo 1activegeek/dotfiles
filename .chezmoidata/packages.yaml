@@ -35,7 +35,7 @@ packages:
   - { ref: chroma, type: brew, module: dev }
   - { ref: claude-code, type: cask, module: dev }
   - { ref: codex, type: cask, module: dev }
-  - { ref: docker, type: cask, module: dev }
+  - { ref: docker-desktop, type: cask, module: dev }
   - { ref: dockutil, type: brew, module: dev }
   - { ref: duti, type: brew, module: dev }
   - { ref: eza, type: brew, module: dev }
@@ -76,7 +76,7 @@ packages:
   - { ref: fabric-ai, type: brew, module: ai }
   - { ref: gemini-cli, type: brew, module: ai }
   - { ref: lm-studio, type: cask, module: ai }
-  - { ref: ollama, type: cask, module: ai }
+  - { ref: ollama-app, type: cask, module: ai }
   # - { ref: superwhisper, type: cask, module: ai }
 
   # ── Media ──
@@ -114,7 +114,7 @@ packages:
   - { ref: go-task/tap/go-task, type: brew, module: infra }
   - { ref: hashicorp/tap/terraform, type: brew, module: infra }
   - { ref: helm, type: brew, module: infra }
-  - { ref: ipcalc, type: brew, module: infra }
+  - { ref: one more alc, type: brew, module: infra }
   - { ref: jq, type: brew, module: infra }
   - { ref: k9s, type: brew, module: infra }
   - { ref: kube-ps1, type: brew, module: infra }
