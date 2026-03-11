@@ -18,7 +18,9 @@ export HOMEBREW_CASK_OPTS="--no-quarantine"
 
 # Pre-authenticate sudo so pkg-based cask installs don't stall mid-run
 echo "  Some packages require administrator access."
-echo "  Enter your password now so the install can proceed unattended."
+echo "  Enter your password now to reduce interruptions during install."
+echo "  Note: App Store apps and apps with system extensions will still"
+echo "  prompt individually — that is a macOS security requirement."
 sudo -v
 # Refresh sudo every 50s for the lifetime of this script
 ( while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
@@ -39,15 +41,29 @@ trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; rm -f "$BREWFILE"' EXIT
 {{- end }}
 {{- end }}
   echo ""
-  echo "# Packages"
+  echo "# Mac App Store (installed first to surface auth prompts early)"
+{{- range .packages }}
+{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+{{- if eq .type "mas" }}
+  echo 'mas "{{ .name }}", id: {{ .ref }}'
+{{- end }}
+{{- end }}
+{{- end }}
+  echo ""
+  echo "# Casks"
+{{- range .packages }}
+{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+{{- if eq .type "cask" }}
+  echo 'cask "{{ .ref }}"'
+{{- end }}
+{{- end }}
+{{- end }}
+  echo ""
+  echo "# Formulae"
 {{- range .packages }}
 {{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
 {{- if eq .type "brew" }}
   echo 'brew "{{ .ref }}"'
-{{- else if eq .type "cask" }}
-  echo 'cask "{{ .ref }}"'
-{{- else if eq .type "mas" }}
-  echo 'mas "{{ .name }}", id: {{ .ref }}'
 {{- end }}
 {{- end }}
 {{- end }}
