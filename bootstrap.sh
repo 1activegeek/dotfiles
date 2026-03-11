@@ -189,6 +189,14 @@ fi
 
 # ── Apply dotfiles ────────────────────────────────────────────────────────────
 
+# Check before apply: if the post-install report is already in chezmoi state it
+# was recorded by a prior run and chezmoi will skip it — we'll run it ourselves.
+if chezmoi state dump --format=json 2>/dev/null | grep -q "run_once_after_12"; then
+  REPORT_NEEDS_EXPLICIT_RUN=true
+else
+  REPORT_NEEDS_EXPLICIT_RUN=false
+fi
+
 step "Applying dotfiles..."
 
 if [[ -d "$CHEZMOI_SOURCE" ]]; then
@@ -251,6 +259,14 @@ if [[ $CHEZMOI_EXIT -ne 0 ]]; then
 
   # Generic fallback — output already shown via tee above
   incomplete "chezmoi exited with an error (see output above)."
+fi
+
+# ── Post-install report ───────────────────────────────────────────────────────
+# If chezmoi skipped the report (already recorded from a prior run), run it now.
+
+REPORT_TMPL="$CHEZMOI_SOURCE/.chezmoiscripts/run_once_after_12-post-install.sh.tmpl"
+if [[ "$REPORT_NEEDS_EXPLICIT_RUN" == "true" && -f "$REPORT_TMPL" ]]; then
+  chezmoi execute-template < "$REPORT_TMPL" | bash || true
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
