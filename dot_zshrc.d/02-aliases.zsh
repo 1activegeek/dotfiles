@@ -71,6 +71,7 @@ alias c='claude'
 alias cy='claude --dangerously-skip-permissions'
 alias oc='opencode'
 alias ch='chezmoi'
+alias chstatus='chezmoi cd && git status --short && cd -'
 
 # ============================================
 # Quick edit common config files
