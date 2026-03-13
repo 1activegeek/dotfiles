@@ -82,8 +82,9 @@ if ! xcode-select -p &>/dev/null; then
   until xcode-select -p &>/dev/null; do sleep 5; done
 fi
 # Accept the license only if it hasn't been accepted yet (fresh install or OS update).
-# xcodebuild -version exits non-zero and mentions "license" if acceptance is needed.
-if xcodebuild -version 2>&1 | grep -qi "license"; then
+# xcodebuild -license status exits non-zero when acceptance is needed, regardless of
+# whether full Xcode or just the CLT is active.
+if ! xcodebuild -license status &>/dev/null; then
   echo "    Accepting Xcode license agreement..."
   sudo xcodebuild -license accept || fail "Failed to accept Xcode license."
 fi

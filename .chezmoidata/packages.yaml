@@ -156,3 +156,4 @@ packages:
   - { ref: "6720708363", type: mas, module: mas, name: "Obsidian Web Clipper" }
   - { ref: "6738274497", type: mas, module: mas, name: "Raycast Companion" }
   - { ref: "6745342698", type: mas, module: mas, name: "uBlock Origin Lite" }
+  - { ref: "6755173244", type: mas, module: mas, name: "Usage for Claude" }

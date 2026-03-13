@@ -25,9 +25,10 @@ sudo -v
 # Refresh sudo every 50s for the lifetime of this script
 ( while true; do sudo -n true 2>/dev/null; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
 SUDO_KEEPALIVE=$!
+_HEARTBEAT_PID=""
 
 BREWFILE="$(mktemp)"
-trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; rm -f "$BREWFILE"' EXIT
+trap 'kill "$SUDO_KEEPALIVE" ${_HEARTBEAT_PID:+"$_HEARTBEAT_PID"} 2>/dev/null; rm -f "$BREWFILE"' EXIT
 
 {
   echo "# Auto-generated Brewfile — profile: {{ .profile }}"
@@ -74,7 +75,22 @@ mkdir -p "$LOG_DIR"
 BUNDLE_LOG="${LOG_DIR}/dotfiles-brew-bundle.log"
 
 echo "==> Running brew bundle install (profile: {{ .profile }})..."
+echo "    This may take a while — a status line will appear every 60s."
+_INSTALL_START=$(date +%s)
+( while true; do
+    sleep 60
+    _elapsed=$(( $(date +%s) - _INSTALL_START ))
+    printf "    ⏳ Still installing... (%dm %ds elapsed)\n" \
+      $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+  done ) &
+_HEARTBEAT_PID=$!
+
 brew bundle install --file="$BREWFILE" 2>&1 | tee "$BUNDLE_LOG" || true
+
+kill "$_HEARTBEAT_PID" 2>/dev/null
+_elapsed=$(( $(date +%s) - _INSTALL_START ))
+printf "    ✓ Bundle install finished in %dm %ds\n" \
+  $(( _elapsed / 60 )) $(( _elapsed % 60 ))
 
 if grep -qiE "^Error:" "$BUNDLE_LOG" 2>/dev/null; then
   echo "    ⚠ Some packages had errors — details in $BUNDLE_LOG"
