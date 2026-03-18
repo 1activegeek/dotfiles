@@ -8,6 +8,15 @@ if ! command -v dockutil &>/dev/null; then
   exit 0
 fi
 
+DOCK_STAMP="${HOME}/.local/state/dotfiles/dock-configured"
+DOCK_HASH="$(md5 -q "$0" 2>/dev/null || md5sum "$0" | cut -d' ' -f1)"
+
+# If stamp matches current script hash, we already succeeded
+if [[ -f "$DOCK_STAMP" ]] && [[ "$(cat "$DOCK_STAMP")" == "$DOCK_HASH" ]]; then
+  echo "==> Dock already configured (use --force to reconfigure)"
+  exit 0
+fi
+
 echo "==> Configuring Dock..."
 
 # ============================================
@@ -83,4 +92,6 @@ echo "    Added: Downloads folder"
 echo "    Restarting Dock to apply changes"
 killall Dock 2>/dev/null || true
 
+mkdir -p "$(dirname "$DOCK_STAMP")"
+echo "$DOCK_HASH" > "$DOCK_STAMP"
 echo "==> ✓ Dock configured"

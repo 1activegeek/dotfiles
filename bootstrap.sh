@@ -12,7 +12,17 @@ BOOTSTRAP_CMD="/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/1a
 CHEZMOI_CONFIG="$HOME/.config/chezmoi/chezmoi.toml"
 CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
 CHEZMOI_LOG=$(mktemp)
+SKIP_1PASSWORD=false
 trap 'rm -f "$CHEZMOI_LOG"' EXIT
+
+# ── Ensure brew is in PATH for re-runs ────────────────────────────────────────
+# First run won't have it yet, but re-runs need it so `command -v brew` succeeds
+# and we don't re-install Homebrew unnecessarily.
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv zsh 2>/dev/null)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv zsh 2>/dev/null)"
+fi
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -150,11 +160,22 @@ if ! op account list &>/dev/null 2>&1; then
   echo "    2. Go to Settings → Developer"
   echo "    3. Enable 'Integrate with 1Password CLI'"
   echo ""
-  read -r -p "  Press Enter when ready..." _
-  echo ""
-  if ! op account list &>/dev/null 2>&1; then
-    fail "1Password CLI is not authenticated. Complete the steps above and re-run."
-  fi
+
+  while true; do
+    read -r -p "  Press Enter when ready (or 's' to skip secrets for now)... " response
+    if [[ "$response" == "s" || "$response" == "S" ]]; then
+      echo "    ⚠ Skipping 1Password — secrets won't be deployed"
+      echo "    Re-run bootstrap later to deploy secrets"
+      SKIP_1PASSWORD=true
+      break
+    fi
+    if op account list &>/dev/null 2>&1; then
+      echo "    ✓ 1Password CLI authenticated"
+      break
+    fi
+    echo "    ✗ Still not authenticated — please check the steps above"
+    echo ""
+  done
 fi
 ok "1Password"
 
@@ -273,28 +294,80 @@ if [[ -d "$CHEZMOI_SOURCE" ]]; then
   fi
 
   git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
-  chezmoi apply 2>&1 | tee "$CHEZMOI_LOG"
-  CHEZMOI_EXIT=${PIPESTATUS[0]}
-else
-  chezmoi init --apply "$DOTFILES_REPO" 2>&1 | tee "$CHEZMOI_LOG"
-  CHEZMOI_EXIT=${PIPESTATUS[0]}
 fi
 
-if [[ $CHEZMOI_EXIT -ne 0 ]]; then
-  CHEZMOI_OUT=$(cat "$CHEZMOI_LOG")
+# Build chezmoi apply args
+CHEZMOI_APPLY_ARGS=()
+if [[ "$SKIP_1PASSWORD" == true ]]; then
+  CHEZMOI_APPLY_ARGS+=(--exclude=encrypted)
+fi
 
-  # 1Password / op auth is the most common first-run blocker
-  if echo "$CHEZMOI_OUT" | grep -qiE "1password|op: |biometric|sign in|not found|unauthorized"; then
-    incomplete \
-      "1Password CLI is not authenticated — required to deploy secrets." \
-      "Steps:" \
-      "  1. Open 1Password and sign in" \
-      "  2. Enable CLI: Settings → Developer → Integrate with 1Password CLI" \
-      "  3. Run:  op signin"
+MAX_RETRIES=2
+RETRY=0
+while true; do
+  if [[ -d "$CHEZMOI_SOURCE/.git" ]]; then
+    chezmoi apply ${CHEZMOI_APPLY_ARGS[@]+"${CHEZMOI_APPLY_ARGS[@]}"} 2>&1 | tee "$CHEZMOI_LOG"
+    CHEZMOI_EXIT=${PIPESTATUS[0]}
+  else
+    chezmoi init --apply "$DOTFILES_REPO" ${CHEZMOI_APPLY_ARGS[@]+"${CHEZMOI_APPLY_ARGS[@]}"} 2>&1 | tee "$CHEZMOI_LOG"
+    CHEZMOI_EXIT=${PIPESTATUS[0]}
   fi
 
-  # Generic fallback — output already shown via tee above
-  incomplete "chezmoi exited with an error (see output above)."
+  if [[ $CHEZMOI_EXIT -eq 0 ]]; then
+    break
+  fi
+
+  RETRY=$((RETRY + 1))
+  CHEZMOI_OUT=$(cat "$CHEZMOI_LOG")
+
+  if echo "$CHEZMOI_OUT" | grep -qiE "1password|op: |biometric|sign in|not found|unauthorized"; then
+    echo ""
+    echo "    ⚠ chezmoi failed due to 1Password authentication"
+    echo "    Please complete 1Password CLI setup (see steps above)"
+    echo ""
+    if [[ $RETRY -ge $MAX_RETRIES ]]; then
+      incomplete "1Password CLI is not authenticated after $MAX_RETRIES retries."
+    fi
+    read -r -p "    Press Enter to retry chezmoi apply (or 's' to skip)... " response
+    if [[ "$response" == "s" || "$response" == "S" ]]; then
+      echo "    ⚠ Skipping — some secrets may not be deployed"
+      break
+    fi
+    continue
+  fi
+
+  # Non-1Password failure
+  if [[ $RETRY -ge $MAX_RETRIES ]]; then
+    incomplete "chezmoi exited with an error after $MAX_RETRIES retries (see output above)."
+  fi
+  echo ""
+  echo "    ⚠ chezmoi apply failed — review the error above"
+  read -r -p "    Press Enter to retry (or 's' to skip)... " response
+  if [[ "$response" == "s" || "$response" == "S" ]]; then
+    echo "    ⚠ Skipping — some dotfiles may not be applied"
+    break
+  fi
+done
+
+# ── Dock retry check ─────────────────────────────────────────────────────────
+
+DOCK_STAMP="${HOME}/.local/state/dotfiles/dock-configured"
+DOCK_SCRIPT="${CHEZMOI_SOURCE}/.chezmoiscripts/run_onchange_after_11-dock.sh"
+if [[ -f "$DOCK_SCRIPT" ]] && [[ ! -f "$DOCK_STAMP" ]]; then
+  echo ""
+  echo "    ⚠ Dock configuration did not complete"
+  while true; do
+    read -r -p "    Retry dock configuration? [Y/n] " response
+    response="${response:-y}"
+    if [[ "$response" =~ ^[Nn]$ ]]; then
+      echo "    Skipping — run manually later: bash $DOCK_SCRIPT"
+      break
+    fi
+    if bash "$DOCK_SCRIPT"; then
+      break
+    fi
+    echo "    ⚠ Dock configuration failed again"
+  done
 fi
 
 # ── Post-install report ───────────────────────────────────────────────────────

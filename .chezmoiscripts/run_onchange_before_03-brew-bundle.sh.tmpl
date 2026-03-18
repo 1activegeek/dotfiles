@@ -7,6 +7,12 @@ set -euo pipefail
 
 {{- if eq .chezmoi.os "darwin" }}
 
+# MAS-installed Xcode can require license acceptance before brew works
+if command -v xcodebuild &>/dev/null && ! xcodebuild -license status &>/dev/null 2>&1; then
+  echo "==> Accepting Xcode license..."
+  sudo xcodebuild -license accept
+fi
+
 if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 elif [[ -x /usr/local/bin/brew ]]; then
@@ -92,13 +98,36 @@ _elapsed=$(( $(date +%s) - _INSTALL_START ))
 printf "    ✓ Bundle install finished in %dm %ds\n" \
   $(( _elapsed / 60 )) $(( _elapsed % 60 ))
 
-if grep -qiE "^Error:" "$BUNDLE_LOG" 2>/dev/null; then
-  echo "    ⚠ Some packages had errors — details in $BUNDLE_LOG"
+# If packages failed due to Xcode license, accept and retry once
+if grep -qi "Xcode license" "$BUNDLE_LOG" 2>/dev/null; then
+  echo ""
+  echo "    ⚠ Some packages failed due to Xcode license"
+  echo "    Attempting to accept Xcode license and retry..."
+  sudo xcodebuild -license accept 2>/dev/null
+  _INSTALL_START=$(date +%s)
+  ( while true; do
+      sleep 60
+      _elapsed=$(( $(date +%s) - _INSTALL_START ))
+      printf "    ⏳ Still installing... (%dm %ds elapsed)\n" \
+        $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+    done ) &
+  _HEARTBEAT_PID=$!
+  brew bundle install --file="$BREWFILE" 2>&1 | tee "$BUNDLE_LOG" || true
+  kill "$_HEARTBEAT_PID" 2>/dev/null
+  _elapsed=$(( $(date +%s) - _INSTALL_START ))
+  printf "    ✓ Retry finished in %dm %ds\n" \
+    $(( _elapsed / 60 )) $(( _elapsed % 60 ))
 fi
 
 echo "==> Cleaning up..."
 brew cleanup --prune=all -q 2>/dev/null || true
 
-echo "==> Brew bundle: OK"
+if grep -qiE "has failed!$" "$BUNDLE_LOG" 2>/dev/null; then
+  FAIL_COUNT=$(grep -ciE "has failed!$" "$BUNDLE_LOG" 2>/dev/null || echo "?")
+  echo "    ⚠ Some packages had errors — details in $BUNDLE_LOG"
+  echo "==> Brew bundle: ${FAIL_COUNT} package(s) failed"
+else
+  echo "==> Brew bundle: OK"
+fi
 
 {{- end }}
