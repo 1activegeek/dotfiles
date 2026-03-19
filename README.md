@@ -81,13 +81,50 @@ brew-export   # Dumps current Homebrew state to Brewfile.current for comparison
 
 ## Managing Dotfiles
 
+### Pulling changes from the repo
+
 ```bash
-chezmoi add ~/.config/app/config    # Start managing a new file
-chezmoi edit ~/.config/app/config   # Edit a managed file
-chezmoi diff                        # Preview what would change
-chezmoi apply                       # Apply changes to home directory
-chezmoi update                      # Pull latest from git and apply
+chezmoi update                      # Pull latest from git and apply to home directory
+```
+
+### Making local changes and pushing to the repo
+
+With `autoCommit` and `autoPush` enabled (configured by bootstrap), most chezmoi commands that modify the source directory will automatically commit and push to the remote. This means changes propagate to all machines without manual git operations.
+
+```bash
+chezmoi add ~/.config/app/config    # Start managing a new file (auto-commits + pushes)
+chezmoi edit ~/.config/app/config   # Edit a managed file (auto-commits + pushes on save)
+chezmoi re-add                      # Re-add all modified managed files (auto-commits + pushes)
+```
+
+If you edit files directly in the source directory (`chezmoi cd`), you'll need to commit and push manually:
+
+```bash
+chezmoi cd
+# make your changes...
+git add -A && git commit -m "description" && git push
+```
+
+### Other useful commands
+
+```bash
+chezmoi diff                        # Preview what chezmoi would change in your home directory
+chezmoi apply                       # Apply source state to home directory (does not pull)
+chezmoi managed                     # List all files managed by chezmoi
+chezmoi status                      # Show differences between source and home directory
 chezmoi cd                          # Open the chezmoi source directory
+chezmoi git -- status               # Run git commands against the source repo
+```
+
+### Verify remote is using SSH
+
+If `autoPush` fails silently, check that the chezmoi source repo is using SSH (not HTTPS):
+
+```bash
+chezmoi git -- remote -v
+# Should show: git@github.com:1activegeek/dotfiles.git
+# If it shows https://, fix with:
+chezmoi git -- remote set-url origin git@github.com:1activegeek/dotfiles.git
 ```
 
 ## Secrets
