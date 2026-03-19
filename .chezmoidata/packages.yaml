@@ -11,6 +11,7 @@ taps:
   - oven-sh/bun
   - fluxcd/tap
   - go-task/tap
+  - alexstrnik/browserino
 
 packages:
   # ── Core ──
@@ -157,3 +158,6 @@ packages:
   - { ref: "6738274497", type: mas, module: mas, name: "Raycast Companion" }
   - { ref: "6745342698", type: mas, module: mas, name: "uBlock Origin Lite" }
   - { ref: "6755173244", type: mas, module: mas, name: "Usage for Claude" }
+
+  # ──  ──
+  - { ref: playwright-cli, type: brew, module:  }
