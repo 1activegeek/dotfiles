@@ -6,158 +6,142 @@
 # profiles: [work]     = work machines only
 
 taps:
-  - hashicorp/tap
+  - alexstrnik/browserino
   - anomalyco/tap
-  - oven-sh/bun
   - fluxcd/tap
   - go-task/tap
-  - alexstrnik/browserino
+  - hashicorp/tap
+  - oven-sh/bun
 
-packages:
-  # ── Core ──
-  - { ref: 1password, type: cask, module: core }
-  - { ref: 1password-cli, type: cask, module: core }
-  - { ref: chezmoi, type: brew, module: core }
-  - { ref: font-jetbrains-mono-nerd-font, type: cask, module: core }
-  - { ref: gh, type: brew, module: core }
-  - { ref: ghostty, type: cask, module: core }
-  - { ref: handy, type: cask, module: core }
-  - { ref: mas, type: brew, module: core }
-  - { ref: raycast, type: cask, module: core }
+formulae:
+  - age
+  - anomalyco/tap/opencode
+  - atuin
+  - awscli
+  - azure-cli
+  - bat
+  - bat-extras
+  - carapace
+  - chezmoi
+  - chroma
+  - direnv
+  - dockutil
+  - duti
+  - eza
+  - fabric-ai
+  - fastfetch
+  - fd
+  - ffmpeg
+  - fluxcd/tap/flux
+  - fzf
+  - gemini-cli
+  - gh
+  - go-task/tap/go-task
+  - googleworkspace-cli
+  - hashicorp/tap/terraform
+  - helm
+  - ipcalc
+  - jq
+  - k9s
+  - kube-ps1
+  - kubectx
+  - kubernetes-cli
+  - kustomize
+  - mas
+  - mole
+  - neovim
+  - oven-sh/bun/bun
+  - playwright-cli
+  - pre-commit
+  - pygments
+  - sops
+  - starship
+  - switchaudio-osx
+  - tmux
+  - watch
+  - yamllint
+  - yt-dlp
+  - zellij
+  - zoxide
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting
 
-  # ── Dev ──
-  - { ref: anomalyco/tap/opencode, type: brew, module: dev }
-  # - { ref: antigravity, type: cask, module: dev }
-  - { ref: atuin, type: brew, module: dev }
-  - { ref: bat, type: brew, module: dev }
-  - { ref: bat-extras, type: brew, module: dev }
-  - { ref: carapace, type: brew, module: dev }
-  - { ref: chroma, type: brew, module: dev }
-  - { ref: claude-code, type: cask, module: dev }
-  - { ref: codex, type: cask, module: dev }
-  - { ref: docker-desktop, type: cask, module: dev }
-  - { ref: dockutil, type: brew, module: dev }
-  - { ref: duti, type: brew, module: dev }
-  - { ref: eza, type: brew, module: dev }
-  - { ref: fastfetch, type: brew, module: dev }
-  - { ref: fd, type: brew, module: dev }
-  - { ref: fzf, type: brew, module: dev }
-  - { ref: neovim, type: brew, module: dev }
-  - { ref: opencode-desktop, type: cask, module: dev }
-  - { ref: orbstack, type: cask, module: dev }
-  - { ref: oven-sh/bun/bun, type: brew, module: dev }
-  - { ref: pygments, type: brew, module: dev }
-  - { ref: starship, type: brew, module: dev }
-  - { ref: switchaudio-osx, type: brew, module: dev }
-  - { ref: tmux, type: brew, module: dev }
-  - { ref: visual-studio-code, type: cask, module: dev }
-  - { ref: watch, type: brew, module: dev }
-  - { ref: yaak, type: cask, module: dev }
-  - { ref: yt-dlp, type: brew, module: dev }
-  - { ref: zellij, type: brew, module: dev }
-  - { ref: zoxide, type: brew, module: dev }
-  - { ref: zsh-autosuggestions, type: brew, module: dev }
-  - { ref: zsh-syntax-highlighting, type: brew, module: dev }
+casks:
+  - 1password
+  - 1password-cli
+  - alexstrnik/browserino/browserino
+  # - antigravity
+  - appcleaner
+  - balenaetcher
+  - { name: bambu-studio, profiles: [personal] }
+  - blockblock
+  - brave-browser
+  - chatgpt
+  - claude
+  - claude-code
+  - cmux
+  - codex
+  - discord
+  - disk-inventory-x
+  - docker-desktop
+  - flux-app
+  - font-jetbrains-mono-nerd-font
+  - gcloud-cli
+  - ghostty
+  - google-chrome
+  - handbrake-app
+  - handy
+  - home-assistant
+  - kap
+  - keka
+  - keyboard-cowboy
+  - knockknock
+  - leader-key
+  - lm-studio
+  - logi-options+
+  - lunar
+  - lulu
+  - mactracker
+  - microsoft-teams
+  - obs
+  - obsidian
+  - ollama-app
+  - opencode-desktop
+  - { name: openscad@snapshot, profiles: [personal] }
+  - orbstack
+  - { name: orcaslicer, profiles: [personal] }
+  - { name: prusaslicer, profiles: [personal] }
+  - raycast
+  - { name: shapr3d, profiles: [personal] }
+  - shottr
+  - slack
+  # - superwhisper
+  - tailscale-app
+  - taskexplorer
+  - thaw
+  - the-unarchiver
+  - { name: thumbhost3mf, profiles: [personal] }
+  - tor-browser
+  - visual-studio-code
+  - vlc
+  - yaak
+  - zoom
 
-  # ── Browsers ──
-  - { ref: brave-browser, type: cask, module: browsers }
-  - { ref: google-chrome, type: cask, module: browsers }
-  - { ref: tor-browser, type: cask, module: browsers }
-
-  # ── Communication ──
-  - { ref: discord, type: cask, module: communication }
-  - { ref: microsoft-teams, type: cask, module: communication }
-  - { ref: slack, type: cask, module: communication }
-  - { ref: zoom, type: cask, module: communication }
-
-  # ── AI ──
-  - { ref: chatgpt, type: cask, module: ai }
-  - { ref: claude, type: cask, module: ai }
-  - { ref: fabric-ai, type: brew, module: ai }
-  - { ref: gemini-cli, type: brew, module: ai }
-  - { ref: lm-studio, type: cask, module: ai }
-  - { ref: ollama-app, type: cask, module: ai }
-  # - { ref: superwhisper, type: cask, module: ai }
-
-  # ── Media ──
-  - { ref: ffmpeg, type: brew, module: media }
-  - { ref: handbrake-app, type: cask, module: media }
-  - { ref: kap, type: cask, module: media }
-  - { ref: obs, type: cask, module: media }
-  - { ref: vlc, type: cask, module: media }
-
-  # ── Utilities ──
-  - { ref: appcleaner, type: cask, module: utilities }
-  - { ref: balenaetcher, type: cask, module: utilities }
-  - { ref: alexstrnik/browserino/browserino, type: cask, module: utilities }
-  - { ref: disk-inventory-x, type: cask, module: utilities }
-  - { ref: flux-app, type: cask, module: utilities }
-  - { ref: home-assistant, type: cask, module: utilities }
-  - { ref: keka, type: cask, module: utilities }
-  - { ref: keyboard-cowboy, type: cask, module: utilities }
-  - { ref: leader-key, type: cask, module: utilities }
-  - { ref: lunar, type: cask, module: utilities }
-  - { ref: mactracker, type: cask, module: utilities }
-  - { ref: obsidian, type: cask, module: utilities }
-  - { ref: shottr, type: cask, module: utilities }
-  - { ref: tailscale-app, type: cask, module: utilities }
-  - { ref: thaw, type: cask, module: utilities }
-  - { ref: the-unarchiver, type: cask, module: utilities }
-
-  # ── Infra / Kubernetes ──
-  - { ref: age, type: brew, module: infra }
-  - { ref: awscli, type: brew, module: infra }
-  - { ref: azure-cli, type: brew, module: infra }
-  - { ref: direnv, type: brew, module: infra }
-  - { ref: fluxcd/tap/flux, type: brew, module: infra }
-  - { ref: gcloud-cli, type: cask, module: infra }
-  - { ref: go-task/tap/go-task, type: brew, module: infra }
-  - { ref: hashicorp/tap/terraform, type: brew, module: infra }
-  - { ref: helm, type: brew, module: infra }
-  - { ref: ipcalc, type: brew, module: infra }
-  - { ref: jq, type: brew, module: infra }
-  - { ref: k9s, type: brew, module: infra }
-  - { ref: kube-ps1, type: brew, module: infra }
-  - { ref: kubectx, type: brew, module: infra }
-  - { ref: kubernetes-cli, type: brew, module: infra }
-  - { ref: kustomize, type: brew, module: infra }
-  - { ref: mole, type: brew, module: infra }
-  - { ref: pre-commit, type: brew, module: infra }
-  - { ref: sops, type: brew, module: infra }
-  - { ref: yamllint, type: brew, module: infra }
-
-  # ── 3D Printing / CAD ──
-  - { ref: bambu-studio, type: cask, module: printing3d, profiles: [personal] }
-  - { ref: openscad@snapshot, type: cask, module: printing3d, profiles: [personal] }
-  - { ref: orcaslicer, type: cask, module: printing3d, profiles: [personal] }
-  - { ref: prusaslicer, type: cask, module: printing3d, profiles: [personal] }
-  - { ref: shapr3d, type: cask, module: printing3d, profiles: [personal] }
-  - { ref: thumbhost3mf, type: cask, module: printing3d, profiles: [personal] }
-
-  # ── Security ──
-  - { ref: blockblock, type: cask, module: security }
-  - { ref: knockknock, type: cask, module: security }
-  - { ref: lulu, type: cask, module: security }
-  - { ref: taskexplorer, type: cask, module: security }
-
-  # ── Mac App Store ──
-  - { ref: "1295203466", type: mas, module: mas, name: "Microsoft Remote Desktop" }
-  - { ref: "1453273600", type: mas, module: mas, name: "Data Jar" }
-  - { ref: "1463298887", type: mas, module: mas, name: "Userscripts" }
-  - { ref: "1472777122", type: mas, module: mas, name: "PayPal Honey" }
-  - { ref: "1532579087", type: mas, module: mas, name: "The Camelizer" }
-  - { ref: "1544743900", type: mas, module: mas, name: "Hush" }
-  - { ref: "1546729687", type: mas, module: mas, name: "Auto HD FPS for YouTube" }
-  - { ref: "1569813296", type: mas, module: mas, name: "1Password for Safari" }
-  - { ref: "1586435171", type: mas, module: mas, name: "Actions" }
-  - { ref: "490179405", type: mas, module: mas, name: "Okta Verify" }
-  - { ref: "497799835", type: mas, module: mas, name: "Xcode" }
-  - { ref: "663592361", type: mas, module: mas, name: "DuckDuckGo" }
-  - { ref: "6714467650", type: mas, module: mas, name: "Perplexity" }
-  - { ref: "6720708363", type: mas, module: mas, name: "Obsidian Web Clipper" }
-  - { ref: "6738274497", type: mas, module: mas, name: "Raycast Companion" }
-  - { ref: "6745342698", type: mas, module: mas, name: "uBlock Origin Lite" }
-  - { ref: "6755173244", type: mas, module: mas, name: "Usage for Claude" }
-
-  # ──  ──
-  - { ref: playwright-cli, type: brew, module:  }
+mas:
+  - { id: "1569813296", name: "1Password for Safari" }
+  - { id: "1586435171", name: "Actions" }
+  - { id: "1546729687", name: "Auto HD FPS for YouTube" }
+  - { id: "1453273600", name: "Data Jar" }
+  - { id: "663592361", name: "DuckDuckGo" }
+  - { id: "1544743900", name: "Hush" }
+  - { id: "1295203466", name: "Microsoft Remote Desktop" }
+  - { id: "6720708363", name: "Obsidian Web Clipper" }
+  - { id: "490179405", name: "Okta Verify" }
+  - { id: "1472777122", name: "PayPal Honey" }
+  - { id: "6714467650", name: "Perplexity" }
+  - { id: "6738274497", name: "Raycast Companion" }
+  - { id: "1532579087", name: "The Camelizer" }
+  - { id: "6745342698", name: "uBlock Origin Lite" }
+  - { id: "6755173244", name: "Usage for Claude" }
+  - { id: "1463298887", name: "Userscripts" }
+  - { id: "497799835", name: "Xcode" }
