@@ -82,7 +82,7 @@ chezmoi cd                          # Open the chezmoi source directory
 
 ## Secrets
 
-SSH keys and SOPS age keys are stored in 1Password and deployed via chezmoi templates. Before running `chezmoi apply` on a fresh machine:
+SSH keys, kube config, and SOPS age keys are stored in 1Password and deployed via chezmoi templates. Before running `chezmoi apply` on a fresh machine:
 
 1. Open 1Password and sign in
 2. Enable CLI integration (Settings → Developer → CLI)
@@ -128,6 +128,17 @@ cp ~/.ssh/config.bak ~/.ssh/config
 
 On a fresh machine, `chezmoi apply` handles this automatically once 1Password CLI is authenticated. No manual step needed — the config will be deployed along with everything else.
 
+## Syncing Secrets Back to 1Password
+
+If you edit `~/.ssh/config` or `~/.kube/config` locally and want to push the changes back to 1Password (so the next `chezmoi apply` on another machine picks them up):
+
+```bash
+op-sync-ssh    # Push ~/.ssh/config → 1Password "SSH Config" Secure Note
+op-sync-kube   # Push ~/.kube/config → 1Password "Kube Config" Secure Note
+```
+
+These functions are available when 1Password CLI is installed (defined in `~/.zshrc.d/07-1password.zsh`).
+
 ## Structure
 
 ```
@@ -150,6 +161,7 @@ dotfiles/
 ├── dot_zshenv                       # → ~/.zshenv
 ├── dot_gitconfig                    # → ~/.gitconfig
 ├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, SOPS age key, etc.)
+├── private_dot_kube/                 # → ~/.kube/ (kube config via 1Password)
 └── private_dot_ssh/                 # → ~/.ssh/ (SSH config + keys via 1Password)
 ```
 

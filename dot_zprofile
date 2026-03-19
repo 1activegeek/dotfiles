@@ -69,3 +69,6 @@ export PATH="$PATH:$HOME/.local/bin"
 if command -v mise &>/dev/null; then
   eval "$(mise activate zsh)"
 fi
+
+# Added by Obsidian
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"

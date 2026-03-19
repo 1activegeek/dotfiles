@@ -35,6 +35,30 @@ if command -v op &>/dev/null; then
     echo "Copied password for '${item}' to clipboard."
   }
 
+  # Sync local SSH config back to 1Password
+  # Usage: op-sync-ssh
+  op-sync-ssh() {
+    if [[ ! -f "${HOME}/.ssh/config" ]]; then
+      echo "Error: ~/.ssh/config not found"
+      return 1
+    fi
+    op item edit "SSH Config" --vault "Private" \
+      notesPlain="$(cat "${HOME}/.ssh/config")"
+    echo "SSH config synced to 1Password"
+  }
+
+  # Sync local kube config back to 1Password
+  # Usage: op-sync-kube
+  op-sync-kube() {
+    if [[ ! -f "${HOME}/.kube/config" ]]; then
+      echo "Error: ~/.kube/config not found"
+      return 1
+    fi
+    op item edit "Kube Config" --vault "Private" \
+      notesPlain="$(cat "${HOME}/.kube/config")"
+    echo "Kube config synced to 1Password"
+  }
+
   # Add a new SSH host entry to ~/.ssh/config
   # Usage: ssh-add-host
   ssh-add-host() {
