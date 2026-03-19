@@ -11,7 +11,17 @@ One command to set up a new Mac. One command to keep it in sync.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)"
 ```
 
-This installs Xcode CLI Tools, Homebrew, and chezmoi, then applies all dotfiles, packages, and system preferences automatically.
+This installs Xcode CLI Tools, Homebrew, and chezmoi, then applies all dotfiles, packages, and system preferences automatically. The bootstrap script clones via HTTPS initially (SSH keys aren't available yet), then **automatically switches the remote to SSH** after dotfiles are applied so that `autoCommit` and `autoPush` work going forward.
+
+### Use chezmoi directly on an existing machine
+
+If you're setting up chezmoi on a device without the full bootstrap, **use the SSH URL** so pushes work:
+
+```bash
+chezmoi init --apply git@github.com:1activegeek/dotfiles.git
+```
+
+Do **not** use the shorthand `chezmoi init 1activegeek` — it defaults to HTTPS, which will fail on push without a credential helper.
 
 ### Sync everything (apps + dotfiles)
 
