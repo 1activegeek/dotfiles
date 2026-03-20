@@ -97,7 +97,19 @@ chezmoi apply
 | File | 1Password reference |
 |------|---------------------|
 | `private_dot_ssh/private_config.tmpl` | `op://Private/SSH Config/notesPlain` |
+| `private_dot_kube/private_config.tmpl` | `op://Private/Kube Config/notesPlain` |
 | `dot_config/private_sops/private_age/private_home-ops.key.tmpl` | `op://Private/Age Encryption Key/private key` |
+
+### Secret Sync Functions
+
+The `07-1password.zsh` file provides two functions for pushing local edits back to 1Password:
+
+| Function | What it syncs |
+|----------|---------------|
+| `op-sync-ssh` | `~/.ssh/config` → 1Password "SSH Config" Secure Note |
+| `op-sync-kube` | `~/.kube/config` → 1Password "Kube Config" Secure Note |
+
+**Workflow:** Edit the file locally → run `op-sync-{ssh,kube}` → the 1Password vault item is updated → next `chezmoi apply` on any machine pulls the new version.
 
 ### Config Templates
 
@@ -118,7 +130,7 @@ chezmoi apply
 | `04-brew.zsh` | Homebrew helpers |
 | `05-macos.zsh` | macOS functions (lock, hidden files, etc.) |
 | `06-docker.zsh` | Docker shortcuts |
-| `07-1password.zsh` | 1Password CLI integration |
+| `07-1password.zsh` | 1Password CLI integration, SSH agent, sync functions (`op-sync-ssh`, `op-sync-kube`) |
 | `08-extract.zsh` | Universal archive extraction |
 | `09-colorize.zsh` | Colored output for less, grep, diff, man |
 | `10-kubectl.zsh` | Kubernetes aliases |

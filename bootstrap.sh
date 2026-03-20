@@ -8,6 +8,7 @@
 set -uo pipefail
 
 DOTFILES_REPO="https://github.com/1activegeek/dotfiles.git"
+DOTFILES_REPO_SSH="git@github.com:1activegeek/dotfiles.git"
 BOOTSTRAP_CMD="/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)\""
 CHEZMOI_CONFIG="$HOME/.config/chezmoi/chezmoi.toml"
 CHEZMOI_SOURCE="$HOME/.local/share/chezmoi"
@@ -246,6 +247,10 @@ else
 
 [diff]
   pager = "less -R"
+
+[git]
+  autoCommit = true
+  autoPush = true
 TOML
 
   echo ""
@@ -348,6 +353,22 @@ while true; do
     break
   fi
 done
+
+# ── Switch chezmoi source to SSH remote ──────────────────────────────────────
+# The initial clone uses HTTPS (SSH keys aren't deployed yet on a fresh machine).
+# Now that chezmoi has applied dotfiles (including SSH keys from 1Password),
+# switch to SSH so autoPush works going forward.
+
+step "Switching chezmoi source remote to SSH..."
+if [[ -d "$CHEZMOI_SOURCE/.git" ]]; then
+  CURRENT_REMOTE=$(git -C "$CHEZMOI_SOURCE" remote get-url origin 2>/dev/null || true)
+  if [[ "$CURRENT_REMOTE" != "$DOTFILES_REPO_SSH" ]]; then
+    git -C "$CHEZMOI_SOURCE" remote set-url origin "$DOTFILES_REPO_SSH"
+    ok "Remote switched to SSH ($DOTFILES_REPO_SSH)"
+  else
+    ok "Remote already using SSH"
+  fi
+fi
 
 # ── Dock retry check ─────────────────────────────────────────────────────────
 
