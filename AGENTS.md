@@ -88,7 +88,7 @@ chezmoi apply
 
 | File | Purpose |
 |------|---------|
-| `.chezmoidata/packages.yaml` | All packages: taps, brew, cask, mas. Profile-filtered. |
+| `.chezmoidata/packages.yaml` | All packages in four sections: taps, formulae, casks, mas. Sorted alphabetically. Profile-filtered. |
 | `.chezmoidata/post_install_notes.yaml` | Per-app post-install instructions |
 | `.chezmoidata/post_install_tasks.yaml` | Manual checklist shown in report |
 
@@ -136,8 +136,9 @@ chezmoi apply
 
 Two profiles: **personal** and **work**. Stored in `~/.config/chezmoi/chezmoi.toml`.
 
-- Packages without `profiles:` key install on both.
-- `profiles: [personal]` = personal only (e.g., 3D printing apps).
+- Simple entries are bare strings and install on all profiles.
+- Entries with `profiles: [personal]` use flow-mapping: `{ name: foo, profiles: [personal] }`.
+- MAS entries always use flow-mapping: `{ id: "123", name: "App Name" }`.
 - Work machines skip SSH config (`.chezmoiignore`).
 - Profile is set once during initial bootstrap and cached.
 
@@ -265,7 +266,7 @@ bash ~/.local/share/chezmoi/.chezmoiscripts/run_once_after_10-macos-defaults.sh
 
 ### Adding a new package
 
-1. Edit `.chezmoidata/packages.yaml`
+1. Edit `.chezmoidata/packages.yaml` — add the entry to the correct section (`formulae`, `casks`, or `mas`) in alphabetical order. Use a bare string for simple entries, or flow-mapping (`{ name: ..., profiles: [...] }`) if profile-restricted.
 2. Run `chezmoi apply` — the brew bundle script auto-reruns (hash changed)
 3. Optionally add post-install notes to `.chezmoidata/post_install_notes.yaml`
 

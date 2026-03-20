@@ -65,30 +65,28 @@ echo "════════════════════════�
 echo "  PACKAGE STATUS"
 echo "══════════════════════════════════════════════════════════════"
 
-{{- $profile := .profile -}}
-
-{{- $modules := list "core" "dev" "browsers" "communication" "ai" "media" "utilities" "infra" "printing3d" "security" "mas" -}}
-{{- $moduleNames := dict "core" "Core" "dev" "Dev" "browsers" "Browsers" "communication" "Communication" "ai" "AI" "media" "Media" "utilities" "Utilities" "infra" "Infra / Kubernetes" "printing3d" "3D Printing / CAD" "security" "Security" "mas" "Mac App Store" -}}
-
-{{ range $mod := $modules -}}
-{{- $hasItems := false -}}
-{{- range $.packages -}}
-  {{- if and (eq .module $mod) (or (not (hasKey . "profiles")) (has $profile .profiles)) -}}
-    {{- $hasItems = true -}}
-  {{- end -}}
-{{- end -}}
-{{- if $hasItems }}
-section "{{ index $moduleNames $mod }}"
-{{ range $.packages -}}
-{{- if and (eq .module $mod) (or (not (hasKey . "profiles")) (has $profile .profiles)) -}}
-{{- if eq .type "mas" }}
-check_pkg "mas" "{{ .ref }}" "{{ .name }}"
-{{ else }}
-check_pkg "{{ .type }}" "{{ .ref }}" "{{ .ref }}"
+{{ $profile := .profile }}
+section "Formulae"
+{{ range .formulae -}}
+{{- if kindIs "string" . }}
+check_pkg "brew" "{{ . }}" "{{ . }}"
+{{ else if or (not (hasKey . "profiles")) (has $profile .profiles) }}
+check_pkg "brew" "{{ .name }}" "{{ .name }}"
 {{ end -}}
-{{- end -}}
 {{- end }}
-{{- end -}}
+section "Casks"
+{{ range .casks -}}
+{{- if kindIs "string" . }}
+check_pkg "cask" "{{ . }}" "{{ . }}"
+{{ else if or (not (hasKey . "profiles")) (has $profile .profiles) }}
+check_pkg "cask" "{{ .name }}" "{{ .name }}"
+{{ end -}}
+{{- end }}
+section "Mac App Store"
+{{ range .mas -}}
+{{- if or (not (hasKey . "profiles")) (has $profile .profiles) }}
+check_pkg "mas" "{{ .id }}" "{{ .name }}"
+{{ end -}}
 {{- end }}
 
 echo ""

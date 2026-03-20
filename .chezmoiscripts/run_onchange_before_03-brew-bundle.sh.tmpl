@@ -49,29 +49,27 @@ trap 'kill "$SUDO_KEEPALIVE" ${_HEARTBEAT_PID:+"$_HEARTBEAT_PID"} 2>/dev/null; r
 {{- end }}
   echo ""
   echo "# Mac App Store (installed first to surface auth prompts early)"
-{{- range .packages }}
+{{- range .mas }}
 {{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
-{{- if eq .type "mas" }}
-  echo 'mas "{{ .name }}", id: {{ .ref }}'
-{{- end }}
+  echo 'mas "{{ .name }}", id: {{ .id }}'
 {{- end }}
 {{- end }}
   echo ""
   echo "# Casks"
-{{- range .packages }}
-{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
-{{- if eq .type "cask" }}
-  echo 'cask "{{ .ref }}"'
-{{- end }}
+{{- range .casks }}
+{{- if kindIs "string" . }}
+  echo 'cask "{{ . }}"'
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+  echo 'cask "{{ .name }}"'
 {{- end }}
 {{- end }}
   echo ""
   echo "# Formulae"
-{{- range .packages }}
-{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
-{{- if eq .type "brew" }}
-  echo 'brew "{{ .ref }}"'
-{{- end }}
+{{- range .formulae }}
+{{- if kindIs "string" . }}
+  echo 'brew "{{ . }}"'
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+  echo 'brew "{{ .name }}"'
 {{- end }}
 {{- end }}
 } > "$BREWFILE"

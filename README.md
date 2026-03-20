@@ -31,17 +31,11 @@ chezmoi update
 
 All packages are defined in `.chezmoidata/packages.yaml` and installed via `brew bundle`:
 
-| Category | Tools |
+| Section | Examples |
 |---|---|
-| Core | chezmoi, 1Password, Brave, Ghostty, Raycast |
-| Dev | atuin, bat, eza, fzf, starship, zellij, VS Code, Docker, OrbStack, Claude, Codex |
-| Browsers | Chrome, Tor |
-| Communication | Slack, Discord, Zoom |
-| AI | ChatGPT, Ollama, LM Studio |
-| Infra | kubectl, helm, k9s, Terraform |
-| 3D Printing | Bambu Studio, OrcaSlicer, PrusaSlicer *(personal only)* |
-| Security | LuLu, BlockBlock, KnockKnock |
-| Utilities | Obsidian, Tailscale, Keka, Shottr, and more |
+| Formulae | chezmoi, atuin, bat, eza, fzf, starship, kubectl, helm, Terraform |
+| Casks | 1Password, Ghostty, VS Code, Docker, OrbStack, Claude, Brave, Slack, Obsidian |
+| Mac App Store | Xcode, 1Password for Safari, DuckDuckGo, Perplexity |
 
 ## Machine Profiles
 
@@ -147,7 +141,7 @@ dotfiles/
 ├── dot_chezmoi.toml.tmpl            # chezmoi config + profile/name/email prompts
 ├── dot_chezmoiignore                # Files excluded from home directory deployment
 ├── .chezmoidata/
-│   └── packages.yaml                # All packages (brew/cask/mas) with profile tags
+│   └── packages.yaml                # All packages: taps, formulae, casks, mas (sorted alphabetically)
 ├── .chezmoiscripts/
 │   ├── run_once_before_01-*         # Installs Homebrew (runs once)
 │   ├── run_once_before_02-*         # Installs core packages (runs once)
