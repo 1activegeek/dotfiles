@@ -10,6 +10,7 @@ bootstrap.sh
 docs/
 TODO.md
 Brewfile.current
+AGENTS.md
 
 # Exclude non-macOS files on non-macOS
 {{- if ne .chezmoi.os "darwin" }}
