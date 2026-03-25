@@ -5,7 +5,7 @@
 # Always ignore these
 README.md
 LICENSE
-.DS_Store
+**/.DS_Store
 bootstrap.sh
 docs/
 TODO.md
