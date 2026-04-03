@@ -108,7 +108,7 @@ casks:
   - ollama-app
   - opencode-desktop
   - { name: openscad@snapshot, profiles: [personal] }
-  - orbstack
+  # - orbstack
   - { name: orcaslicer, profiles: [personal] }
   - { name: prusaslicer, profiles: [personal] }
   - raycast
@@ -123,6 +123,7 @@ casks:
   - the-unarchiver
   - { name: thumbhost3mf, profiles: [personal] }
   - tor-browser
+  - utm
   - visual-studio-code
   - vlc
   - yaak
