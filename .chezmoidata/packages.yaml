@@ -4,6 +4,10 @@
 # Packages without a `profiles` key install on ALL profiles.
 # profiles: [personal] = personal/homelab only
 # profiles: [work]     = work machines only
+#
+# This catalog is kept as a strict mirror of the gold machine's
+# installed-on-request set. `brew bundle cleanup --force` (run by
+# 03-brew-bundle) removes anything NOT listed here on apply.
 
 taps:
   - alexstrnik/browserino
@@ -12,9 +16,11 @@ taps:
   - go-task/tap
   - hashicorp/tap
   - oven-sh/bun
+  - steipete/tap
 
 formulae:
   - age
+  - agent-browser
   - anomalyco/tap/opencode
   - atuin
   - awscli
@@ -28,14 +34,14 @@ formulae:
   - dockutil
   - duti
   - eza
-  - fabric-ai
   - fastfetch
   - fd
   - ffmpeg
   - fluxcd/tap/flux
   - fzf
-  - gemini-cli
   - gh
+  - git-filter-repo
+  - go
   - go-task/tap/go-task
   - googleworkspace-cli
   - hashicorp/tap/terraform
@@ -47,19 +53,26 @@ formulae:
   - kubectx
   - kubernetes-cli
   - kustomize
+  - marp-cli
   - mas
+  - mise
   - mole
+  - mosquitto
   - neovim
   - oven-sh/bun/bun
   - playwright-cli
+  - poppler
   - pre-commit
   - pygments
   - sops
   - starship
+  - steipete/tap/remindctl
   - switchaudio-osx
-  - tmux
+  - talosctl
+  - uv
   - watch
   - yamllint
+  - yq
   - yt-dlp
   - zellij
   - zoxide
@@ -69,37 +82,38 @@ formulae:
 casks:
   - 1password
   - 1password-cli
-  - alexstrnik/browserino/browserino
-  # - antigravity
+  - antigravity
+  - antigravity-cli
+  - antigravity-ide
   - appcleaner
+  - autodesk-fusion
   - balenaetcher
   - { name: bambu-studio, profiles: [personal] }
   - blockblock
   - brave-browser
+  - browserino
   - chatgpt
   - claude
-  - claude-code
-  - cmux
+  - claude-code@latest
   - codex
+  - codex-app
   - discord
   - disk-inventory-x
   - docker-desktop
+  - fluidvoice
   - flux-app
   - font-jetbrains-mono-nerd-font
   - gcloud-cli
   - ghostty
   - google-chrome
   - handbrake-app
-  - handy
+  - headlamp
   - home-assistant
   - kap
   - keka
   - keyboard-cowboy
   - knockknock
-  - leader-key
   - lm-studio
-  - logi-options+
-  - lunar
   - lulu
   - mactracker
   - microsoft-teams
@@ -119,14 +133,13 @@ casks:
   - syncthing-app
   - tailscale-app
   - taskexplorer
-  - thaw
   - the-unarchiver
   - { name: thumbhost3mf, profiles: [personal] }
   - tor-browser
   - utm
-  - visual-studio-code
   - vlc
   - yaak
+  - zed
   - zoom
 
 mas:
@@ -136,14 +149,12 @@ mas:
   - { id: "1453273600", name: "Data Jar" }
   - { id: "663592361", name: "DuckDuckGo" }
   - { id: "1544743900", name: "Hush" }
-  - { id: "1295203466", name: "Microsoft Remote Desktop" }
+  - { id: "1295203466", name: "Windows App" }
   - { id: "6720708363", name: "Obsidian Web Clipper" }
   - { id: "490179405", name: "Okta Verify" }
   - { id: "1472777122", name: "PayPal Honey" }
-  - { id: "6714467650", name: "Perplexity" }
   - { id: "6738274497", name: "Raycast Companion" }
   - { id: "1532579087", name: "The Camelizer" }
   - { id: "6745342698", name: "uBlock Origin Lite" }
-  - { id: "6755173244", name: "Usage for Claude" }
   - { id: "1463298887", name: "Userscripts" }
   - { id: "497799835", name: "Xcode" }

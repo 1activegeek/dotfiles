@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Techniques lab · 3 new rendering approaches</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23ff6b1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 6l18 10v16L24 42 6 32V16Z'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+<style>
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface3: #15151d;
+  --border: #1a1a1a;
+  --text: #e0e0e0;
+  --text-paper: #f1ece0;
+  --text-dim: #888;
+  --muted: #55555c;
+  --accent: #ff6b1a;
+  --accent-glow: rgba(255, 107, 26, 0.3);
+  --teal: #50e3c2;
+  --violet: #8b5cf6;
+  --cyan: #22d3ee;
+  --amber: #f5a623;
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  padding: clamp(40px, 6vh, 80px) clamp(20px, 4vw, 60px);
+  min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% -10%, rgba(255, 107, 26, 0.045), transparent 55%);
+}
+.wrap { max-width: 1440px; margin: 0 auto; position: relative; z-index: 1; }
+
+header { padding-bottom: 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+.kicker {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.kicker::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+h1 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(42px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.018em;
+  color: var(--text-paper); max-width: 18ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.subtitle {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 18px; color: #a8a296; margin-top: 14px; max-width: 62ch; line-height: 1.45;
+}
+
+.tech-grid { display: grid; grid-template-columns: 1fr; gap: 32px; }
+@media (min-width: 1100px) { .tech-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.tech {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px;
+  display: flex; flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tech:hover { border-color: var(--accent); transform: translateY(-4px); }
+.tech .t-num {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.24em; color: var(--accent); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.tech .t-name {
+  font-family: var(--font-display); font-weight: 400; font-style: italic;
+  font-size: 30px; color: var(--text-paper); letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+.tech .t-stage {
+  height: 320px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 50%, #141418 0%, #0a0a0f 70%);
+}
+.tech .t-technique {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  display: inline-block;
+  background: rgba(255, 107, 26, 0.08);
+  border: 1px solid rgba(255, 107, 26, 0.3);
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.tech .t-desc {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 14px; color: var(--text-dim); line-height: 1.6;
+  margin-bottom: 12px;
+}
+.tech .t-uses {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 13px; color: var(--text-paper);
+  line-height: 1.55;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.tech .t-uses strong { color: var(--accent); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; margin-right: 8px; }
+
+footer {
+  margin-top: 60px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+footer strong { color: var(--text-paper); font-weight: 500; }
+footer code { color: var(--accent); font-family: var(--font-mono); font-size: 12px; padding: 2px 6px; background: rgba(255,107,26,0.08); border-radius: 3px; }
+
+/* ================================================================
+   T01 · CANVAS FLOW FIELD (particle simulation)
+   ================================================================ */
+#t01-canvas { display: block; width: 100%; height: 100%; }
+
+/* ================================================================
+   T02 · SVG FILTER WARP (feTurbulence + feDisplacementMap)
+   ================================================================ */
+.t02-stage {
+  display: flex; align-items: center; justify-content: center;
+  padding: 30px;
+}
+.t02-stage svg { width: 100%; height: 100%; }
+.t02-stage .warp-text {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 54px; letter-spacing: -0.02em;
+  fill: var(--accent);
+  filter: url(#warp) drop-shadow(0 0 18px var(--accent-glow));
+}
+.t02-stage .warp-ring {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 2;
+  filter: url(#warp);
+  opacity: 0.6;
+}
+.t02-stage .warp-inner {
+  fill: none;
+  stroke: var(--violet);
+  stroke-width: 1.5;
+  filter: url(#warp);
+  opacity: 0.55;
+}
+.t02-stage feDisplacementMap {
+  animation: warpShift 8s ease-in-out infinite;
+}
+.t02-stage feTurbulence {
+  animation: turbFreq 10s ease-in-out infinite;
+}
+@keyframes warpShift {
+  0%, 100% { scale: 3; }
+  50% { scale: 14; }
+}
+@keyframes turbFreq {
+  0%, 100% { base-frequency: 0.015; }
+  50% { base-frequency: 0.04; }
+}
+
+/* ================================================================
+   T03 · CONIC-GRADIENT + BLEND MODES
+   ================================================================ */
+.t03-stage {
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.t03-stage .conic {
+  position: absolute;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  animation: conicSpin linear infinite;
+}
+.t03-stage .conic.c1 {
+  background: conic-gradient(from var(--angle), var(--accent), transparent 30%, transparent 70%, var(--accent));
+  animation-duration: 9s;
+}
+.t03-stage .conic.c2 {
+  background: conic-gradient(from var(--angle), var(--cyan), transparent 25%, transparent 75%, var(--cyan));
+  animation-duration: 14s;
+  animation-direction: reverse;
+  width: 260px; height: 260px;
+}
+.t03-stage .conic.c3 {
+  background: conic-gradient(from var(--angle), var(--violet), transparent 35%, transparent 65%, var(--violet));
+  animation-duration: 18s;
+  width: 220px; height: 220px;
+}
+@keyframes conicSpin {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+.t03-stage .center-core {
+  position: relative;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffa26b, var(--accent));
+  box-shadow: 0 0 30px var(--accent), 0 0 60px var(--accent-glow);
+  z-index: 2;
+  animation: coreBeat 3s ease-in-out infinite;
+}
+@keyframes coreBeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.t03-stage .ring-mask {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 40%, var(--bg) 60%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ================================================================
+   T04 · MASK-IMAGE WIPE REVEAL
+   ================================================================ */
+.t04-stage {
+  display: flex; align-items: center; justify-content: center;
+}
+.t04-content {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 96px;
+  line-height: 1;
+  color: var(--accent);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: t04Wipe 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+}
+@keyframes t04Wipe {
+  0% { -webkit-mask-position: 130% 0; mask-position: 130% 0; }
+  100% { -webkit-mask-position: -130% 0; mask-position: -130% 0; }
+}
+.t04-sub {
+  position: absolute;
+  bottom: 30px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ================================================================
+   T05 · SVG MOTION PATH
+   ================================================================ */
+.t05-stage { padding: 20px; position: relative; }
+.t05-stage svg { width: 100%; height: 100%; overflow: visible; }
+.t05-path { fill: none; stroke: var(--border2); stroke-width: 1; stroke-dasharray: 3 3; }
+.t05-path-active { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; animation: t05Flow 2s linear infinite; opacity: 0.6; }
+@keyframes t05Flow { to { stroke-dashoffset: -20; } }
+.t05-node {
+  fill: var(--surface3); stroke: var(--accent); stroke-width: 1.5;
+}
+.t05-node.active { fill: rgba(255, 107, 26, 0.15); }
+.t05-label { fill: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; }
+.t05-traveler {
+  offset-path: path('M 60 160 C 120 60, 180 60, 240 160 S 360 260, 420 160');
+  offset-distance: 0%;
+  animation: t05Move 5s linear infinite;
+}
+.t05-traveler.tr2 { animation-delay: -1.6s; }
+.t05-traveler.tr3 { animation-delay: -3.3s; }
+@keyframes t05Move {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+.t05-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent);
+  position: absolute;
+  top: 0; left: 0;
+  transform: translate(-50%, -50%);
+}
+.t05-dot.tr2 { background: var(--cyan); box-shadow: 0 0 14px var(--cyan); }
+.t05-dot.tr3 { background: var(--violet); box-shadow: 0 0 14px var(--violet); }
+
+/* ================================================================
+   T06 · CLIP-PATH MORPH
+   ================================================================ */
+.t06-stage { display: flex; align-items: center; justify-content: center; }
+.t06-shape {
+  width: 220px; height: 220px;
+  background: conic-gradient(from 45deg, var(--accent), var(--violet), var(--cyan), var(--accent));
+  animation: t06Morph 8s ease-in-out infinite;
+  filter: drop-shadow(0 0 24px var(--accent-glow));
+}
+@keyframes t06Morph {
+  0%, 100%   { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); } /* diamond */
+  20%        { clip-path: polygon(25% 0%, 75% 0%, 100% 40%, 75% 100%, 25% 100%, 0% 40%); } /* hex */
+  40%        { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); } /* triangle */
+  60%        { clip-path: polygon(10% 10%, 90% 10%, 90% 90%, 10% 90%); } /* square */
+  80%        { clip-path: polygon(50% 0%, 65% 35%, 100% 35%, 72% 58%, 82% 100%, 50% 75%, 18% 100%, 28% 58%, 0% 35%, 35% 35%); } /* star */
+}
+
+/* ================================================================
+   T07 · CANVAS PIXEL GLITCH
+   ================================================================ */
+#t07-canvas { display: block; width: 100%; height: 100%; }
+
+/* ================================================================
+   T08 · BACKDROP-FILTER GLASS LAYERS
+   ================================================================ */
+.t08-stage {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.t08-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, var(--accent) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, var(--cyan) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, var(--violet) 0%, transparent 50%);
+  filter: blur(2px);
+  animation: t08BgDrift 10s ease-in-out infinite;
+}
+@keyframes t08BgDrift {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(6deg); }
+}
+.t08-glass {
+  position: absolute;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-paper);
+  letter-spacing: 0.1em;
+  animation: t08GlassFloat 4s ease-in-out infinite;
+}
+@keyframes t08GlassFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.t08-glass .k { color: var(--accent); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; font-size: 9px; display: block; margin-bottom: 4px; }
+.t08-glass .v { font-size: 18px; font-weight: 300; color: #fff; font-family: var(--font-display); font-style: italic; letter-spacing: -0.01em; }
+.t08-glass.g1 { top: 30px; left: 30px; animation-delay: 0s; }
+.t08-glass.g2 { top: 50%; left: 40%; animation-delay: 1s; }
+.t08-glass.g3 { bottom: 30px; right: 30px; animation-delay: 2s; }
+
+/* ================================================================
+   T09 · KINETIC TYPOGRAPHY
+   ================================================================ */
+.t09-stage { display: flex; align-items: center; justify-content: center; }
+.t09-word {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 96px; line-height: 1;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+}
+.t09-word span {
+  display: inline-block;
+  animation: t09Letter 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+.t09-word span:nth-child(1) { animation-delay: 0s; }
+.t09-word span:nth-child(2) { animation-delay: 0.1s; }
+.t09-word span:nth-child(3) { animation-delay: 0.2s; }
+.t09-word span:nth-child(4) { animation-delay: 0.3s; }
+.t09-word span:nth-child(5) { animation-delay: 0.4s; }
+.t09-word span:nth-child(6) { animation-delay: 0.5s; }
+.t09-word span:nth-child(7) { animation-delay: 0.6s; }
+@keyframes t09Letter {
+  0%, 80%, 100% { transform: translateY(0) rotate(0deg); color: var(--accent); }
+  15% { transform: translateY(-30px) rotate(-12deg); color: var(--cyan); }
+  30% { transform: translateY(0) rotate(0deg); color: var(--accent); }
+  45% { transform: translateY(10px) rotate(8deg); color: var(--violet); }
+  60% { transform: translateY(0) rotate(0deg); color: var(--accent); }
+}
+
+/* ================================================================
+   T10 · 3D PARALLAX DEPTH
+   ================================================================ */
+.t10-stage {
+  padding: 0;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+}
+.t10-scene {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  animation: t10SceneRot 16s ease-in-out infinite;
+}
+@keyframes t10SceneRot {
+  0%, 100% { transform: rotateY(-12deg) rotateX(4deg); }
+  50% { transform: rotateY(12deg) rotateX(-4deg); }
+}
+.t10-layer {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.t10-item {
+  width: 70px; height: 70px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--font-mono); font-size: 9px;
+  font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center;
+  position: absolute;
+  box-shadow: 0 0 20px currentColor;
+}
+.t10-layer.far .t10-item { transform: translateZ(-120px); color: var(--violet); opacity: 0.7; }
+.t10-layer.mid .t10-item { transform: translateZ(0); color: var(--cyan); }
+.t10-layer.near .t10-item {
+  transform: translateZ(120px);
+  color: var(--accent);
+  background: rgba(255, 107, 26, 0.15);
+  box-shadow: 0 0 30px var(--accent);
+}
+.t10-layer.far .t10-item.a { top: 20%; left: 20%; }
+.t10-layer.far .t10-item.b { top: 60%; right: 15%; }
+.t10-layer.mid .t10-item.a { top: 35%; left: 45%; }
+.t10-layer.near .t10-item.a { top: 50%; left: 25%; }
+
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Techniques lab · three new rendering paths</div>
+  <h1>Three <em>visual techniques</em> I haven't used yet.</h1>
+  <p class="subtitle">All my existing graphics are CSS transforms + SVG paths + CSS keyframes. These three each open a fundamentally different rendering path — particle physics, declarative filter effects, and chromatic blend-mode compositing. Pick one to integrate into the toolkit and whole families of new visuals unlock.</p>
+</header>
+
+<div class="tech-grid">
+
+  <!-- ============ T01 · CANVAS FLOW FIELD ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 01</div>
+    <div class="t-name">Canvas flow field</div>
+    <div class="t-stage">
+      <canvas id="t01-canvas"></canvas>
+    </div>
+    <div class="t-technique">Canvas 2D · particle sim · noise field</div>
+    <div class="t-desc">200 particles moving through a sine-wave vector field. Each particle has position, velocity, and age. Every frame I sample the field direction at its location and nudge it along. Trails come from not fully clearing the canvas each frame — leaving a subtle orange afterglow.</div>
+    <div class="t-uses"><strong>unlocks</strong>thought flow, context streaming, data ingestion at scale, ambient backgrounds for hero slides, "the system is alive." Any concept where you want many things moving at once.</div>
+  </div>
+
+  <!-- ============ T02 · SVG FILTER WARP ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 02</div>
+    <div class="t-name">SVG filter warp</div>
+    <div class="t-stage t02-stage">
+      <svg viewBox="0 0 400 320">
+        <defs>
+          <filter id="warp" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" seed="3" result="noise">
+              <animate attributeName="baseFrequency" values="0.015;0.04;0.015" dur="10s" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G">
+              <animate attributeName="scale" values="3;14;3" dur="8s" repeatCount="indefinite"/>
+            </feDisplacementMap>
+          </filter>
+        </defs>
+
+        <circle class="warp-ring" cx="200" cy="160" r="130"/>
+        <circle class="warp-inner" cx="200" cy="160" r="80"/>
+        <text class="warp-text" x="200" y="178" text-anchor="middle">drift</text>
+      </svg>
+    </div>
+    <div class="t-technique">SVG · feTurbulence + feDisplacementMap · animate</div>
+    <div class="t-desc">Declarative noise + displacement. A turbulence pattern (fractal noise) distorts anything routed through the filter — text, shapes, entire groups. Animating the displacement scale makes the distortion breathe. Zero JS.</div>
+    <div class="t-uses"><strong>unlocks</strong>interpretation, hallucination, context drift, "what the agent sees," heat shimmer, water surface, unsettled states. Anything where clarity wavers.</div>
+  </div>
+
+  <!-- ============ T03 · CONIC + BLEND MODES ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 03</div>
+    <div class="t-name">Conic + blend modes</div>
+    <div class="t-stage t03-stage">
+      <div class="conic c1"></div>
+      <div class="conic c2"></div>
+      <div class="conic c3"></div>
+      <div class="center-core"></div>
+    </div>
+    <div class="t-technique">CSS · conic-gradient · @property --angle · mix-blend-mode: screen</div>
+    <div class="t-desc">Three conic gradients stacked with <code>mix-blend-mode: screen</code> so their colors add chromatically. Each spins at a different rate using <code>@property --angle</code> for smooth custom-property animation. The overlap produces colors none of the layers contain on their own.</div>
+    <div class="t-uses"><strong>unlocks</strong>multi-model orchestration, synthesis, harmony, "when three things align," multi-agent chorus, consensus. Anything where separate things combine into something new.</div>
+  </div>
+
+  <!-- ============ T04 · MASK-IMAGE WIPE ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 04</div>
+    <div class="t-name">Mask-image wipe</div>
+    <div class="t-stage t04-stage">
+      <div class="t04-content">reveal</div>
+      <div class="t04-sub">gradient mask · linear wipe</div>
+    </div>
+    <div class="t-technique">CSS · mask-image · gradient position animation</div>
+    <div class="t-desc">A linear-gradient mask wipes across the element — hard edge, not an opacity fade. The mask is oversized and its position animates, so content appears and disappears with a clean edge. Works on text, SVG, images, anything.</div>
+    <div class="t-uses"><strong>unlocks</strong>reveals, curtain openings, "what's behind this," progressive disclosure, before-after wipes. Different from opacity in that the transition is a hard edge — feels like a scanner or a flashlight beam.</div>
+  </div>
+
+  <!-- ============ T05 · SVG MOTION PATH ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 05</div>
+    <div class="t-name">Motion path</div>
+    <div class="t-stage t05-stage">
+      <svg viewBox="0 0 480 220">
+        <path class="t05-path" d="M 60 160 C 120 60, 180 60, 240 160 S 360 260, 420 160"/>
+        <path class="t05-path-active" d="M 60 160 C 120 60, 180 60, 240 160 S 360 260, 420 160"/>
+        <circle class="t05-node active" cx="60" cy="160" r="9"/>
+        <text class="t05-label" x="38" y="195">IN</text>
+        <circle class="t05-node" cx="240" cy="160" r="7"/>
+        <text class="t05-label" x="224" y="195">MID</text>
+        <circle class="t05-node active" cx="420" cy="160" r="9"/>
+        <text class="t05-label" x="400" y="195">OUT</text>
+      </svg>
+      <div class="t05-traveler"><div class="t05-dot"></div></div>
+      <div class="t05-traveler tr2"><div class="t05-dot tr2"></div></div>
+      <div class="t05-traveler tr3"><div class="t05-dot tr3"></div></div>
+    </div>
+    <div class="t-technique">CSS · offset-path · offset-distance</div>
+    <div class="t-desc">Elements travel along an arbitrary SVG path via <code>offset-path: path(...)</code>. Animate <code>offset-distance</code> from 0% to 100% and the element follows the curve — including orientation if you want. Three dots at different delays = a flowing pipeline.</div>
+    <div class="t-uses"><strong>unlocks</strong>choreographed motion, traffic along routes, execution traces, particle along curve, "data flows from A to B via C." Precise curved motion you can't get from standard keyframes alone.</div>
+  </div>
+
+  <!-- ============ T06 · CLIP-PATH MORPH ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 06</div>
+    <div class="t-name">Clip-path morph</div>
+    <div class="t-stage t06-stage">
+      <div class="t06-shape"></div>
+    </div>
+    <div class="t-technique">CSS · clip-path polygon · keyframe interpolation</div>
+    <div class="t-desc">A single element (with a conic-gradient fill for color shift) cycles through shapes — diamond, hex, triangle, square, star — by animating the <code>clip-path: polygon()</code> coordinates. The browser interpolates between polygon point-sets if they have the same number of points.</div>
+    <div class="t-uses"><strong>unlocks</strong>shape transformation, state changes, "what form does the agent take," identity morph, mode-shift visualizations. Strong primal feel — we read shape change as state change.</div>
+  </div>
+
+  <!-- ============ T07 · CANVAS PIXEL GLITCH ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 07</div>
+    <div class="t-name">Canvas pixel glitch</div>
+    <div class="t-stage">
+      <canvas id="t07-canvas"></canvas>
+    </div>
+    <div class="t-technique">Canvas 2D · getImageData / putImageData · RGB channel shift</div>
+    <div class="t-desc">Draw a stable base (text, shape) to canvas, then periodically grab the pixel buffer and mess with it: shift scanlines horizontally, offset the red channel, drop random static. Feels like a CRT being hit by interference. Pure pixel manipulation, no filters.</div>
+    <div class="t-uses"><strong>unlocks</strong>uncertainty, error states, "signal lost," CRT/retro aesthetic, corrupted data, glitch transitions. Adds an edge that clean vector graphics can't reach.</div>
+  </div>
+
+  <!-- ============ T08 · BACKDROP-FILTER GLASS ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 08</div>
+    <div class="t-name">Glass layers</div>
+    <div class="t-stage t08-stage">
+      <div class="t08-bg"></div>
+      <div class="t08-glass g1">
+        <span class="k">status</span>
+        <span class="v">Running</span>
+      </div>
+      <div class="t08-glass g2">
+        <span class="k">agent</span>
+        <span class="v">Scribe</span>
+      </div>
+      <div class="t08-glass g3">
+        <span class="k">tokens</span>
+        <span class="v">2.4M</span>
+      </div>
+    </div>
+    <div class="t-technique">CSS · backdrop-filter: blur + saturate · alpha panels</div>
+    <div class="t-desc">Semi-transparent panels with <code>backdrop-filter: blur()</code> sit on top of a noisy radial-gradient background. The blur only applies to what's behind each panel — the colors bleed through as soft light. Boosts saturation to preserve color vividness through the blur.</div>
+    <div class="t-uses"><strong>unlocks</strong>depth layering, floating dashboards over busy scenes, HUD overlays, "looking through to what's underneath," apple-style product aesthetics. Creates visual hierarchy via depth rather than color.</div>
+  </div>
+
+  <!-- ============ T09 · KINETIC TYPOGRAPHY ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 09</div>
+    <div class="t-name">Kinetic type</div>
+    <div class="t-stage t09-stage">
+      <div class="t09-word">
+        <span>a</span><span>g</span><span>e</span><span>n</span><span>t</span><span>i</span><span>c</span>
+      </div>
+    </div>
+    <div class="t-technique">CSS · per-letter transform · staggered animation-delay · color cycling</div>
+    <div class="t-desc">Each letter is its own span. Keyframes shift translateY + rotate + color per letter, with staggered delays so the effect cascades across the word. Uses the full palette — orange / cyan / violet — cycling letter by letter.</div>
+    <div class="t-uses"><strong>unlocks</strong>text as material, hero title moments, emotional beats, "the word itself is alive," editorial drama. Different from static type: words become performances.</div>
+  </div>
+
+  <!-- ============ T10 · 3D PARALLAX DEPTH ============ -->
+  <div class="tech">
+    <div class="t-num">Technique 10</div>
+    <div class="t-name">3D parallax depth</div>
+    <div class="t-stage t10-stage">
+      <div class="t10-scene">
+        <div class="t10-layer far">
+          <div class="t10-item a">L3</div>
+          <div class="t10-item b">L3</div>
+        </div>
+        <div class="t10-layer mid">
+          <div class="t10-item a">L2</div>
+        </div>
+        <div class="t10-layer near">
+          <div class="t10-item a">L1</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-technique">CSS · perspective · translateZ · rotateY on parent</div>
+    <div class="t-desc">Three layers at different <code>translateZ</code> distances sit inside a preserve-3d parent that slowly rotates on Y-axis. Far layer (-120px) moves slower visually than near layer (+120px) — true parallax from perspective projection. No image tricks.</div>
+    <div class="t-uses"><strong>unlocks</strong>spatial depth, layer hierarchy visualized, "things in front / behind," narrative depth (foreground = active, background = context), abstract stage sets. Feels like a real scene, not a flat graphic.</div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>Why three and not ten:</strong> each one is a whole new rendering surface. Canvas opens particle physics and generative art. SVG filters open declarative distortion and noise effects. Conic + blend modes open chromatic compositing with zero images. Adopting one adds hundreds of potential visuals. Adopting all three = we can paint nearly anything.<br><br>
+  <strong>How to use:</strong> tell me the number and the concept. Examples: <code>T01 for M3 context streaming (ambient background of every iso slide)</code>, <code>T02 for stochastic / drift concept in M2</code>, <code>T03 for M5 multi-model orchestration (hero graphic)</code>.<br><br>
+  <strong>What's also possible but not here:</strong> WebGL/Three.js (real 3D meshes — heavy dep), CSS Houdini paint worklets (limited browser support), scroll-timeline (requires deck-level scroll hijacking), mask-image reveal (smaller effect, can add later), CSS motion-path (SVG path following — easier to demo after adoption).
+</footer>
+
+</div>
+
+<script>
+/* ================================================================
+   T01 · Canvas flow field particle simulation
+   ================================================================ */
+(function() {
+  const canvas = document.getElementById('t01-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
+    ctx.scale(dpr, dpr);
+    W = r.width;
+    H = r.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const PARTICLES = 200;
+  const particles = [];
+  for (let i = 0; i < PARTICLES; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      age: Math.random() * 300,
+      maxAge: 200 + Math.random() * 200,
+      size: 0.8 + Math.random() * 1.6,
+    });
+  }
+
+  let t = 0;
+  function field(x, y, t) {
+    // Pseudo-noise flow field using layered sinewaves
+    const a = Math.sin(x * 0.006 + t * 0.3) * Math.cos(y * 0.008 + t * 0.2);
+    const b = Math.cos(x * 0.01 - t * 0.15) + Math.sin(y * 0.009 + t * 0.25);
+    return (a + b * 0.4) * Math.PI;
+  }
+
+  function frame() {
+    t += 0.02;
+    // Soft fade (trail effect)
+    ctx.fillStyle = 'rgba(10, 10, 15, 0.08)';
+    ctx.fillRect(0, 0, W, H);
+
+    for (const p of particles) {
+      const angle = field(p.x, p.y, t);
+      p.x += Math.cos(angle) * 0.7;
+      p.y += Math.sin(angle) * 0.7;
+      p.age++;
+
+      if (p.x < 0 || p.x > W || p.y < 0 || p.y > H || p.age > p.maxAge) {
+        p.x = Math.random() * W;
+        p.y = Math.random() * H;
+        p.age = 0;
+        p.maxAge = 200 + Math.random() * 200;
+      }
+
+      // Color depends on age — fade in/out
+      const lifeRatio = p.age / p.maxAge;
+      const alpha = Math.sin(lifeRatio * Math.PI) * 0.85;
+      // Shift hue between orange and amber across the field
+      const hueShift = (Math.sin(p.x * 0.005 + p.y * 0.005 + t * 0.1) + 1) / 2;
+      const r = 255;
+      const g = Math.round(107 + hueShift * 60);
+      const b = Math.round(26 + hueShift * 15);
+
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ================================================================
+   T07 · Canvas pixel glitch
+   ================================================================ */
+(function() {
+  const canvas = document.getElementById('t07-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    W = r.width; H = r.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawBase() {
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Scanlines for CRT texture
+    ctx.fillStyle = 'rgba(255, 107, 26, 0.04)';
+    for (let y = 0; y < H; y += 3) {
+      ctx.fillRect(0, y, W, 1);
+    }
+
+    // Big glitchy word
+    ctx.fillStyle = '#ff6b1a';
+    ctx.font = 'bold 72px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('DRIFT', W / 2, H / 2 - 10);
+
+    // Small status text
+    ctx.fillStyle = '#f1ece0';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillText('SIGNAL · 47% · UNSTABLE', W / 2, H / 2 + 40);
+  }
+
+  let frame = 0;
+  function tick() {
+    frame++;
+    drawBase();
+
+    // Periodic glitches
+    if (Math.random() < 0.18) {
+      const img = ctx.getImageData(0, 0, W, H);
+      const data = img.data;
+      const rowCount = Math.floor(2 + Math.random() * 3);
+
+      // Shift random scanlines horizontally
+      for (let r = 0; r < rowCount; r++) {
+        const bandY = Math.floor(Math.random() * H);
+        const bandH = Math.floor(2 + Math.random() * 8);
+        const shift = Math.floor((Math.random() * 40 - 20));
+        for (let y = bandY; y < bandY + bandH && y < H; y++) {
+          const rowStart = y * W * 4;
+          const rowEnd = rowStart + W * 4;
+          const row = data.slice(rowStart, rowEnd);
+          for (let x = 0; x < W; x++) {
+            const srcX = x - shift;
+            if (srcX >= 0 && srcX < W) {
+              const src = srcX * 4;
+              const dst = rowStart + x * 4;
+              data[dst] = row[src];
+              data[dst + 1] = row[src + 1];
+              data[dst + 2] = row[src + 2];
+              data[dst + 3] = row[src + 3];
+            }
+          }
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // RGB split — redraw word offset in cyan
+      if (Math.random() < 0.5) {
+        ctx.fillStyle = 'rgba(34, 211, 238, 0.55)';
+        ctx.font = 'bold 72px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('DRIFT', W / 2 + 3, H / 2 - 10);
+      }
+    }
+
+    // Constant static dots (very low density)
+    for (let i = 0; i < 6; i++) {
+      const x = Math.random() * W;
+      const y = Math.random() * H;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillRect(x, y, 1, 1);
+    }
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

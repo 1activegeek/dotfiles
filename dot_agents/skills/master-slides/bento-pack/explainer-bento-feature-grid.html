@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Bento Grid — Cinematic Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --surface:#111118;
+    --surface2:#15151d;
+    --surface3:#1a1a24;
+    --text:#eae7e2;
+    --muted:#6a6a78;
+    --muted2:#4a4a56;
+    --accent:#ff6b1a;
+    --accent2:#f5a623;
+    --blue:#5eadff;
+    --blue-glow:rgba(94,173,255,.4);
+    --border:#1e1e28;
+    --border2:#2a2a36;
+    --good:#4ca879;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,107,26,.06),transparent 60%),radial-gradient(ellipse at 80% 110%,rgba(255,107,26,.03),transparent 50%);pointer-events:none;z-index:0}
+
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ─── Hero ─── */
+  .hero{position:relative;z-index:1;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 20px}
+  .hero-label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;line-height:1.08;max-width:780px;letter-spacing:-.03em}
+  .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{margin-top:16px;max-width:600px;color:var(--muted);font-size:16px;line-height:1.5}
+
+  /* ─── Grid ─── */
+  .grid{position:relative;z-index:1;max-width:1240px;margin:40px auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 22px 26px;min-height:340px;display:flex;flex-direction:column;overflow:hidden;transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+  .card::before{content:'';position:absolute;inset:0;border-radius:20px;background:radial-gradient(circle at 50% 0%,rgba(255,107,26,.05),transparent 55%);pointer-events:none;opacity:.7}
+  .card:hover{transform:translateY(-3px);border-color:var(--border2)}
+
+  .card.featured{border-color:rgba(255,107,26,.35);box-shadow:0 0 0 1px rgba(255,107,26,.15),0 20px 60px -20px rgba(255,107,26,.3),inset 0 1px 0 rgba(255,255,255,.03)}
+  .card.featured::after{content:'';position:absolute;inset:-1px;border-radius:20px;padding:1px;background:linear-gradient(135deg,rgba(255,107,26,.6),transparent 40%,transparent 60%,rgba(255,107,26,.35));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderPulse 3.5s ease infinite}
+  @keyframes borderPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* Card header */
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:relative;z-index:2}
+  .card-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--accent);font-weight:500}
+  .card-num.blue{color:var(--accent)}
+  .card-num .sep{color:var(--muted2);margin:0 6px}
+  .card-num .name{color:var(--muted);text-transform:uppercase}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:100px;color:var(--accent);border:1px solid rgba(255,107,26,.4);background:rgba(255,107,26,.06);box-shadow:0 0 20px rgba(255,107,26,.18),inset 0 0 12px rgba(255,107,26,.05)}
+  .pill .plus{color:var(--accent);font-weight:400}
+
+  /* Preview area */
+  .preview{flex:1;position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;min-height:160px}
+
+  /* Card footer */
+  .card-title{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px;position:relative;z-index:2}
+  .card-sub{font-size:13.5px;color:var(--muted);line-height:1.45;position:relative;z-index:2}
+
+  /* ═══ PREVIEW 1 — Stacked Rows (Inbox / Queue) ═══ */
+  .pv-rows{padding:12px;display:flex;flex-direction:column;gap:7px;height:100%}
+  .pv-row{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surface3);border:1px solid var(--border);border-radius:7px;position:relative;transition:all .4s}
+  .pv-row .dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);flex-shrink:0}
+  .pv-row .bar{height:5px;background:var(--border2);border-radius:2px;flex:1}
+  .pv-row .bar.short{flex:.5}
+  .pv-row.active{border-color:rgba(255,107,26,.45);background:rgba(255,107,26,.07);box-shadow:0 0 0 1px rgba(255,107,26,.22),0 8px 24px -8px rgba(255,107,26,.3);animation:activePulse 2.8s ease infinite}
+  .pv-row.active .dot{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .pv-row.active .bar{background:rgba(255,107,26,.32)}
+  @keyframes activePulse{0%,100%{box-shadow:0 0 0 1px rgba(255,107,26,.22),0 8px 24px -8px rgba(255,107,26,.3)}50%{box-shadow:0 0 0 1px rgba(255,107,26,.45),0 8px 32px -6px rgba(255,107,26,.5)}}
+  .pv-tag{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;letter-spacing:.1em;padding:3px 6px;border-radius:4px;background:var(--accent);color:#0a0a0f;margin-left:auto;white-space:nowrap}
+
+  /* ═══ PREVIEW 2 — Sidebar + Live Row ═══ */
+  .pv-app{display:flex;height:100%}
+  .pv-side{width:42%;padding:10px 8px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+  .pv-side-item{display:flex;align-items:center;gap:6px;padding:6px 7px;border-radius:5px;font-size:9px;color:var(--muted);font-weight:500}
+  .pv-side-item .sq{width:10px;height:10px;border-radius:3px;background:var(--border2);flex-shrink:0}
+  .pv-side-item.on{background:var(--surface3);color:var(--text)}
+  .pv-side-item.on .sq{background:var(--accent)}
+  .pv-main{flex:1;padding:10px 10px;display:flex;flex-direction:column;gap:6px;position:relative}
+  .pv-main-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .pv-main-title{font-size:10px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+  .pv-live{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:7.5px;font-weight:600;letter-spacing:.12em;padding:2px 6px;border-radius:100px;background:rgba(76,168,121,.12);color:var(--good);border:1px solid rgba(76,168,121,.3);margin-left:auto}
+  .pv-live .live-dot{width:5px;height:5px;border-radius:50%;background:var(--good);box-shadow:0 0 6px var(--good);animation:liveBlink 1.2s ease infinite}
+  @keyframes liveBlink{0%,100%{opacity:1}50%{opacity:.4}}
+  .pv-main-row{height:6px;background:var(--border2);border-radius:2px;opacity:.6}
+  .pv-main-row.w70{width:70%}
+  .pv-main-row.w50{width:50%}
+  .pv-main-row.w85{width:85%}
+  .pv-type{margin-top:2px;padding:6px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--accent);overflow:hidden;white-space:nowrap}
+  .pv-type .cursor{display:inline-block;width:1px;height:8px;background:var(--accent);margin-left:1px;animation:blink .6s step-end infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ═══ PREVIEW 3 — Tabs + Pinned Block ═══ */
+  .pv-tabs-wrap{padding:10px;display:flex;flex-direction:column;gap:8px;height:100%}
+  .pv-tabs{display:flex;gap:3px;background:var(--surface3);padding:3px;border-radius:7px;border:1px solid var(--border)}
+  .pv-tab{flex:1;text-align:center;padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:600;letter-spacing:.08em;color:var(--muted);border-radius:5px;transition:all .4s}
+  .pv-tab.on{background:var(--surface);color:var(--text);box-shadow:0 0 0 1px var(--border2),0 2px 6px rgba(0,0,0,.3)}
+  .pv-pinned{flex:1;padding:10px;background:var(--surface3);border:1px dashed var(--border2);border-radius:7px;display:flex;flex-direction:column;gap:5px;position:relative}
+  .pv-pinned::before{content:'PREVIEW';position:absolute;top:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:600;letter-spacing:.12em;color:var(--muted)}
+  .pv-pin-bar{height:5px;background:var(--border2);border-radius:2px}
+  .pv-pin-bar.accent{background:rgba(255,107,26,.45);width:60%}
+  .pv-pin-bar.w40{width:40%}
+  .pv-pin-bar.w75{width:75%}
+
+  /* ═══ PREVIEW 4 — Node Graph ═══ */
+  .pv-graph{position:relative;width:100%;height:100%;padding:8px}
+  .pv-graph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .pv-node{position:absolute;padding:5px 9px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:600;letter-spacing:.08em;color:var(--text);transform:translate(-50%,-50%);z-index:2;white-space:nowrap}
+  .pv-node.n-edit{left:22%;top:50%;border-color:rgba(255,107,26,.45);color:var(--accent);background:rgba(255,107,26,.08)}
+  .pv-node.n-format{left:60%;top:25%}
+  .pv-node.n-lint{left:60%;top:75%}
+  .pv-node.n-commit{left:88%;top:50%;border-color:rgba(76,168,121,.4);color:var(--good);background:rgba(76,168,121,.08)}
+  .pv-edge{stroke:var(--border2);stroke-width:1.2;stroke-dasharray:3 3;fill:none;animation:edgeFlow 2.4s linear infinite}
+  .pv-edge.e1{animation-delay:0s}
+  .pv-edge.e2{animation-delay:.3s}
+  .pv-edge.e3{animation-delay:.8s}
+  .pv-edge.e4{animation-delay:1.1s}
+  @keyframes edgeFlow{0%{stroke-dashoffset:18;stroke:var(--border2)}40%{stroke:rgba(255,107,26,.75)}100%{stroke-dashoffset:0;stroke:var(--border2)}}
+  .pv-spark{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);z-index:3;opacity:0}
+  .pv-spark.s1{animation:sparkRun1 2.4s linear infinite}
+  .pv-spark.s2{animation:sparkRun2 2.4s linear infinite;animation-delay:.4s}
+  @keyframes sparkRun1{0%{left:22%;top:50%;opacity:0}10%{opacity:1}50%{left:60%;top:25%;opacity:1}70%{left:88%;top:50%;opacity:1}100%{left:88%;top:50%;opacity:0}}
+  @keyframes sparkRun2{0%{left:22%;top:50%;opacity:0}10%{opacity:1}50%{left:60%;top:75%;opacity:1}70%{left:88%;top:50%;opacity:1}100%{left:88%;top:50%;opacity:0}}
+
+  /* ═══ PREVIEW 5 — Hub and Spoke ═══ */
+  /* (note: --blue unused; kept in :root only for legacy compat) */
+  .pv-hub{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .pv-hub svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .pv-hub-line{stroke:var(--border2);stroke-width:1;stroke-dasharray:2 3;fill:none;animation:hubFlow 2.8s linear infinite}
+  .pv-hub-line:nth-child(1){animation-delay:0s}
+  .pv-hub-line:nth-child(2){animation-delay:.25s}
+  .pv-hub-line:nth-child(3){animation-delay:.5s}
+  .pv-hub-line:nth-child(4){animation-delay:.75s}
+  .pv-hub-line:nth-child(5){animation-delay:1s}
+  .pv-hub-line:nth-child(6){animation-delay:1.25s}
+  @keyframes hubFlow{0%,100%{stroke-dashoffset:10;stroke:var(--border2);opacity:.5}50%{stroke-dashoffset:0;stroke:rgba(255,107,26,.65);opacity:1}}
+  .pv-hub-center{position:relative;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;z-index:3;box-shadow:0 0 0 4px rgba(255,107,26,.16),0 0 24px rgba(255,107,26,.45);animation:hubPulse 2.8s ease infinite}
+  @keyframes hubPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,107,26,.16),0 0 24px rgba(255,107,26,.45)}50%{box-shadow:0 0 0 6px rgba(255,107,26,.22),0 0 36px rgba(255,107,26,.6)}}
+  .pv-hub-center svg{width:16px;height:16px;fill:#0a0a0f}
+  .pv-hub-node{position:absolute;width:24px;height:24px;border-radius:7px;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;z-index:2;transition:all .4s}
+  .pv-hub-node svg{width:11px;height:11px;fill:var(--muted);transition:fill .4s}
+  .pv-hub-node.lit{border-color:rgba(255,107,26,.55);background:rgba(255,107,26,.1);box-shadow:0 0 12px rgba(255,107,26,.35)}
+  .pv-hub-node.lit svg{fill:var(--accent)}
+  .pv-hub-node.p1{left:10%;top:18%}
+  .pv-hub-node.p2{right:10%;top:18%}
+  .pv-hub-node.p3{left:4%;top:50%;transform:translateY(-50%)}
+  .pv-hub-node.p4{right:4%;top:50%;transform:translateY(-50%)}
+  .pv-hub-node.p5{left:10%;bottom:18%}
+  .pv-hub-node.p6{right:10%;bottom:18%}
+
+  /* ═══ PREVIEW 6 — Waveform ═══ */
+  .pv-wave{position:relative;width:100%;height:100%;padding:12px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .pv-wave-head{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.1em}
+  .pv-wave-head .rec{width:7px;height:7px;border-radius:50%;background:#e74c3c;box-shadow:0 0 8px #e74c3c;animation:liveBlink 1.4s ease infinite}
+  .pv-wave-head .time{margin-left:auto;color:var(--text);font-weight:600}
+  .pv-wave-bars{display:flex;align-items:center;justify-content:center;gap:3px;height:60px}
+  .pv-bar{width:3px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px;animation:barWave 1.2s ease infinite}
+  .pv-bar:nth-child(1){animation-delay:0s;height:20%}
+  .pv-bar:nth-child(2){animation-delay:.08s;height:45%}
+  .pv-bar:nth-child(3){animation-delay:.16s;height:70%}
+  .pv-bar:nth-child(4){animation-delay:.24s;height:40%}
+  .pv-bar:nth-child(5){animation-delay:.32s;height:85%}
+  .pv-bar:nth-child(6){animation-delay:.4s;height:55%}
+  .pv-bar:nth-child(7){animation-delay:.48s;height:90%}
+  .pv-bar:nth-child(8){animation-delay:.56s;height:35%}
+  .pv-bar:nth-child(9){animation-delay:.64s;height:65%}
+  .pv-bar:nth-child(10){animation-delay:.72s;height:48%}
+  .pv-bar:nth-child(11){animation-delay:.8s;height:78%}
+  .pv-bar:nth-child(12){animation-delay:.88s;height:30%}
+  .pv-bar:nth-child(13){animation-delay:.96s;height:60%}
+  .pv-bar:nth-child(14){animation-delay:1.04s;height:42%}
+  .pv-bar:nth-child(15){animation-delay:1.12s;height:72%}
+  .pv-bar:nth-child(16){animation-delay:0s;height:38%}
+  .pv-bar:nth-child(17){animation-delay:.08s;height:68%}
+  .pv-bar:nth-child(18){animation-delay:.16s;height:50%}
+  .pv-bar:nth-child(19){animation-delay:.24s;height:82%}
+  .pv-bar:nth-child(20){animation-delay:.32s;height:28%}
+  .pv-bar:nth-child(21){animation-delay:.4s;height:58%}
+  .pv-bar:nth-child(22){animation-delay:.48s;height:44%}
+  .pv-bar:nth-child(23){animation-delay:.56s;height:74%}
+  .pv-bar:nth-child(24){animation-delay:.64s;height:36%}
+  .pv-bar:nth-child(25){animation-delay:.72s;height:62%}
+  @keyframes barWave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1.1)}}
+  .pv-wave-caption{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-align:center;letter-spacing:.05em;overflow:hidden;white-space:nowrap}
+  .pv-wave-caption span{color:var(--text)}
+
+  /* ─── Explain ─── */
+  .explain{position:relative;z-index:1;padding:100px 24px;text-align:center;max-width:680px;margin:0 auto;border-top:1px solid #1a1a1d}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(232,121,58,.25);padding:4px 12px;border-radius:100px;margin-bottom:20px}
+  .explain h2{font-size:clamp(24px,4vw,38px);font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+  .explain p{font-size:17px;color:var(--muted);line-height:1.6}
+  footer{position:relative;z-index:1;border-top:1px solid #1a1a1d;padding:24px;text-align:center;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">Module — Animated Bento (Feature Grid)</div>
+  <h1>Six cards, <span>six ideas</span>, all moving on their own</h1>
+  <p>Each card has a live mini-wireframe preview. Record your narration over the top — the grid does the visual work while you talk.</p>
+</section>
+
+<section class="grid">
+
+  <!-- ═══ 01 — Stacked Rows / Attention ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span>01</span><span class="sep">—</span><span class="name">Attention</span></div>
+    </div>
+    <div class="preview">
+      <div class="pv-rows">
+        <div class="pv-row"><div class="dot"></div><div class="bar"></div><div class="bar short"></div></div>
+        <div class="pv-row"><div class="dot"></div><div class="bar"></div><div class="bar short"></div></div>
+        <div class="pv-row active"><div class="dot"></div><div class="bar"></div><div class="pv-tag">NEEDS YOU</div></div>
+        <div class="pv-row"><div class="dot"></div><div class="bar"></div><div class="bar short"></div></div>
+        <div class="pv-row"><div class="dot"></div><div class="bar"></div><div class="bar short"></div></div>
+      </div>
+    </div>
+    <div class="card-title">Only what needs you</div>
+    <div class="card-sub">The agent works the queue. You only see the one thing waiting on a human call.</div>
+  </div>
+
+  <!-- ═══ 02 — Sidebar + Live (Featured) ═══ -->
+  <div class="card featured">
+    <div class="card-head">
+      <div class="card-num blue"><span>02</span><span class="sep">—</span><span class="name">Sessions</span></div>
+      <div class="pill"><span class="plus">+</span> THE UNLOCK</div>
+    </div>
+    <div class="preview">
+      <div class="pv-app">
+        <div class="pv-side">
+          <div class="pv-side-item"><div class="sq"></div>agent-a</div>
+          <div class="pv-side-item on"><div class="sq"></div>agent-b</div>
+          <div class="pv-side-item"><div class="sq"></div>agent-c</div>
+          <div class="pv-side-item"><div class="sq"></div>agent-e</div>
+          <div class="pv-side-item"><div class="sq"></div>agent-f</div>
+        </div>
+        <div class="pv-main">
+          <div class="pv-main-head">
+            <div class="pv-main-title">agent-b · session</div>
+            <div class="pv-live"><div class="live-dot"></div>LIVE</div>
+          </div>
+          <div class="pv-main-row w85"></div>
+          <div class="pv-main-row w70"></div>
+          <div class="pv-main-row w50"></div>
+          <div class="pv-type" id="pvType">&gt; running build<span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Parallel sessions, one operator</div>
+    <div class="card-sub">Spin up an agent per job. Check in on whichever one has news.</div>
+  </div>
+
+  <!-- ═══ 03 — Tabs + Pinned Preview ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span>03</span><span class="sep">—</span><span class="name">Surface</span></div>
+    </div>
+    <div class="preview">
+      <div class="pv-tabs-wrap">
+        <div class="pv-tabs">
+          <div class="pv-tab" data-tab="0">CHAT</div>
+          <div class="pv-tab on" data-tab="1">TASKS</div>
+          <div class="pv-tab" data-tab="2">DIFF</div>
+        </div>
+        <div class="pv-pinned">
+          <div class="pv-pin-bar accent"></div>
+          <div class="pv-pin-bar w75"></div>
+          <div class="pv-pin-bar w40"></div>
+          <div class="pv-pin-bar w75"></div>
+          <div class="pv-pin-bar w40"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">One pane to rule them</div>
+    <div class="card-sub">Chat, tasks, diffs — same view. Context never breaks.</div>
+  </div>
+
+  <!-- ═══ 04 — Node Graph / Pipeline ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span>04</span><span class="sep">—</span><span class="name">Pipeline</span></div>
+    </div>
+    <div class="preview">
+      <div class="pv-graph">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path class="pv-edge e1" d="M22,50 L60,25"/>
+          <path class="pv-edge e2" d="M22,50 L60,75"/>
+          <path class="pv-edge e3" d="M60,25 L88,50"/>
+          <path class="pv-edge e4" d="M60,75 L88,50"/>
+        </svg>
+        <div class="pv-node n-edit">EDIT</div>
+        <div class="pv-node n-format">FORMAT</div>
+        <div class="pv-node n-lint">LINT</div>
+        <div class="pv-node n-commit">COMMIT</div>
+        <div class="pv-spark s1"></div>
+        <div class="pv-spark s2"></div>
+      </div>
+    </div>
+    <div class="card-title">Every edit, same rails</div>
+    <div class="card-sub">Edit. Format. Lint. Commit. The pipeline runs itself.</div>
+  </div>
+
+  <!-- ═══ 05 — Hub and Spoke / Integrations ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span>05</span><span class="sep">—</span><span class="name">Connected</span></div>
+    </div>
+    <div class="preview">
+      <div class="pv-hub">
+        <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line class="pv-hub-line" x1="50" y1="50" x2="15" y2="22"/>
+          <line class="pv-hub-line" x1="50" y1="50" x2="85" y2="22"/>
+          <line class="pv-hub-line" x1="50" y1="50" x2="8" y2="50"/>
+          <line class="pv-hub-line" x1="50" y1="50" x2="92" y2="50"/>
+          <line class="pv-hub-line" x1="50" y1="50" x2="15" y2="78"/>
+          <line class="pv-hub-line" x1="50" y1="50" x2="85" y2="78"/>
+        </svg>
+        <div class="pv-hub-center">
+          <svg viewBox="0 0 24 24"><path d="M12 2 L22 8 L22 16 L12 22 L2 16 L2 8 Z" stroke="#0a0a0f" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" fill="#0a0a0f"/></svg>
+        </div>
+        <div class="pv-hub-node p1" data-hub="0"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/></svg></div>
+        <div class="pv-hub-node p2" data-hub="1"><svg viewBox="0 0 24 24"><path d="M2 6 L22 6 L22 20 L2 20 Z M2 6 L12 14 L22 6"/></svg></div>
+        <div class="pv-hub-node p3" data-hub="2"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></div>
+        <div class="pv-hub-node p4" data-hub="3"><svg viewBox="0 0 24 24"><path d="M4 4 L20 4 L20 14 L12 22 L4 14 Z"/></svg></div>
+        <div class="pv-hub-node p5" data-hub="4"><svg viewBox="0 0 24 24"><path d="M3 12 L12 3 L21 12 L12 21 Z"/></svg></div>
+        <div class="pv-hub-node p6" data-hub="5"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="9"/></svg></div>
+      </div>
+    </div>
+    <div class="card-title">Plugs into everything</div>
+    <div class="card-sub">Slack, Gmail, Drive, notes, APIs. The agent reaches where you already work.</div>
+  </div>
+
+  <!-- ═══ 06 — Waveform / Voice ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span>06</span><span class="sep">—</span><span class="name">Voice</span></div>
+    </div>
+    <div class="preview">
+      <div class="pv-wave">
+        <div class="pv-wave-head"><div class="rec"></div>REC<span class="time" id="wvTime">00:12</span></div>
+        <div class="pv-wave-bars">
+          <div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div>
+          <div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div>
+          <div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div>
+          <div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div>
+          <div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div><div class="pv-bar"></div>
+        </div>
+        <div class="pv-wave-caption" id="wvCap">&ldquo;<span>ship the landing page</span>&rdquo;</div>
+      </div>
+    </div>
+    <div class="card-title">Talk, don&rsquo;t type</div>
+    <div class="card-sub">Say what you want. The agent writes the intent, confirms, and runs.</div>
+  </div>
+
+</section>
+
+<section class="explain">
+  <div class="tag">Why it works</div>
+  <h2>Six live surfaces, one message</h2>
+  <p>A static bento grid says "here are six things." An animated bento grid says "here are six things, and they all already work." Record your narration — the motion in each card carries the energy while you walk through them one at a time.</p>
+</section>
+
+<footer>Cinematic Module — Animated Bento (Feature Grid)</footer>
+
+<script>
+(function(){
+  // Card 02 — typing cycle
+  var typeEl=document.getElementById('pvType');
+  if(typeEl){
+    var lines=['&gt; running build','&gt; applying diff','&gt; tests passing','&gt; ready for review'];
+    var li=0;
+    setInterval(function(){
+      li=(li+1)%lines.length;
+      typeEl.innerHTML=lines[li]+'<span class="cursor"></span>';
+    },1800);
+  }
+
+  // Card 03 — tab cycle
+  var tabs=document.querySelectorAll('.pv-tab');
+  var ti=1;
+  setInterval(function(){
+    tabs.forEach(function(t){t.classList.remove('on')});
+    ti=(ti+1)%tabs.length;
+    if(tabs[ti])tabs[ti].classList.add('on');
+  },2200);
+
+  // Card 05 — hub light sequence
+  var hubNodes=document.querySelectorAll('.pv-hub-node');
+  var hi=0;
+  setInterval(function(){
+    hubNodes.forEach(function(n){n.classList.remove('lit')});
+    hubNodes[hi].classList.add('lit');
+    hubNodes[(hi+3)%hubNodes.length].classList.add('lit');
+    hi=(hi+1)%hubNodes.length;
+  },600);
+
+  // Card 06 — timer + caption cycle
+  var timeEl=document.getElementById('wvTime');
+  var capEl=document.getElementById('wvCap');
+  var caps=['ship the landing page','draft the cold email','fix the layout bug','book a flight to Tokyo'];
+  var secs=12,ci=0;
+  if(timeEl){
+    setInterval(function(){
+      secs++;
+      var m=Math.floor(secs/60),s=secs%60;
+      timeEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    },1000);
+  }
+  if(capEl){
+    setInterval(function(){
+      ci=(ci+1)%caps.length;
+      capEl.innerHTML='&ldquo;<span>'+caps[ci]+'</span>&rdquo;';
+    },2800);
+  }
+})();
+</script>
+
+</body>
+</html>

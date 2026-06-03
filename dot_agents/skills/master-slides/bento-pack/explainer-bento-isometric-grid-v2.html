@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Bento (Isometric Grid v2) — Cinematic Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#07070c;--bg2:#0c0c14;--surface:#11111a;--text:#eae7e2;--muted:#6a6a78;--accent:#ff6b1a;--accent-2:#ffa26b;--teal:#5ed0c5;--purple:#a26bff;--border:#1a1a24;--border2:#242430;--o-top:#ff8c4a;--o-left:#d85715;--o-right:#b3440c;--g-top:#2a2a36;--g-left:#1a1a24;--g-right:#111119;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh;position:relative}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,107,26,.08),transparent 55%),radial-gradient(ellipse at 80% 60%,rgba(162,107,255,.05),transparent 50%);pointer-events:none;z-index:0}
+  .hero{position:relative;z-index:2;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 20px}
+  .hero-label{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:inline-flex;align-items:center;gap:8px}
+  .hero-label svg{width:14px;height:14px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;line-height:1.08;max-width:820px;letter-spacing:-.03em}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin-top:16px;max-width:600px;color:var(--muted);font-size:16px;line-height:1.5}
+  .grid{position:relative;z-index:2;max-width:1240px;margin:40px auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 24px;min-height:360px;display:flex;flex-direction:column;overflow:hidden;transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+  .card:hover{transform:translateY(-3px);border-color:var(--border2)}
+  .card.featured{border-color:rgba(255,107,26,.45);box-shadow:0 0 0 1px rgba(255,107,26,.15),0 20px 60px -20px rgba(255,107,26,.35)}
+  .card.featured::after{content:'';position:absolute;inset:-1px;border-radius:14px;padding:1px;background:conic-gradient(from 0deg,rgba(255,107,26,.8),transparent 30%,transparent 70%,rgba(255,107,26,.8));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:sheen 6s linear infinite}
+  @keyframes sheen{to{transform:rotate(360deg)}}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative;z-index:2}
+  .card-num{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;color:var(--muted)}
+  .card-num .n{color:var(--accent);margin-right:6px}
+  .pill{font-family:'Space Mono',monospace;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:4px 9px;border-radius:999px;color:var(--accent);border:1px solid rgba(255,107,26,.4);background:rgba(255,107,26,.08)}
+  .iso-stage{flex:1;position:relative;background:radial-gradient(ellipse at 50% 40%,#1a1a26 0%,var(--bg2) 70%);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;min-height:200px;perspective:800px}
+  .card-title{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px;position:relative;z-index:2}
+  .card-sub{font-size:13.5px;color:var(--muted);line-height:1.5;position:relative;z-index:2}
+  .card-sub strong{color:var(--text);font-weight:600}
+
+  /* 01 Floating islands */
+  .isl{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .island{position:absolute;transform-style:preserve-3d}
+  .island .top{position:absolute;background:linear-gradient(135deg,#2a2a36,#1a1a24);border:1px solid #3a3a46;border-radius:4px;transform:rotateX(60deg) rotateZ(-45deg)}
+  .island.accent .top{background:linear-gradient(135deg,var(--o-top),var(--o-left));border-color:var(--o-top);box-shadow:0 0 12px rgba(255,107,26,.3)}
+  .island.i1{left:20%;top:30%;animation:isl1 4s ease-in-out infinite}
+  .island.i1 .top{width:70px;height:70px;margin:-35px}
+  .island.i2{left:65%;top:35%;animation:isl2 4.5s ease-in-out infinite}
+  .island.i2 .top{width:50px;height:50px;margin:-25px}
+  .island.i3{left:45%;top:65%;animation:isl3 5s ease-in-out infinite}
+  .island.i3 .top{width:60px;height:60px;margin:-30px}
+  @keyframes isl1{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes isl2{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
+  @keyframes isl3{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+  /* 02 Dominoes FEATURED */
+  .dom{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .dom-rig{position:relative;width:220px;height:100px;transform:rotateX(60deg) rotateZ(-20deg);transform-style:preserve-3d}
+  .dtile{position:absolute;bottom:10px;width:14px;height:44px;background:linear-gradient(180deg,var(--g-top),var(--g-left));border:1px solid #3a3a46;border-radius:2px;transform-origin:bottom;animation:domFall 4s ease infinite}
+  .dtile.accent{background:linear-gradient(180deg,var(--o-top),var(--o-left));border-color:var(--o-top);box-shadow:0 0 8px rgba(255,107,26,.4)}
+  @keyframes domFall{0%,20%{transform:rotate(0deg)}55%,85%{transform:rotate(55deg)}100%{transform:rotate(0deg)}}
+
+  /* 03 Growing crystals */
+  .cry{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .cry-rig{position:relative;width:180px;height:160px;transform:rotateX(54.7deg) rotateZ(45deg);transform-style:preserve-3d}
+  .crystal{position:absolute;width:0;height:0;transform-origin:bottom;animation:cryGrow 5s ease-in-out infinite}
+  .crystal::before{content:'';position:absolute;width:20px;height:60px;left:-10px;bottom:0;background:linear-gradient(180deg,rgba(255,107,26,.9),rgba(216,87,21,.6));clip-path:polygon(50% 0,100% 30%,80% 100%,20% 100%,0 30%);box-shadow:0 0 10px rgba(255,107,26,.4)}
+  .crystal.teal::before{background:linear-gradient(180deg,rgba(94,208,197,.9),rgba(46,153,145,.6));box-shadow:0 0 10px rgba(94,208,197,.4)}
+  @keyframes cryGrow{0%,100%{transform:scale(.3)}50%{transform:scale(1)}}
+
+  /* 04 Ripple pond */
+  .pond{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .pond-rig{position:relative;width:200px;height:200px;transform:rotateX(60deg) rotateZ(-45deg);transform-style:preserve-3d}
+  .ripple{position:absolute;left:50%;top:50%;border:1.5px solid var(--accent);border-radius:50%;transform:translate(-50%,-50%);animation:rippleOut 3s ease-out infinite;opacity:0}
+  @keyframes rippleOut{0%{width:0;height:0;opacity:1}100%{width:180px;height:180px;opacity:0}}
+  .pond-dot{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+
+  /* 05 Rotating faced cube */
+  .rotc{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;perspective:500px}
+  .rotc-rig{position:relative;width:80px;height:80px;transform-style:preserve-3d;animation:rotcSpin 12s linear infinite}
+  @keyframes rotcSpin{to{transform:rotateY(360deg) rotateX(360deg)}}
+  .rface{position:absolute;width:80px;height:80px;border:1px solid var(--accent);background:rgba(255,107,26,.12);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;color:var(--accent);font-size:24px;font-weight:700;box-shadow:inset 0 0 20px rgba(255,107,26,.2)}
+  .rface.f1{transform:translateZ(40px)}
+  .rface.f2{transform:rotateY(180deg) translateZ(40px)}
+  .rface.f3{transform:rotateY(90deg) translateZ(40px)}
+  .rface.f4{transform:rotateY(-90deg) translateZ(40px)}
+  .rface.f5{transform:rotateX(90deg) translateZ(40px)}
+  .rface.f6{transform:rotateX(-90deg) translateZ(40px)}
+
+  /* 06 Signal towers */
+  .twr{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .twr-rig{position:relative;width:200px;height:160px;transform:rotateX(54.7deg) rotateZ(45deg);transform-style:preserve-3d}
+  .tower-base{position:absolute;bottom:20px;width:16px;background:linear-gradient(180deg,#3a3a46,#1a1a24);border:1px solid #3a3a46;border-radius:1px}
+  .tower-base.t1{left:30px;height:60px}
+  .tower-base.t2{left:90px;height:90px}
+  .tower-base.t3{left:150px;height:70px}
+  .tower-ping{position:absolute;width:10px;height:10px;margin-left:-5px;border-radius:50%;border:2px solid var(--accent);animation:pingOut 2.5s ease-out infinite}
+  .tower-ping.p1{left:38px;top:90px}
+  .tower-ping.p2{left:98px;top:60px;animation-delay:.8s}
+  .tower-ping.p3{left:158px;top:80px;animation-delay:1.6s}
+  @keyframes pingOut{0%{transform:scale(.5);opacity:1}100%{transform:scale(4);opacity:0}}
+  .tower-dot{position:absolute;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .tower-dot.d1{left:38px;top:90px}
+  .tower-dot.d2{left:98px;top:60px}
+  .tower-dot.d3{left:158px;top:80px}
+
+  .outro{position:relative;z-index:2;padding:80px 24px 120px;text-align:center;max-width:640px;margin:40px auto 0;border-top:1px solid var(--border)}
+  .outro h2{font-size:clamp(24px,4vw,40px);font-weight:600;letter-spacing:-.02em}
+  .outro h2 em{font-style:normal;color:var(--accent)}
+  .outro p{margin-top:14px;color:var(--muted);font-size:15px;line-height:1.5}
+  .outro .cta{display:inline-flex;align-items:center;gap:8px;margin-top:26px;padding:12px 22px;background:var(--accent);color:#0c0c14;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;border-radius:8px;text-decoration:none;transition:transform .3s;font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l9 5.2v9.6L12 22l-9-5.2V7.2L12 2z" stroke="#ff6b1a" stroke-width="1.5"/></svg>
+    Bento / Grid v2
+  </div>
+  <h1>Six more <em>moves</em>.</h1>
+  <p>Islands, dominoes, crystals, ripples — the second pass of isometric vignettes.</p>
+</section>
+
+<div class="grid">
+
+  <!-- 01 Islands -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">01</span>ISLANDS</div></div>
+    <div class="iso-stage">
+      <div class="isl">
+        <div class="island i1"><div class="top"></div></div>
+        <div class="island accent i2"><div class="top"></div></div>
+        <div class="island i3"><div class="top"></div></div>
+      </div>
+    </div>
+    <div class="card-title">Floating Islands</div>
+    <div class="card-sub">Independent plates <strong>drift at their own cadence</strong> — loosely coupled subsystems.</div>
+  </div>
+
+  <!-- 02 Dominoes FEATURED -->
+  <div class="card featured">
+    <div class="card-head"><div class="card-num"><span class="n">02</span>CASCADE</div><div class="pill">Chain</div></div>
+    <div class="iso-stage">
+      <div class="dom">
+        <div class="dom-rig" id="domRig"></div>
+      </div>
+    </div>
+    <div class="card-title">Dominoes</div>
+    <div class="card-sub">Tiles <strong>fall in sequence</strong> — one nudge, the whole line follows.</div>
+  </div>
+
+  <!-- 03 Crystals -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">03</span>CRYSTALS</div></div>
+    <div class="iso-stage">
+      <div class="cry">
+        <div class="cry-rig" id="cryRig"></div>
+      </div>
+    </div>
+    <div class="card-title">Growing Crystals</div>
+    <div class="card-sub">Shards <strong>rise and retract</strong> — load emerging and resolving across a field.</div>
+  </div>
+
+  <!-- 04 Pond -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">04</span>RIPPLE</div></div>
+    <div class="iso-stage">
+      <div class="pond">
+        <div class="pond-rig">
+          <div class="ripple"></div>
+          <div class="ripple" style="animation-delay:1s"></div>
+          <div class="ripple" style="animation-delay:2s"></div>
+          <div class="pond-dot"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Ripple Pond</div>
+    <div class="card-sub">A single drop — <strong>rings expand outward</strong>. One event, broadcast.</div>
+  </div>
+
+  <!-- 05 Rotating cube -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">05</span>FACES</div></div>
+    <div class="iso-stage">
+      <div class="rotc">
+        <div class="rotc-rig">
+          <div class="rface f1">01</div>
+          <div class="rface f2">02</div>
+          <div class="rface f3">03</div>
+          <div class="rface f4">04</div>
+          <div class="rface f5">05</div>
+          <div class="rface f6">06</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Numbered Cube</div>
+    <div class="card-sub">Six faces <strong>tumble into view</strong> — every side of the same object.</div>
+  </div>
+
+  <!-- 06 Towers -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">06</span>SIGNAL</div></div>
+    <div class="iso-stage">
+      <div class="twr">
+        <div class="twr-rig">
+          <div class="tower-base t1"></div>
+          <div class="tower-base t2"></div>
+          <div class="tower-base t3"></div>
+          <div class="tower-ping p1"></div>
+          <div class="tower-ping p2"></div>
+          <div class="tower-ping p3"></div>
+          <div class="tower-dot d1"></div>
+          <div class="tower-dot d2"></div>
+          <div class="tower-dot d3"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Signal Towers</div>
+    <div class="card-sub">Beacons <strong>pulse outward</strong> — each tower calling on its own cycle.</div>
+  </div>
+
+</div>
+
+<section class="outro">
+  <h2>Six more ways to show a system <em>alive</em>.</h2>
+  <p>Pick the one that matches the idea.</p>
+  <a href="index.html" class="cta">◀ back to modules</a>
+</section>
+
+<script>
+  // Dominoes
+  const dr = document.getElementById('domRig');
+  if(dr){
+    for(let i=0;i<12;i++){
+      const d=document.createElement('div');
+      d.className='dtile' + (i===5?' accent':'');
+      d.style.left=(10+i*17)+'px';
+      d.style.animationDelay=(i*.15)+'s';
+      dr.appendChild(d);
+    }
+  }
+  // Crystals grid
+  const cr = document.getElementById('cryRig');
+  if(cr){
+    const positions=[[30,30],[70,50],[110,40],[150,70],[50,90],[90,110],[130,100],[40,130],[120,140]];
+    positions.forEach((p,i)=>{
+      const c=document.createElement('div');
+      c.className='crystal' + (i%3===1?' teal':'');
+      c.style.left=p[0]+'px';c.style.top=p[1]+'px';
+      c.style.animationDelay=(i*.25)+'s';
+      cr.appendChild(c);
+    });
+  }
+</script>
+</body>
+</html>

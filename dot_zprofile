@@ -18,11 +18,11 @@ export HOMEBREW_CASK_OPTS="--no-quarantine"
 # ============================================
 # Editor
 # ============================================
-# Use VS Code locally; fall back to nano over SSH
+# Use Zed locally; fall back to nano over SSH
 if [[ -n "$SSH_CONNECTION" ]]; then
   export EDITOR='nano'
 else
-  export EDITOR='code --wait'
+  export EDITOR='zed --wait'
 fi
 export VISUAL="$EDITOR"
 

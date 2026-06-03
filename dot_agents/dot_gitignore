@@ -1,0 +1,16 @@
+
+# Secrets
+*.pub
+*.key
+*.decrypted~*.yaml
+.env
+.secret
+
+# Misc.
+.private/
+.worktrees/
+.playwright-cli/
+.task/
+.venv/
+.DS_Store
+Thumbs.db

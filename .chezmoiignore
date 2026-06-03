@@ -23,4 +23,17 @@ dot_config/ghostty/
 # SSH config is managed separately on work machines — don't overwrite it.
 # To pull from 1Password manually: op read 'op://Private/SSH Config/notesPlain' > ~/.ssh/config
 .ssh/config
+# Home-lab secrets must NOT land on a work machine. Both are pulled from
+# 1Password and are personal / home-ops only — gate them off the work profile.
+.kube/config
+.config/sops/age/home-ops.key
 {{- end }}
+
+# Never track the .agents inner git repo
+.agents/.git
+.agents/.git/**
+
+# .agents/context holds personal DNA + employer (Proofpoint) brand/IP material.
+# This repo is PUBLIC — never publish context here. Back it up privately instead.
+.agents/context
+.agents/context/**

@@ -117,6 +117,13 @@ if grep -qi "Xcode license" "$BUNDLE_LOG" 2>/dev/null; then
     $(( _elapsed / 60 )) $(( _elapsed % 60 ))
 fi
 
+# Strict mirror: uninstall any formula/cask/tap/mas NOT in the generated
+# Brewfile so the machine matches packages.yaml exactly. Dependencies of
+# listed packages are preserved automatically. Profile-filtered, so e.g.
+# personal-only casks are removed on a work machine.
+echo "==> Pruning packages not in the Brewfile (brew bundle cleanup)..."
+brew bundle cleanup --file="$BREWFILE" --force 2>&1 | tee -a "$BUNDLE_LOG" || true
+
 echo "==> Cleaning up..."
 brew cleanup --prune=all -q 2>/dev/null || true
 

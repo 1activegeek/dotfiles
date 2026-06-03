@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<!-- ================================================================
+   GRAPHICS SHEET TEMPLATE (master-slides)
+   ---
+   Use this file as the base for new modules' graphics sheets.
+
+   TO ADAPT:
+     1. Copy this file to ./projects/{id}/{m{n}-deck}/graphics-sheet.html
+     2. Update <title> and the header h1/kicker
+     3. In the <script>, change `MODULE` to 'M{N}' and `CONCEPTS` to the ordered list of concept keys
+     4. Replace the concept rows with your own — 3-5 variants per concept
+     5. Per-variant CSS blocks live at the bottom of <style> — add / remove / scope
+     6. Open in browser. Click variants to pick, leave notes on any variant, hit Copy Picks.
+
+   INTERACTIONS (prebuilt, do not remove):
+     • Click any .variant to pick (one pick per concept; re-click to unpick)
+     • '+ note' button on each variant opens inline textarea; blur to save
+     • Fixed picks bar at bottom with live count, chips, Copy + Clear buttons
+     • Toast confirms clipboard copy
+     • Picks persist in localStorage: `picks-M{N}`
+     • Notes persist in localStorage: `notes-M{N}`
+     • Copy output format (with notes): `M2.skills=V02 — "note text", M2.ctx=V03`
+   ================================================================ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{MODULE}} · Graphics sheet · pick winners</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23ff6b1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 6l18 10v16L24 42 6 32V16Z'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+<style>
+:root {
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface3: #15151d;
+  --surface4: #1a1a24;
+  --border: #1a1a1a;
+  --border2: #2a2a36;
+  --text: #e0e0e0;
+  --text-paper: #f1ece0;
+  --text-dim: #888;
+  --muted: #55555c;
+  --accent: #ff6b1a;
+  --accent-glow: rgba(255, 107, 26, 0.3);
+  --teal: #50e3c2;
+  --violet: #8b5cf6;
+  --cyan: #22d3ee;
+  --amber: #f5a623;
+  --red: #ef4444;
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  padding: clamp(40px, 6vh, 80px) clamp(20px, 4vw, 60px);
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% -10%, rgba(255, 107, 26, 0.04), transparent 55%);
+}
+.wrap { max-width: 1440px; margin: 0 auto; position: relative; z-index: 1; }
+
+header { padding-bottom: 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+.kicker {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.kicker::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+h1 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(42px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.018em;
+  color: var(--text-paper); max-width: 18ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.subtitle {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 18px; color: #a8a296; margin-top: 14px; max-width: 56ch; line-height: 1.45;
+}
+
+.concept-row { padding: 48px 0; border-bottom: 1px solid var(--border); }
+.concept-row:last-of-type { border-bottom: none; }
+.concept-row .label { display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px; }
+.concept-row .num {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.2em;
+}
+.concept-row h2 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(28px, 3.6vw, 42px); line-height: 1.05;
+  letter-spacing: -0.015em; color: var(--text-paper);
+}
+.concept-row h2 em { font-style: italic; color: var(--accent); }
+.concept-row .concept-desc {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 14px; color: var(--text-dim);
+  margin-top: 4px; max-width: 60ch;
+}
+
+.variants { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 960px) { .variants { grid-template-columns: 1fr; } }
+
+.variant {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+.variant:hover { border-color: var(--accent); transform: translateY(-3px); }
+.variant.picked {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(255, 107, 26, 0.06), var(--surface));
+  box-shadow: 0 0 0 1px var(--accent), 0 0 32px rgba(255, 107, 26, 0.18);
+}
+.variant.picked::after {
+  content: '';
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 14px var(--accent-glow);
+  animation: pickPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pickPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+/* ===== Comment affordance on each variant ===== */
+.v-note {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.v-note .note-trigger {
+  background: none; border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  display: flex; align-items: center; gap: 6px;
+  transition: color 0.2s;
+}
+.v-note .note-trigger:hover { color: var(--accent); }
+.v-note .note-trigger svg { width: 12px; height: 12px; }
+.v-note .note-display {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 12px; color: var(--text-paper);
+  letter-spacing: 0.02em;
+  font-style: italic;
+  line-height: 1.4;
+  flex: 1;
+}
+.v-note .note-display:empty { display: none; }
+.v-note.has-note .note-trigger { color: var(--accent); }
+.v-note textarea {
+  width: 100%;
+  margin-top: 8px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text-paper);
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 54px;
+  outline: none;
+  display: none;
+}
+.v-note.editing textarea { display: block; }
+.v-note.editing .note-display { display: none; }
+.v-note.editing .note-trigger { color: var(--accent); }
+
+/* Picks bar · fixed bottom */
+.picks-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-width: 92vw;
+}
+.picks-bar.empty { opacity: 0.6; }
+.picks-status {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.picks-chips {
+  display: flex; gap: 6px;
+  flex-wrap: nowrap;
+  max-width: 50vw;
+  overflow-x: auto;
+}
+.picks-chips::-webkit-scrollbar { height: 4px; }
+.picks-chips::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+.picks-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px 4px 10px;
+  background: rgba(255, 107, 26, 0.12);
+  border: 1px solid rgba(255, 107, 26, 0.35);
+  border-radius: 100px;
+  color: var(--text-paper);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.picks-chip .rm {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 11px; padding: 0 0 0 2px;
+  line-height: 1;
+}
+.picks-chip .rm:hover { color: var(--accent); }
+.btn-copy, .btn-clear {
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-copy:hover { background: #ffb07c; box-shadow: 0 0 18px var(--accent-glow); }
+.btn-copy:active { transform: scale(0.96); }
+.btn-clear {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-clear:hover { color: var(--accent); border-color: var(--accent); }
+.copy-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: var(--accent);
+  color: #000;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.copy-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+.v-num {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase;
+}
+.v-stage {
+  height: 180px;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, #141418 0%, #0a0a0f 70%);
+  position: relative; overflow: hidden;
+}
+.v-label {
+  font-family: var(--font-display); font-weight: 400; font-style: italic;
+  font-size: 16px; color: var(--text-paper); letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.v-desc {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 12px; color: var(--text-dim); line-height: 1.5;
+}
+
+footer {
+  margin-top: 60px;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+footer .eg { color: var(--accent); margin-top: 10px; display: block; }
+
+/* ================================================================
+   01 · CLAUDE.md
+   ================================================================ */
+.mk-rows { width: 170px; padding: 12px; background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; font-family: var(--font-mono); font-size: 8px; position: relative; overflow: hidden; }
+.mk-rows::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanX 2.4s linear infinite; }
+@keyframes scanX { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.mk-rows .h { color: var(--accent); font-size: 7px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
+.mk-rows .r { display: flex; gap: 6px; padding: 2px 0; color: var(--text-dim); }
+.mk-rows .r .k { color: var(--accent); width: 36px; font-weight: 600; }
+.mk-rows .r .v { color: var(--text-paper); }
+
+.mk-scroll { width: 140px; height: 150px; background: linear-gradient(180deg, #e6dfce, #c9c2b0); border-radius: 4px 4px 12px 12px; position: relative; padding: 18px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.mk-scroll::before { content: ''; position: absolute; top: -6px; left: -4px; right: -4px; height: 12px; background: #c9c2b0; border-radius: 6px; }
+.mk-scroll::after { content: ''; position: absolute; bottom: -6px; left: -4px; right: -4px; height: 12px; background: #c9c2b0; border-radius: 6px; }
+.mk-scroll .row { height: 2px; background: #4a4a4a; margin-bottom: 4px; border-radius: 1px; width: 90%; opacity: 0.6; animation: scrollWrite 3s ease infinite; }
+.mk-scroll .row.w60 { width: 60%; }
+.mk-scroll .row.w75 { width: 75%; }
+.mk-scroll .row:nth-child(2) { animation-delay: 0.3s; }
+.mk-scroll .row:nth-child(3) { animation-delay: 0.6s; }
+.mk-scroll .row:nth-child(4) { animation-delay: 0.9s; }
+@keyframes scrollWrite { 0%, 10% { width: 0; } 40%, 80% { width: var(--w, 90%); } 100% { width: 0; } }
+
+.mk-card { width: 150px; padding: 14px; background: var(--surface3); border: 1px solid var(--accent); border-radius: 10px; font-family: var(--font-mono); font-size: 8px; position: relative; }
+.mk-card .photo { width: 28px; height: 28px; background: var(--accent); border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 8px; animation: photoPulse 2s ease infinite; }
+@keyframes photoPulse { 0%, 100% { box-shadow: 0 0 0 transparent; } 50% { box-shadow: 0 0 14px var(--accent-glow); } }
+.mk-card .name { display: inline-block; vertical-align: middle; font-size: 10px; color: var(--text-paper); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.mk-card .divider { height: 1px; background: var(--accent); margin: 10px 0; opacity: 0.5; }
+.mk-card .field { margin-bottom: 4px; }
+.mk-card .field .label { color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-size: 6px; }
+.mk-card .field .val { color: var(--text-paper); font-size: 9px; margin-top: 1px; }
+
+/* ================================================================
+   02 · SKILLS
+   ================================================================ */
+.sk-recipe { width: 150px; padding: 12px; background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; }
+.sk-recipe .h { font-family: var(--font-display); font-style: italic; color: var(--accent); font-size: 14px; margin-bottom: 8px; }
+.sk-recipe .step { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 8px; padding: 3px 0; color: var(--text-dim); }
+.sk-recipe .step .n { color: var(--accent); font-weight: 700; min-width: 14px; }
+.sk-recipe .step .bar { flex: 1; height: 2px; background: var(--border2); border-radius: 1px; }
+.sk-recipe .step .bar.fill { background: var(--accent); width: 0; animation: recipeFill 3s ease infinite; }
+.sk-recipe .step:nth-child(2) .bar.fill { animation-delay: 0s; }
+.sk-recipe .step:nth-child(3) .bar.fill { animation-delay: 0.4s; }
+.sk-recipe .step:nth-child(4) .bar.fill { animation-delay: 0.8s; }
+.sk-recipe .step:nth-child(5) .bar.fill { animation-delay: 1.2s; }
+@keyframes recipeFill { 0%, 10% { width: 0; } 40%, 90% { width: 100%; } 100% { width: 0; } }
+
+.sk-knife svg { overflow: visible; }
+.sk-knife .tool { transform-origin: 50% 100%; animation: toolSwing 5s ease-in-out infinite; }
+.sk-knife .tool.t1 { animation-delay: 0s; }
+.sk-knife .tool.t2 { animation-delay: 0.3s; }
+.sk-knife .tool.t3 { animation-delay: 0.6s; }
+.sk-knife .tool.t4 { animation-delay: 0.9s; }
+@keyframes toolSwing { 0%, 60%, 100% { transform: rotate(0); } 30% { transform: rotate(-50deg); } 45% { transform: rotate(-50deg); } }
+
+/* ================================================================
+   03 · MEMORY
+   ================================================================ */
+.mm-stack { position: relative; width: 160px; height: 150px; }
+.mm-stack .file { position: absolute; width: 110px; padding: 10px 12px; background: var(--surface3); border: 1px solid var(--border); border-radius: 5px; font-family: var(--font-mono); font-size: 8px; animation: stackFloat 5s ease-in-out infinite; }
+.mm-stack .file .h { color: var(--accent); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; font-size: 7px; margin-bottom: 4px; }
+.mm-stack .file .l { height: 2px; background: var(--muted); border-radius: 1px; margin-bottom: 3px; width: 80%; opacity: 0.5; }
+.mm-stack .file .l.w60 { width: 60%; }
+.mm-stack .file.f1 { top: 5%; left: 5%; transform: rotate(-4deg); }
+.mm-stack .file.f2 { top: 25%; left: 25%; transform: rotate(2deg); animation-delay: 1.5s; }
+.mm-stack .file.f3 { top: 45%; left: 10%; transform: rotate(-2deg); animation-delay: 3s; border-color: var(--accent); box-shadow: 0 0 16px rgba(255, 107, 26, 0.25); }
+@keyframes stackFloat { 0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translateY(-4px) rotate(var(--r, 0deg)); } }
+
+.mm-brain svg { overflow: visible; }
+.mm-brain .region { animation: regionGlow 2.4s ease-in-out infinite; transform-origin: center; }
+.mm-brain .region.r2 { animation-delay: 0.3s; }
+.mm-brain .region.r3 { animation-delay: 0.6s; }
+.mm-brain .region.r4 { animation-delay: 0.9s; }
+@keyframes regionGlow { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; filter: drop-shadow(0 0 8px var(--accent-glow)); } }
+
+.mm-library { display: flex; gap: 3px; align-items: flex-end; padding: 12px; }
+.mm-library .book { width: 10px; background: var(--accent); border-radius: 2px 2px 0 0; transition: height 0.3s; animation: bookPulse 3s ease infinite; }
+.mm-library .book:nth-child(1) { height: 60px; animation-delay: 0s; background: var(--cyan); }
+.mm-library .book:nth-child(2) { height: 80px; animation-delay: 0.2s; background: var(--accent); }
+.mm-library .book:nth-child(3) { height: 50px; animation-delay: 0.4s; background: var(--violet); }
+.mm-library .book:nth-child(4) { height: 90px; animation-delay: 0.6s; background: var(--accent); }
+.mm-library .book:nth-child(5) { height: 70px; animation-delay: 0.8s; background: var(--teal); }
+.mm-library .book:nth-child(6) { height: 65px; animation-delay: 1.0s; background: var(--accent); }
+.mm-library .book:nth-child(7) { height: 85px; animation-delay: 1.2s; background: var(--amber); }
+.mm-library .book:nth-child(8) { height: 55px; animation-delay: 1.4s; background: var(--accent); }
+.mm-library .book:nth-child(9) { height: 75px; animation-delay: 1.6s; background: var(--violet); }
+@keyframes bookPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; filter: brightness(1.2); } }
+
+/* ================================================================
+   04 · CONTEXT WINDOW
+   ================================================================ */
+.ctx-gauge svg { width: 170px; }
+.ctx-gauge .g-track { stroke: var(--border2); stroke-width: 10; fill: none; stroke-linecap: round; }
+.ctx-gauge .g-fill { stroke: url(#ctxG); stroke-width: 10; fill: none; stroke-linecap: round; stroke-dasharray: 200; stroke-dashoffset: 200; animation: ctxFill 3.5s ease infinite; }
+@keyframes ctxFill { 0% { stroke-dashoffset: 200; } 55% { stroke-dashoffset: 40; } 75% { stroke-dashoffset: 40; } 100% { stroke-dashoffset: 200; } }
+.ctx-gauge .g-needle { stroke: var(--accent); stroke-width: 2; transform-origin: 85px 85px; transform: rotate(-90deg); animation: ctxNeedle 3.5s ease infinite; }
+@keyframes ctxNeedle { 0% { transform: rotate(-90deg); } 55% { transform: rotate(72deg); } 75% { transform: rotate(72deg); } 100% { transform: rotate(-90deg); } }
+
+.ctx-iceberg svg { overflow: visible; }
+.ctx-iceberg .waterline { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.6; }
+.ctx-iceberg .above { fill: var(--accent); }
+.ctx-iceberg .below { fill: var(--accent); opacity: 0.2; animation: icebergBob 3s ease-in-out infinite; transform-origin: center; }
+@keyframes icebergBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+.ctx-iceberg .lbl { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em; fill: var(--accent); }
+
+.ctx-glass { position: relative; width: 80px; height: 140px; border: 2px solid var(--accent); border-radius: 0 0 20px 20px; border-top: none; overflow: hidden; }
+.ctx-glass::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-top: 2px solid var(--accent); border-radius: 2px 2px 0 0; }
+.ctx-glass .water { position: absolute; bottom: 0; left: 0; right: 0; height: 0; background: linear-gradient(180deg, rgba(255, 107, 26, 0.3), var(--accent)); animation: ctxFillUp 3.5s ease infinite; }
+@keyframes ctxFillUp { 0%, 10% { height: 0; } 55%, 80% { height: 85%; } 100% { height: 0; } }
+.ctx-glass .water::before { content: ''; position: absolute; top: -4px; left: 0; right: 0; height: 8px; background: radial-gradient(ellipse at center top, var(--accent-glow), transparent); }
+.ctx-glass-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ctx-glass-wrap .cap { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
+
+/* ================================================================
+   05 · TOOLS / MCP
+   ================================================================ */
+.mcp-hub-scene { position: relative; width: 170px; height: 140px; display: flex; align-items: center; justify-content: center; }
+.mcp-hub-scene svg.lines { position: absolute; inset: 0; }
+.mcp-hub-scene .line { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; fill: none; animation: mcpFlow 2s linear infinite; }
+.mcp-hub-scene .line:nth-child(2) { animation-delay: 0.3s; }
+.mcp-hub-scene .line:nth-child(3) { animation-delay: 0.6s; }
+.mcp-hub-scene .line:nth-child(4) { animation-delay: 0.9s; }
+@keyframes mcpFlow { 0%,100% { stroke-dashoffset: 6; opacity: 0.4; } 50% { stroke-dashoffset: 0; opacity: 1; } }
+.mcp-hub-scene .h-center { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #b3440c); box-shadow: 0 0 18px var(--accent-glow); font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: #0a0a0f; display: flex; align-items: center; justify-content: center; letter-spacing: 0.12em; z-index: 2; }
+.mcp-hub-scene .n { position: absolute; width: 20px; height: 20px; border-radius: 5px; background: var(--surface4); border: 1px solid var(--accent); }
+.mcp-hub-scene .n1 { top: 15%; left: 15%; }
+.mcp-hub-scene .n2 { top: 15%; right: 15%; }
+.mcp-hub-scene .n3 { bottom: 15%; left: 15%; }
+.mcp-hub-scene .n4 { bottom: 15%; right: 15%; }
+
+.mcp-usb svg { overflow: visible; }
+.mcp-usb .plug { fill: var(--accent); animation: plugIn 3s ease-in-out infinite; transform-origin: right center; }
+.mcp-usb .plug.p1 { animation-delay: 0s; }
+.mcp-usb .plug.p2 { animation-delay: 0.4s; }
+.mcp-usb .plug.p3 { animation-delay: 0.8s; }
+@keyframes plugIn { 0%, 100% { transform: translateX(0); opacity: 0.6; } 50% { transform: translateX(-6px); opacity: 1; } }
+.mcp-usb .port { fill: var(--surface3); stroke: var(--accent); stroke-width: 1.5; }
+
+.mcp-strip { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.mcp-strip .strip { width: 140px; height: 32px; background: var(--surface4); border: 1px solid var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
+.mcp-strip .strip .outlet { width: 14px; height: 14px; border: 1.5px solid var(--accent); border-radius: 2px; position: relative; }
+.mcp-strip .strip .outlet::before { content: ''; position: absolute; top: 3px; left: 50%; width: 1.5px; height: 8px; background: var(--accent); transform: translateX(-50%); animation: outletGlow 2s ease infinite; }
+.mcp-strip .strip .outlet:nth-child(2)::before { animation-delay: 0.3s; }
+.mcp-strip .strip .outlet:nth-child(3)::before { animation-delay: 0.6s; }
+.mcp-strip .strip .outlet:nth-child(4)::before { animation-delay: 0.9s; }
+.mcp-strip .strip .outlet:nth-child(5)::before { animation-delay: 1.2s; }
+@keyframes outletGlow { 0%, 100% { background: var(--muted); } 50% { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); } }
+.mcp-strip .cord { width: 2px; height: 34px; background: var(--accent); border-radius: 2px; }
+
+/* ================================================================
+   06 · HOOKS
+   ================================================================ */
+.hk-flow { display: flex; align-items: center; gap: 8px; position: relative; }
+.hk-flow .step { padding: 6px 10px; background: var(--surface3); border: 1px solid var(--border); border-radius: 5px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.1em; }
+.hk-flow .step.active { border-color: var(--accent); color: var(--accent); background: rgba(255, 107, 26, 0.08); }
+.hk-flow .arr { color: var(--muted); font-size: 12px; }
+.hk-flow .tag { position: absolute; top: -14px; left: 60px; padding: 2px 8px; background: var(--surface); border: 1px solid var(--accent); border-radius: 100px; font-family: var(--font-mono); font-size: 8px; color: var(--accent); letter-spacing: 0.15em; font-weight: 700; animation: hkBlink 2s ease infinite; }
+.hk-flow .tag.post { top: auto; bottom: -14px; left: auto; right: 30px; animation-delay: 1s; }
+@keyframes hkBlink { 0%, 100% { transform: translateY(0); box-shadow: 0 0 0 transparent; } 50% { transform: translateY(-3px); box-shadow: 0 0 10px var(--accent-glow); } }
+
+.hk-fishing svg { overflow: visible; }
+.hk-fishing .line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; fill: none; }
+.hk-fishing .hook { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.hk-fishing .event { fill: var(--accent); animation: eventCatch 2.5s ease infinite; }
+.hk-fishing .event.e2 { animation-delay: 0.8s; }
+.hk-fishing .event.e3 { animation-delay: 1.6s; }
+@keyframes eventCatch { 0%, 40% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(-12px); opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); } 80%, 100% { transform: translateY(-30px); opacity: 0; } }
+
+.hk-tripwire svg { overflow: visible; }
+.hk-tripwire .beam { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+.hk-tripwire .post { fill: var(--text-dim); }
+.hk-tripwire .traveler { fill: var(--accent); filter: drop-shadow(0 0 6px var(--accent-glow)); animation: tripRun 3s linear infinite; }
+@keyframes tripRun { 0% { transform: translateX(0); } 100% { transform: translateX(140px); } }
+.hk-tripwire .flash { fill: var(--accent); opacity: 0; animation: tripFlash 3s linear infinite; }
+.hk-tripwire .flash.f1 { animation-delay: 0.9s; }
+.hk-tripwire .flash.f2 { animation-delay: 2.1s; }
+@keyframes tripFlash { 0%, 100% { opacity: 0; } 5%, 10% { opacity: 1; filter: drop-shadow(0 0 10px var(--accent)); } }
+
+/* ================================================================
+   07 · SUBAGENTS
+   ================================================================ */
+.sa-lineup { display: flex; gap: 6px; }
+.sa-lineup .agent { width: 36px; height: 36px; background: var(--accent); border-radius: 4px; image-rendering: pixelated; animation: saHover 2s ease-in-out infinite; }
+.sa-lineup .agent:nth-child(2) { animation-delay: 0.2s; background: var(--cyan); }
+.sa-lineup .agent:nth-child(3) { animation-delay: 0.4s; background: var(--amber); }
+.sa-lineup .agent:nth-child(4) { animation-delay: 0.6s; background: var(--teal); }
+@keyframes saHover { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+.sa-cell { position: relative; width: 160px; height: 130px; display: flex; align-items: center; justify-content: center; }
+.sa-cell .blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffa26b, var(--accent)); box-shadow: 0 0 14px var(--accent-glow); animation: cellSplit 4s ease-in-out infinite; }
+.sa-cell .blob.b1 { animation-delay: 0s; }
+.sa-cell .blob.b2 { animation-delay: 1s; }
+.sa-cell .blob.b3 { animation-delay: 2s; }
+@keyframes cellSplit {
+  0%, 100% { transform: translate(0, 0); opacity: 1; }
+  50% { transform: translate(calc(var(--dx, 0) * 1px), calc(var(--dy, 0) * 1px)); opacity: 0.9; }
+}
+.sa-cell .b1 { --dx: -35; --dy: -18; }
+.sa-cell .b2 { --dx: 38; --dy: -15; }
+.sa-cell .b3 { --dx: 0; --dy: 30; }
+
+.sa-relay { display: flex; align-items: center; gap: 6px; }
+.sa-relay .runner { width: 26px; height: 26px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent-glow); position: relative; }
+.sa-relay .runner::after { content: ''; position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px; border: 1.5px solid var(--accent); border-radius: 50%; opacity: 0; animation: relayPulse 2.4s ease infinite; }
+.sa-relay .runner:nth-child(2)::after { animation-delay: 0.8s; background: var(--cyan); }
+.sa-relay .runner:nth-child(3)::after { animation-delay: 1.6s; }
+@keyframes relayPulse { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+.sa-relay .baton { width: 30px; height: 4px; background: var(--accent); border-radius: 2px; animation: batonPass 2.4s ease-in-out infinite; }
+
+/* ================================================================
+   08 · MODES
+   ================================================================ */
+.mo-pills { display: flex; flex-direction: column; gap: 8px; }
+.mo-pills .pill { display: flex; align-items: center; width: 160px; padding: 8px 12px; border: 1px solid var(--border); background: var(--surface3); border-radius: 100px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); animation: moCycle 6s ease-in-out infinite; }
+.mo-pills .pill:nth-child(1) { animation-delay: 0s; }
+.mo-pills .pill:nth-child(2) { animation-delay: 2s; }
+.mo-pills .pill:nth-child(3) { animation-delay: 4s; }
+.mo-pills .pill .bulb { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 10px; }
+@keyframes moCycle {
+  0%, 30%, 100% { border-color: var(--border); background: var(--surface3); color: var(--text-dim); }
+  5%, 25% { border-color: var(--accent); background: rgba(255, 107, 26, 0.1); color: var(--accent); box-shadow: 0 0 16px var(--accent-glow); }
+}
+.mo-pills .pill .lbl { font-weight: 700; }
+
+.mo-traffic svg { overflow: visible; }
+.mo-traffic .light { animation: trafficCycle 6s ease-in-out infinite; }
+.mo-traffic .light.red { animation-delay: 0s; }
+.mo-traffic .light.yellow { animation-delay: 2s; }
+.mo-traffic .light.green { animation-delay: 4s; }
+@keyframes trafficCycle {
+  0%, 30%, 100% { opacity: 0.25; filter: none; }
+  5%, 25% { opacity: 1; filter: drop-shadow(0 0 8px currentColor); }
+}
+
+.mo-gear { display: flex; gap: 4px; align-items: flex-end; }
+.mo-gear .pos { width: 24px; padding: 8px 0; text-align: center; background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-dim); animation: gearShift 6s ease-in-out infinite; }
+.mo-gear .pos:nth-child(1) { animation-delay: 0s; }
+.mo-gear .pos:nth-child(2) { animation-delay: 1.5s; }
+.mo-gear .pos:nth-child(3) { animation-delay: 3s; }
+.mo-gear .pos:nth-child(4) { animation-delay: 4.5s; }
+@keyframes gearShift {
+  0%, 20%, 100% { border-color: var(--border); color: var(--text-dim); background: var(--surface3); transform: translateY(0); }
+  3%, 18% { border-color: var(--accent); color: var(--accent); background: rgba(255, 107, 26, 0.1); transform: translateY(-3px); box-shadow: 0 4px 12px var(--accent-glow); }
+}
+
+/* ================================================================
+   09 · TOKENS
+   ================================================================ */
+.tk-spark svg { width: 160px; }
+.tk-spark .base { stroke: var(--border2); stroke-width: 0.6; stroke-dasharray: 2 3; }
+.tk-spark .fill-path { fill: url(#tkG); opacity: 0; animation: tkF 3s ease infinite; }
+@keyframes tkF { 0% { opacity: 0; } 50%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.tk-spark .line-path { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 500; stroke-dashoffset: 500; animation: tkD 3s ease infinite; }
+@keyframes tkD { 0% { stroke-dashoffset: 500; } 50%, 80% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 500; } }
+.tk-spark .dot { fill: var(--accent); opacity: 0; animation: tkDot 3s ease infinite; filter: drop-shadow(0 0 5px var(--accent-glow)); }
+@keyframes tkDot { 0%, 50% { opacity: 0; } 55%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+.tk-coins { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; }
+.tk-coins .coin { width: 42px; height: 8px; background: radial-gradient(ellipse at top, #ffd280, var(--accent)); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.5); animation: coinDrop 3s ease-in-out infinite; }
+.tk-coins .coin:nth-child(1) { animation-delay: 0s; }
+.tk-coins .coin:nth-child(2) { animation-delay: 0.3s; }
+.tk-coins .coin:nth-child(3) { animation-delay: 0.6s; }
+.tk-coins .coin:nth-child(4) { animation-delay: 0.9s; }
+.tk-coins .coin:nth-child(5) { animation-delay: 1.2s; }
+.tk-coins .coin:nth-child(6) { animation-delay: 1.5s; }
+@keyframes coinDrop { 0%, 5% { opacity: 0; transform: translateY(-30px); } 15%, 95% { opacity: 1; transform: translateY(0); } 100% { opacity: 1; transform: translateY(0); } }
+
+.tk-fuel svg { width: 170px; }
+.tk-fuel .track { stroke: var(--border2); stroke-width: 10; fill: none; stroke-linecap: round; }
+.tk-fuel .fill { stroke: var(--accent); stroke-width: 10; fill: none; stroke-linecap: round; stroke-dasharray: 180; stroke-dashoffset: 180; animation: fuelBurn 4s linear infinite; }
+@keyframes fuelBurn { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 180; } }
+.tk-fuel .icon-gas { fill: var(--accent); font-family: var(--font-mono); font-size: 18px; font-weight: 700; }
+
+/* ================================================================
+   10 · PROMPT CONTRACTS
+   ================================================================ */
+.pc-structured { width: 180px; background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; padding: 10px; position: relative; overflow: hidden; }
+.pc-structured::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanX 2.4s linear infinite; }
+.pc-structured .row { display: flex; gap: 8px; padding: 5px 0; font-family: var(--font-mono); font-size: 8px; border-bottom: 1px solid var(--border); animation: pcReveal 4s ease infinite; opacity: 0; }
+.pc-structured .row:last-child { border-bottom: none; }
+.pc-structured .row:nth-child(1) { animation-delay: 0s; }
+.pc-structured .row:nth-child(2) { animation-delay: 0.3s; }
+.pc-structured .row:nth-child(3) { animation-delay: 0.6s; }
+.pc-structured .row:nth-child(4) { animation-delay: 0.9s; }
+.pc-structured .k { color: var(--accent); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; width: 60px; }
+.pc-structured .v { color: var(--text-paper); font-family: var(--font-body); font-weight: 300; }
+@keyframes pcReveal { 0% { opacity: 0; transform: translateX(-8px); } 15%, 85% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(0); } }
+
+.pc-legal { width: 130px; height: 160px; background: #e6dfce; border-radius: 3px; padding: 12px 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); font-family: serif; font-size: 6px; color: #2a2a2a; position: relative; }
+.pc-legal .title { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; padding-bottom: 6px; border-bottom: 1px solid #2a2a2a; margin-bottom: 6px; }
+.pc-legal .line { height: 1px; background: #666; margin-bottom: 3px; opacity: 0.5; width: 100%; }
+.pc-legal .line.w80 { width: 80%; }
+.pc-legal .sig { margin-top: 12px; border-top: 1px solid #444; padding-top: 6px; }
+.pc-legal .sig-line { width: 70%; height: 1px; background: var(--accent); animation: signLine 3s ease infinite; stroke-dasharray: 100; }
+@keyframes signLine { 0% { width: 0; } 50%, 90% { width: 70%; } 100% { width: 0; } }
+.pc-legal .stamp { position: absolute; bottom: 16px; right: 8px; width: 28px; height: 28px; border: 2px solid var(--accent); border-radius: 50%; transform: rotate(-15deg); color: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 5px; font-weight: 700; letter-spacing: 0.1em; animation: stampIn 3s ease infinite; opacity: 0; }
+@keyframes stampIn { 0%, 70% { opacity: 0; transform: rotate(-15deg) scale(1.4); } 80% { opacity: 1; transform: rotate(-15deg) scale(1); } 95% { opacity: 1; transform: rotate(-15deg) scale(1); } }
+
+.pc-spec svg { overflow: visible; }
+.pc-spec .panel { fill: #08111f; stroke: var(--accent); stroke-width: 1; }
+.pc-spec .grid-ln { stroke: rgba(126, 211, 252, 0.15); stroke-width: 0.5; }
+.pc-spec .item { fill: var(--accent); animation: specTick 3s ease infinite; }
+.pc-spec .item.i2 { animation-delay: 0.4s; }
+.pc-spec .item.i3 { animation-delay: 0.8s; }
+.pc-spec .item.i4 { animation-delay: 1.2s; }
+@keyframes specTick { 0%, 10% { opacity: 0; } 20%, 90% { opacity: 1; } 100% { opacity: 0; } }
+.pc-spec .label { fill: #7dd3fc; font-family: var(--font-mono); font-size: 6px; letter-spacing: 0.1em; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">M2 · Graphics sheet · pick the winners</div>
+  <h1>Ten glossary terms. <em>Three variants each</em>.</h1>
+  <p class="subtitle">Exploration for Module 2. Each row shows three takes on the term. Tell me which ones ship — winners get promoted to canonical patterns. Push for unusual metaphors; the glossary module is the one where memorable visuals matter most.</p>
+</header>
+
+<!-- 01 · CLAUDE.md -->
+<section class="concept-row">
+  <div class="label"><span class="num">01</span><h2><em>CLAUDE.md</em></h2></div>
+  <p class="concept-desc">The instruction sheet. How do we show "a text file that tells an agent who it is"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="mk-rows">
+          <div class="h">CLAUDE.md · Agent C</div>
+          <div class="r"><span class="k">role</span><span class="v">Content</span></div>
+          <div class="r"><span class="k">rules</span><span class="v">Fact-check</span></div>
+          <div class="r"><span class="k">tools</span><span class="v">Drive · tasks</span></div>
+          <div class="r"><span class="k">memory</span><span class="v">convo_log.md</span></div>
+        </div>
+      </div>
+      <div class="v-label">Config rows</div>
+      <div class="v-desc">Live config mock with scan bar + pixel agent. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · scroll</span>
+      <div class="v-stage">
+        <div class="mk-scroll">
+          <div class="row"></div>
+          <div class="row w75"></div>
+          <div class="row"></div>
+          <div class="row w60"></div>
+          <div class="row"></div>
+          <div class="row w75"></div>
+        </div>
+      </div>
+      <div class="v-label">Paper scroll</div>
+      <div class="v-desc">Cream scroll with lines writing themselves. Ancient-document feel.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · ID card</span>
+      <div class="v-stage">
+        <div class="mk-card">
+          <div style="display:flex; align-items:center; padding-bottom: 8px;">
+            <span class="photo"></span>
+            <span class="name">Agent C</span>
+          </div>
+          <div class="divider"></div>
+          <div class="field"><div class="label">Role</div><div class="val">Content</div></div>
+          <div class="field"><div class="label">Access</div><div class="val">Drive · Tasks</div></div>
+          <div class="field"><div class="label">Serial</div><div class="val">EDO-01</div></div>
+        </div>
+      </div>
+      <div class="v-label">Agent ID card</div>
+      <div class="v-desc">Passport-style identity card. Photo (pulsing), name, role. Reads "the agent's identity."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 · SKILLS -->
+<section class="concept-row">
+  <div class="label"><span class="num">02</span><h2><em>Skills</em></h2></div>
+  <p class="concept-desc">Reusable playbooks — a recipe for one workflow. How do we show "a named procedure"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage" style="background: radial-gradient(ellipse at 50% 50%, #15130a 0%, #0a0a0f 70%);">
+        <svg width="160" height="120" viewBox="0 0 160 120">
+          <path d="M22,60 L66,30" stroke="#ff6b1a" stroke-width="1.5" stroke-dasharray="3 3" fill="none"><animate attributeName="stroke-dashoffset" from="12" to="0" dur="2s" repeatCount="indefinite"/></path>
+          <path d="M22,60 L66,90" stroke="#ff6b1a" stroke-width="1.5" stroke-dasharray="3 3" fill="none"><animate attributeName="stroke-dashoffset" from="12" to="0" dur="2s" repeatCount="indefinite"/></path>
+          <path d="M66,30 L138,60" stroke="#ff6b1a" stroke-width="1.5" stroke-dasharray="3 3" fill="none"><animate attributeName="stroke-dashoffset" from="12" to="0" dur="2s" repeatCount="indefinite"/></path>
+          <path d="M66,90 L138,60" stroke="#ff6b1a" stroke-width="1.5" stroke-dasharray="3 3" fill="none"><animate attributeName="stroke-dashoffset" from="12" to="0" dur="2s" repeatCount="indefinite"/></path>
+          <rect x="8" y="52" width="30" height="16" fill="rgba(255,107,26,0.08)" stroke="#ff6b1a" rx="3"/>
+          <text x="23" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#ff6b1a" font-weight="700">TRIG</text>
+          <rect x="50" y="22" width="32" height="16" fill="#15151d" stroke="#2a2a36" rx="3"/>
+          <text x="66" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#eae7e2" font-weight="700">PLAN</text>
+          <rect x="50" y="82" width="32" height="16" fill="#15151d" stroke="#2a2a36" rx="3"/>
+          <text x="66" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#eae7e2" font-weight="700">CHECK</text>
+          <rect x="122" y="52" width="30" height="16" fill="rgba(76,168,121,0.08)" stroke="#4ca879" rx="3"/>
+          <text x="137" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#4ca879" font-weight="700">DONE</text>
+        </svg>
+      </div>
+      <div class="v-label">Pipeline nodes</div>
+      <div class="v-desc">Trigger → plan/check → done. Already shipped in M2.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · recipe</span>
+      <div class="v-stage">
+        <div class="sk-recipe">
+          <div class="h">script-writing.md</div>
+          <div class="step"><span class="n">01</span><span>Research</span><span class="bar"><span class="bar fill" style="display:block;height:100%"></span></span></div>
+          <div class="step"><span class="n">02</span><span>Hook</span><span class="bar"><span class="bar fill" style="display:block;height:100%"></span></span></div>
+          <div class="step"><span class="n">03</span><span>Draft</span><span class="bar"><span class="bar fill" style="display:block;height:100%"></span></span></div>
+          <div class="step"><span class="n">04</span><span>CTA</span><span class="bar"><span class="bar fill" style="display:block;height:100%"></span></span></div>
+        </div>
+      </div>
+      <div class="v-label">Recipe card</div>
+      <div class="v-desc">Numbered steps fill in sequence. Reads "a known procedure."</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · swiss army</span>
+      <div class="v-stage sk-knife">
+        <svg width="170" height="140" viewBox="0 0 170 140">
+          <rect x="68" y="82" width="34" height="48" fill="#ff6b1a" rx="3"/>
+          <rect x="85" y="125" width="1" height="8" fill="#b3440c"/>
+          <g class="tool t1"><rect x="75" y="40" width="3" height="42" fill="#22d3ee"/></g>
+          <g class="tool t2"><rect x="82" y="36" width="3" height="46" fill="#8b5cf6"/></g>
+          <g class="tool t3"><rect x="89" y="38" width="3" height="44" fill="#50e3c2"/></g>
+          <g class="tool t4"><rect x="96" y="42" width="3" height="40" fill="#f5a623"/></g>
+          <text x="85" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#0a0a0f" font-weight="700">SKILLS</text>
+        </svg>
+      </div>
+      <div class="v-label">Swiss army</div>
+      <div class="v-desc">Tools swinging out from a handle. Playful. Reads "pick the right one for the job."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 · MEMORY -->
+<section class="concept-row">
+  <div class="label"><span class="num">03</span><h2><em>Memory</em></h2></div>
+  <p class="concept-desc">Files the agent reads on startup. Persistent context. How do we show "what it remembers"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="mm-stack">
+          <div class="file f1"><div class="h">MEMORY.md</div><div class="l"></div><div class="l w60"></div></div>
+          <div class="file f2"><div class="h">daily_log.md</div><div class="l w60"></div><div class="l"></div></div>
+          <div class="file f3"><div class="h">convo.md</div><div class="l"></div><div class="l w60"></div></div>
+        </div>
+      </div>
+      <div class="v-label">File stack</div>
+      <div class="v-desc">3 drifting files, top one glowing. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · brain regions</span>
+      <div class="v-stage mm-brain">
+        <svg width="170" height="140" viewBox="0 0 170 140">
+          <path d="M 40 60 C 40 30, 60 25, 85 30 C 110 25, 130 30, 135 55 C 140 80, 125 105, 95 108 C 65 112, 38 90, 40 60 Z" fill="rgba(255,107,26,0.08)" stroke="#ff6b1a" stroke-width="1.5"/>
+          <circle class="region r1" cx="60" cy="55" r="7" fill="#ff6b1a"/>
+          <circle class="region r2" cx="100" cy="50" r="6" fill="#22d3ee"/>
+          <circle class="region r3" cx="80" cy="80" r="5" fill="#8b5cf6"/>
+          <circle class="region r4" cx="115" cy="85" r="7" fill="#50e3c2"/>
+        </svg>
+      </div>
+      <div class="v-label">Brain regions</div>
+      <div class="v-desc">Brain outline with regions pulsing. Memories as neural hotspots.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · library</span>
+      <div class="v-stage">
+        <div class="mm-library">
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+          <div class="book"></div>
+        </div>
+      </div>
+      <div class="v-label">Library shelf</div>
+      <div class="v-desc">Row of book spines at different heights, pulsing. Reads "archive."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 · CONTEXT WINDOW -->
+<section class="concept-row">
+  <div class="label"><span class="num">04</span><h2><em>Context window</em></h2></div>
+  <p class="concept-desc">Short-term memory. Finite. How do we show "it fills up and drifts"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage ctx-gauge">
+        <svg width="170" height="100" viewBox="0 0 170 100">
+          <defs><linearGradient id="ctxG" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#22c55e"/><stop offset="60%" stop-color="#f5a623"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs>
+          <path class="g-track" d="M15,85 A70,70 0 0,1 155,85"/>
+          <path class="g-fill" d="M15,85 A70,70 0 0,1 155,85"/>
+          <line class="g-needle" x1="85" y1="85" x2="85" y2="30"/>
+          <circle cx="85" cy="85" r="4" fill="#ff6b1a"/>
+        </svg>
+      </div>
+      <div class="v-label">Gauge / needle</div>
+      <div class="v-desc">Needle sweeps from 0 to red zone. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · iceberg</span>
+      <div class="v-stage ctx-iceberg">
+        <svg width="170" height="140" viewBox="0 0 170 140">
+          <polygon class="above" points="85,30 108,70 62,70"/>
+          <line class="waterline" x1="10" y1="70" x2="160" y2="70"/>
+          <polygon class="below" points="50,70 120,70 135,110 100,130 70,130 35,110"/>
+          <text class="lbl" x="115" y="55">20%</text>
+          <text class="lbl" x="130" y="105" opacity="0.6">80%</text>
+        </svg>
+      </div>
+      <div class="v-label">Iceberg</div>
+      <div class="v-desc">Tip above water (loaded), mass below (on-demand). Maps to the Iceberg Technique.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · glass</span>
+      <div class="v-stage">
+        <div class="ctx-glass-wrap">
+          <div class="ctx-glass"><div class="water"></div></div>
+          <div class="cap">Context · 85%</div>
+        </div>
+      </div>
+      <div class="v-label">Glass filling</div>
+      <div class="v-desc">Water rises, nearly overflows. Primal "it's getting full" signal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 · TOOLS / MCP -->
+<section class="concept-row">
+  <div class="label"><span class="num">05</span><h2><em>Tools</em> / MCP</h2></div>
+  <p class="concept-desc">Standard way for any model to plug into any tool. How do we show "universal connection"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage mcp-hub-scene">
+        <svg class="lines" viewBox="0 0 170 140" preserveAspectRatio="none"><line class="line" x1="85" y1="70" x2="30" y2="25"/><line class="line" x1="85" y1="70" x2="140" y2="25"/><line class="line" x1="85" y1="70" x2="30" y2="115"/><line class="line" x1="85" y1="70" x2="140" y2="115"/></svg>
+        <div class="h-center">MCP</div>
+        <div class="n n1"></div><div class="n n2"></div><div class="n n3"></div><div class="n n4"></div>
+      </div>
+      <div class="v-label">Hub + spoke</div>
+      <div class="v-desc">Central MCP, nodes connected with pulsing lines. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · USB-C</span>
+      <div class="v-stage mcp-usb">
+        <svg width="170" height="120" viewBox="0 0 170 120">
+          <rect class="port" x="105" y="45" width="40" height="30" rx="4"/>
+          <rect x="110" y="53" width="30" height="14" fill="#0a0a0f" stroke="#ff6b1a" stroke-width="0.8" rx="2"/>
+          <rect class="plug p1" x="80" y="22" width="25" height="12" fill="#ff6b1a" rx="2"/>
+          <rect class="plug p2" x="80" y="55" width="25" height="10" fill="#ff6b1a" rx="2"/>
+          <rect class="plug p3" x="80" y="85" width="25" height="12" fill="#ff6b1a" rx="2"/>
+          <line x1="80" y1="28" x2="60" y2="28" stroke="#ff6b1a" stroke-width="1"/>
+          <line x1="80" y1="60" x2="60" y2="60" stroke="#ff6b1a" stroke-width="1"/>
+          <line x1="80" y1="91" x2="60" y2="91" stroke="#ff6b1a" stroke-width="1"/>
+          <rect x="30" y="22" width="32" height="76" fill="#15151d" stroke="#2a2a36" rx="4"/>
+          <text x="46" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#ff6b1a" font-weight="700">MCP</text>
+        </svg>
+      </div>
+      <div class="v-label">USB-C port</div>
+      <div class="v-desc">Three plugs reaching for a shared port. Reads "universal connector."</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · power strip</span>
+      <div class="v-stage">
+        <div class="mcp-strip">
+          <div class="cord"></div>
+          <div class="strip">
+            <div class="outlet"></div>
+            <div class="outlet"></div>
+            <div class="outlet"></div>
+            <div class="outlet"></div>
+            <div class="outlet"></div>
+          </div>
+        </div>
+      </div>
+      <div class="v-label">Power strip</div>
+      <div class="v-desc">5 outlets sparking to life in sequence. "One source, many devices."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 · HOOKS -->
+<section class="concept-row">
+  <div class="label"><span class="num">06</span><h2><em>Hooks</em></h2></div>
+  <p class="concept-desc">Automatic triggers. Pre and post events. How do we show "fires when X happens"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="hk-flow">
+          <div class="tag">pre</div>
+          <div class="step">READ</div>
+          <span class="arr">→</span>
+          <div class="step active">EDIT</div>
+          <span class="arr">→</span>
+          <div class="step">SAVE</div>
+          <div class="tag post">post</div>
+        </div>
+      </div>
+      <div class="v-label">Pre/post flow</div>
+      <div class="v-desc">Flow with floating pre/post tags blinking. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · fishing</span>
+      <div class="v-stage hk-fishing">
+        <svg width="170" height="140" viewBox="0 0 170 140">
+          <line class="line" x1="40" y1="15" x2="40" y2="85"/>
+          <line class="line" x1="85" y1="15" x2="85" y2="65"/>
+          <line class="line" x1="130" y1="15" x2="130" y2="80"/>
+          <path class="hook" d="M 40 85 Q 40 95, 50 95 Q 55 95, 55 88"/>
+          <path class="hook" d="M 85 65 Q 85 75, 95 75 Q 100 75, 100 68"/>
+          <path class="hook" d="M 130 80 Q 130 90, 140 90 Q 145 90, 145 83"/>
+          <circle class="event e1" cx="52" cy="115" r="4"/>
+          <circle class="event e2" cx="97" cy="115" r="4"/>
+          <circle class="event e3" cx="142" cy="115" r="4"/>
+        </svg>
+      </div>
+      <div class="v-label">Fishing hooks</div>
+      <div class="v-desc">Event dots rise up to dangling hooks. Literal meaning of "hook."</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · tripwire</span>
+      <div class="v-stage hk-tripwire">
+        <svg width="170" height="120" viewBox="0 0 170 120">
+          <rect class="post" x="10" y="30" width="4" height="60"/>
+          <rect class="post" x="156" y="30" width="4" height="60"/>
+          <rect class="post" x="78" y="30" width="4" height="60"/>
+          <line class="beam" x1="14" y1="60" x2="78" y2="60" stroke-dasharray="3 2"/>
+          <line class="beam" x1="82" y1="60" x2="156" y2="60" stroke-dasharray="3 2"/>
+          <circle class="traveler" cx="10" cy="60" r="4"/>
+          <circle class="flash f1" cx="80" cy="60" r="8"/>
+          <circle class="flash f2" cx="156" cy="60" r="8"/>
+          <text x="50" y="90" font-family="JetBrains Mono" font-size="7" fill="#ff6b1a">pre</text>
+          <text x="118" y="90" font-family="JetBrains Mono" font-size="7" fill="#ff6b1a">post</text>
+        </svg>
+      </div>
+      <div class="v-label">Tripwire beams</div>
+      <div class="v-desc">Dot travels, tripping flashes at hook points. Reads "crosses the line, fires."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 · SUBAGENTS -->
+<section class="concept-row">
+  <div class="label"><span class="num">07</span><h2><em>Subagents</em></h2></div>
+  <p class="concept-desc">Helpers the main agent spawns. Parallel work. How do we show "delegation"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="sa-lineup">
+          <div class="agent"></div>
+          <div class="agent"></div>
+          <div class="agent"></div>
+          <div class="agent"></div>
+        </div>
+      </div>
+      <div class="v-label">Agent lineup</div>
+      <div class="v-desc">Pixel icons hovering in a row. Shipped in M1/M2.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · cell split</span>
+      <div class="v-stage">
+        <div class="sa-cell">
+          <div class="blob b1"></div>
+          <div class="blob b2"></div>
+          <div class="blob b3"></div>
+        </div>
+      </div>
+      <div class="v-label">Cell division</div>
+      <div class="v-desc">One blob splits into many. Biological metaphor for spawning.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · relay</span>
+      <div class="v-stage">
+        <div class="sa-relay">
+          <div class="runner"></div>
+          <div class="baton"></div>
+          <div class="runner"></div>
+          <div class="baton"></div>
+          <div class="runner"></div>
+        </div>
+      </div>
+      <div class="v-label">Relay team</div>
+      <div class="v-desc">Runners with a baton passing. Reads "handoff." Sports energy.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 · MODES -->
+<section class="concept-row">
+  <div class="label"><span class="num">08</span><h2><em>Modes</em></h2></div>
+  <p class="concept-desc">Permission levels: auto / ask / plan. How do we show "trust dial"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="mo-pills">
+          <div class="pill"><span class="bulb"></span><span class="lbl">Auto</span></div>
+          <div class="pill"><span class="bulb"></span><span class="lbl">Ask</span></div>
+          <div class="pill"><span class="bulb"></span><span class="lbl">Plan</span></div>
+        </div>
+      </div>
+      <div class="v-label">Mode pills</div>
+      <div class="v-desc">Stacked pills highlighting in sequence. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · traffic light</span>
+      <div class="v-stage mo-traffic">
+        <svg width="100" height="150" viewBox="0 0 100 150">
+          <rect x="30" y="15" width="40" height="120" fill="#15151d" stroke="#2a2a36" stroke-width="1" rx="6"/>
+          <circle class="light green" cx="50" cy="35" r="12" fill="#4ca879"/>
+          <circle class="light yellow" cx="50" cy="70" r="12" fill="#f5a623"/>
+          <circle class="light red" cx="50" cy="105" r="12" fill="#ef4444"/>
+        </svg>
+      </div>
+      <div class="v-label">Traffic light</div>
+      <div class="v-desc">Green = auto, yellow = ask, red = stop. Cycles. Universal symbol.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · gearbox</span>
+      <div class="v-stage">
+        <div class="mo-gear">
+          <div class="pos">P</div>
+          <div class="pos">R</div>
+          <div class="pos">A</div>
+          <div class="pos">D</div>
+        </div>
+      </div>
+      <div class="v-label">Gearbox</div>
+      <div class="v-desc">P/R/A/D positions lighting up in turn. Reads "what mode am I driving in."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 · TOKENS -->
+<section class="concept-row">
+  <div class="label"><span class="num">09</span><h2><em>Tokens</em></h2></div>
+  <p class="concept-desc">The unit of thinking that costs money. How do we show "the meter is running"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage tk-spark">
+        <svg width="160" height="100" viewBox="0 0 200 80" preserveAspectRatio="none">
+          <defs><linearGradient id="tkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6b1a" stop-opacity=".4"/><stop offset="100%" stop-color="#ff6b1a" stop-opacity="0"/></linearGradient></defs>
+          <line class="base" x1="0" y1="40" x2="200" y2="40"/>
+          <path class="fill-path" d="M0,60 L40,50 L80,55 L120,40 L160,30 L200,12 L200,80 L0,80 Z"/>
+          <path class="line-path" d="M0,60 L40,50 L80,55 L120,40 L160,30 L200,12"/>
+          <circle class="dot" cx="200" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="v-label">Sparkline</div>
+      <div class="v-desc">Line chart climbing with a dot at the end. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · coin stack</span>
+      <div class="v-stage">
+        <div class="tk-coins">
+          <div class="coin"></div>
+          <div class="coin"></div>
+          <div class="coin"></div>
+          <div class="coin"></div>
+          <div class="coin"></div>
+          <div class="coin"></div>
+        </div>
+      </div>
+      <div class="v-label">Coins dropping</div>
+      <div class="v-desc">Gold coins stacking from above. Each one = a token = $. Visceral cost.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · fuel gauge</span>
+      <div class="v-stage tk-fuel">
+        <svg width="170" height="110" viewBox="0 0 170 100">
+          <path class="track" d="M15,80 A65,65 0 0,1 155,80"/>
+          <path class="fill" d="M15,80 A65,65 0 0,1 155,80"/>
+          <text class="icon-gas" x="85" y="55" text-anchor="middle">⛽</text>
+          <text x="15" y="95" font-family="JetBrains Mono" font-size="7" fill="#ff6b1a">F</text>
+          <text x="155" y="95" font-family="JetBrains Mono" font-size="7" fill="#ef4444">E</text>
+        </svg>
+      </div>
+      <div class="v-label">Fuel gauge</div>
+      <div class="v-desc">Arc depleting from full to empty. Reads "you're burning through."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · PROMPT CONTRACTS -->
+<section class="concept-row">
+  <div class="label"><span class="num">10</span><h2><em>Prompt contracts</em></h2></div>
+  <p class="concept-desc">Goal + constraints + format + failure. How do we show "a spec sheet"?</p>
+  <div class="variants">
+    <div class="variant">
+      <span class="v-num">V01 · baseline</span>
+      <div class="v-stage">
+        <div class="pc-structured">
+          <div class="row"><span class="k">goal</span><span class="v">Ship by Thursday</span></div>
+          <div class="row"><span class="k">cons</span><span class="v">14 slides · YourBrand</span></div>
+          <div class="row"><span class="k">fmt</span><span class="v">Single HTML</span></div>
+          <div class="row"><span class="k">fail</span><span class="v">Ask before ship</span></div>
+        </div>
+      </div>
+      <div class="v-label">Structured card</div>
+      <div class="v-desc">Rows revealing in sequence. Already shipped.</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V02 · legal doc</span>
+      <div class="v-stage">
+        <div class="pc-legal">
+          <div class="title">Contract</div>
+          <div class="line"></div>
+          <div class="line w80"></div>
+          <div class="line"></div>
+          <div class="line w80"></div>
+          <div class="line"></div>
+          <div class="sig">
+            <div class="sig-line"></div>
+          </div>
+          <div class="stamp">APPR</div>
+        </div>
+      </div>
+      <div class="v-label">Legal contract</div>
+      <div class="v-desc">Paper doc with signature drawing + approval stamp. Reads "binding agreement."</div>
+    </div>
+    <div class="variant">
+      <span class="v-num">V03 · blueprint</span>
+      <div class="v-stage pc-spec" style="background: #08111f;">
+        <svg width="170" height="140" viewBox="0 0 170 140">
+          <line class="grid-ln" x1="0" y1="20" x2="170" y2="20"/>
+          <line class="grid-ln" x1="0" y1="50" x2="170" y2="50"/>
+          <line class="grid-ln" x1="0" y1="80" x2="170" y2="80"/>
+          <line class="grid-ln" x1="0" y1="110" x2="170" y2="110"/>
+          <line class="grid-ln" x1="40" y1="0" x2="40" y2="140"/>
+          <line class="grid-ln" x1="80" y1="0" x2="80" y2="140"/>
+          <line class="grid-ln" x1="120" y1="0" x2="120" y2="140"/>
+          <rect class="panel" x="12" y="12" width="146" height="120" rx="4"/>
+          <text class="label" x="20" y="28">SPEC · M2</text>
+          <text class="label" x="20" y="50">GOAL</text>
+          <rect class="item" x="52" y="45" width="80" height="6"/>
+          <text class="label" x="20" y="70">CONS</text>
+          <rect class="item i2" x="52" y="65" width="60" height="6"/>
+          <text class="label" x="20" y="90">FMT</text>
+          <rect class="item i3" x="52" y="85" width="75" height="6"/>
+          <text class="label" x="20" y="110">FAIL</text>
+          <rect class="item i4" x="52" y="105" width="55" height="6"/>
+        </svg>
+      </div>
+      <div class="v-label">Engineering blueprint</div>
+      <div class="v-desc">Cyan-on-navy spec sheet. Cadence: each field ticks on. Reads "technical specification."</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div><strong style="color:var(--text-paper);">Pick a variant:</strong> click any card to select. Picks auto-save as you click. Hit <strong style="color:var(--accent);">Copy picks</strong> at the bottom when done — paste the string back in chat.</div>
+  <span class="eg">example output: M2.claude=V03, M2.skills=V02, M2.ctx=V02, M2.mcp=V03, M2.modes=V02</span>
+</footer>
+
+</div>
+
+<div class="picks-bar empty" id="picksBar">
+  <div class="picks-status"><span id="picksCount">0</span> / 10 picks</div>
+  <div class="picks-chips" id="picksChips"></div>
+  <button class="btn-copy" id="btnCopy">Copy picks</button>
+  <button class="btn-clear" id="btnClear">Clear</button>
+</div>
+<div class="copy-toast" id="copyToast">Copied to clipboard</div>
+
+<script>
+(function() {
+  const MODULE = 'M2';
+  const CONCEPTS = ['claude', 'skills', 'memory', 'ctx', 'mcp', 'hooks', 'subagents', 'modes', 'tokens', 'contracts'];
+  const STORAGE_KEY = 'picks-' + MODULE;
+
+  const state = new Map();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    for (const [k, v] of Object.entries(saved)) state.set(k, v);
+  } catch (e) {}
+
+  const notesKey = 'notes-' + MODULE;
+  const notes = new Map();
+  try {
+    const saved = JSON.parse(localStorage.getItem(notesKey) || '{}');
+    for (const [k, v] of Object.entries(saved)) notes.set(k, v);
+  } catch (e) {}
+
+  const rows = document.querySelectorAll('.concept-row');
+  rows.forEach((row, ri) => {
+    const concept = CONCEPTS[ri];
+    if (!concept) return;
+    row.querySelectorAll('.variant').forEach((variant, vi) => {
+      const v = 'V' + String(vi + 1).padStart(2, '0');
+      const key = `${concept}:${v}`;
+      variant.dataset.m = MODULE;
+      variant.dataset.c = concept;
+      variant.dataset.v = v;
+      variant.dataset.key = key;
+      if (state.get(concept) === v) variant.classList.add('picked');
+
+      // Build note affordance
+      const noteBox = document.createElement('div');
+      noteBox.className = 'v-note';
+      if (notes.has(key)) noteBox.classList.add('has-note');
+      noteBox.innerHTML = `
+        <button class="note-trigger" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="trigger-label">${notes.has(key) ? 'edit note' : '+ note'}</span>
+        </button>
+        <span class="note-display">${escapeHtml(notes.get(key) || '')}</span>
+        <textarea placeholder="add your thoughts on this variant…" rows="2">${escapeHtml(notes.get(key) || '')}</textarea>
+      `;
+      variant.appendChild(noteBox);
+
+      const trigger = noteBox.querySelector('.note-trigger');
+      const ta = noteBox.querySelector('textarea');
+      const display = noteBox.querySelector('.note-display');
+      const label = noteBox.querySelector('.trigger-label');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        noteBox.classList.toggle('editing');
+        if (noteBox.classList.contains('editing')) {
+          ta.focus();
+          ta.setSelectionRange(ta.value.length, ta.value.length);
+        }
+      });
+      ta.addEventListener('click', (e) => e.stopPropagation());
+      ta.addEventListener('blur', () => {
+        const val = ta.value.trim();
+        if (val) {
+          notes.set(key, val);
+          noteBox.classList.add('has-note');
+          label.textContent = 'edit note';
+          display.textContent = val;
+        } else {
+          notes.delete(key);
+          noteBox.classList.remove('has-note');
+          label.textContent = '+ note';
+          display.textContent = '';
+        }
+        noteBox.classList.remove('editing');
+        saveNotes();
+      });
+
+      // Main pick click (ignore if coming from note area)
+      variant.addEventListener('click', (e) => {
+        if (e.target.closest('.v-note')) return;
+        togglePick(concept, v, variant);
+      });
+    });
+  });
+
+  function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function saveNotes() {
+    const obj = {};
+    notes.forEach((v, k) => obj[k] = v);
+    try { localStorage.setItem(notesKey, JSON.stringify(obj)); } catch (e) {}
+  }
+
+  function togglePick(concept, variant, el) {
+    const current = state.get(concept);
+    const row = el.closest('.concept-row');
+    row.querySelectorAll('.variant').forEach(v => v.classList.remove('picked'));
+    if (current === variant) {
+      state.delete(concept);
+    } else {
+      state.set(concept, variant);
+      el.classList.add('picked');
+    }
+    save();
+    render();
+  }
+
+  function save() {
+    const obj = {};
+    state.forEach((v, k) => obj[k] = v);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch (e) {}
+  }
+
+  function formatPicks() {
+    // Build a richer output: pick line + per-pick note (if any) + any comments on non-picked variants
+    const lines = [];
+    const extras = [];
+    for (const concept of CONCEPTS) {
+      if (state.has(concept)) {
+        const pick = state.get(concept);
+        const noteKey = `${concept}:${pick}`;
+        const note = notes.get(noteKey);
+        if (note) {
+          lines.push(`${MODULE}.${concept}=${pick} — "${note}"`);
+        } else {
+          lines.push(`${MODULE}.${concept}=${pick}`);
+        }
+      }
+      // Notes on variants that weren't picked — include as extras
+      notes.forEach((noteText, key) => {
+        const [c, v] = key.split(':');
+        if (c === concept && state.get(concept) !== v) {
+          extras.push(`  (note on ${MODULE}.${concept} ${v}: "${noteText}")`);
+        }
+      });
+    }
+    let out = lines.join(', ');
+    if (extras.length) out += '\n' + extras.join('\n');
+    return out;
+  }
+
+  function render() {
+    const bar = document.getElementById('picksBar');
+    const count = document.getElementById('picksCount');
+    const chips = document.getElementById('picksChips');
+    count.textContent = state.size;
+    bar.classList.toggle('empty', state.size === 0);
+
+    chips.innerHTML = '';
+    for (const concept of CONCEPTS) {
+      if (!state.has(concept)) continue;
+      const chip = document.createElement('span');
+      chip.className = 'picks-chip';
+      chip.innerHTML = `${concept}=<strong style="color:var(--accent);">${state.get(concept)}</strong><button class="rm" data-c="${concept}" aria-label="Remove ${concept}">×</button>`;
+      chips.appendChild(chip);
+    }
+    chips.querySelectorAll('.rm').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const c = btn.dataset.c;
+        state.delete(c);
+        document.querySelectorAll(`[data-c="${c}"]`).forEach(el => el.classList.remove('picked'));
+        save();
+        render();
+      });
+    });
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', () => {
+    const text = formatPicks();
+    if (!text) { showToast('Pick at least one first'); return; }
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('Copied to clipboard');
+    });
+  });
+
+  document.getElementById('btnClear').addEventListener('click', () => {
+    if (!confirm('Clear all picks AND notes?')) return;
+    state.clear();
+    notes.clear();
+    document.querySelectorAll('.variant.picked').forEach(el => el.classList.remove('picked'));
+    document.querySelectorAll('.v-note').forEach(n => {
+      n.classList.remove('has-note', 'editing');
+      const ta = n.querySelector('textarea');
+      const display = n.querySelector('.note-display');
+      const label = n.querySelector('.trigger-label');
+      if (ta) ta.value = '';
+      if (display) display.textContent = '';
+      if (label) label.textContent = '+ note';
+    });
+    save();
+    saveNotes();
+    render();
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('copyToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

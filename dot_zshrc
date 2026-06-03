@@ -52,3 +52,7 @@ unset _zsh_syntax
 if command -v starship &>/dev/null; then
   eval "$(starship init zsh)"
 fi
+
+# Added by Antigravity
+export PATH="/Users/shawnmix/.antigravity/antigravity/bin:$PATH"
+

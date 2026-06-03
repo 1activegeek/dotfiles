@@ -59,3 +59,6 @@ window-width = 200
 window-save-state = always
 shell-integration-features = ssh-terminfo, ssh-env, sudo, title
 keybind = shift+enter=text:\x1b\r
+macos-option-as-alt = left
+keybind = alt+left=unbind
+keybind = alt+right=unbind

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Components lab · 9 left-field experiments</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23ff6b1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 6l18 10v16L24 42 6 32V16Z'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+<style>
+:root {
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface3: #15151d;
+  --surface4: #1a1a24;
+  --border: #1a1a1a;
+  --border2: #2a2a36;
+  --text: #e0e0e0;
+  --text-paper: #f1ece0;
+  --text-dim: #888;
+  --muted: #55555c;
+  --accent: #ff6b1a;
+  --accent-glow: rgba(255, 107, 26, 0.3);
+  --teal: #50e3c2;
+  --violet: #8b5cf6;
+  --cyan: #22d3ee;
+  --amber: #f5a623;
+  --red: #ef4444;
+  --green: #4ca879;
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  padding: clamp(40px, 6vh, 80px) clamp(20px, 4vw, 60px);
+  min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% -10%, rgba(255, 107, 26, 0.05), transparent 55%);
+}
+.wrap { max-width: 1440px; margin: 0 auto; position: relative; z-index: 1; }
+
+header { padding-bottom: 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+.kicker {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.kicker::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+h1 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(42px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.018em;
+  color: var(--text-paper); max-width: 18ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.subtitle {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 18px; color: #a8a296; margin-top: 14px; max-width: 62ch; line-height: 1.45;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; flex-direction: column;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-4px); }
+.card .num {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.24em; color: var(--accent); text-transform: uppercase;
+}
+.card .stage {
+  height: 220px;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, #141418 0%, #0a0a0f 70%);
+}
+.card .name {
+  font-family: var(--font-display); font-weight: 400; font-style: italic;
+  font-size: 20px; color: var(--text-paper); letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.card .uses {
+  font-family: var(--font-body); font-weight: 300;
+  font-size: 13px; color: var(--text-dim); line-height: 1.5;
+}
+.card .uses .tag {
+  display: inline-block;
+  color: var(--accent);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-right: 4px;
+}
+
+footer {
+  margin-top: 60px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+footer strong { color: var(--text-paper); font-weight: 500; }
+footer code { color: var(--accent); font-family: var(--font-mono); font-size: 12px; padding: 2px 6px; background: rgba(255,107,26,0.08); border-radius: 3px; }
+
+/* ================================================================
+   01 · THERMAL BLOOM — activity heat map
+   ================================================================ */
+.c01 { background:
+  radial-gradient(ellipse at 50% 50%, #141418 0%, #0a0a0f 70%),
+  linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px) 0 0 / 22px 22px,
+  linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px) 0 0 / 22px 22px;
+}
+.c01 .bloom {
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,107,26,0.8), rgba(255,107,26,0.2), transparent 70%);
+  filter: blur(4px);
+  animation: bloom 3s ease-in-out infinite;
+}
+@keyframes bloom {
+  0%, 100% { transform: scale(0.5); opacity: 0.2; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+.c01 .b1 { top: 20%; left: 20%; animation-delay: 0s; }
+.c01 .b2 { top: 55%; left: 55%; animation-delay: 1s; background: radial-gradient(circle, rgba(245,166,35,0.7), transparent 70%); }
+.c01 .b3 { top: 25%; left: 60%; animation-delay: 2s; background: radial-gradient(circle, rgba(34,211,238,0.55), transparent 70%); width: 60px; height: 60px; }
+
+/* ================================================================
+   02 · SEISMOGRAPH — event trace
+   ================================================================ */
+.c02 { padding: 0 14px; }
+.c02 svg { width: 100%; height: auto; }
+.c02 .base { stroke: var(--border2); stroke-width: 0.8; stroke-dasharray: 2 3; }
+.c02 .trace {
+  fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round;
+  animation: seis 4s linear infinite;
+}
+@keyframes seis { 0% { transform: translateX(0); } 100% { transform: translateX(-100px); } }
+.c02 .pulse {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+  animation: seisPulse 0.4s ease infinite;
+}
+.c02 .lbl { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; }
+@keyframes seisPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+
+/* ================================================================
+   03 · PINBALL — routing decision
+   ================================================================ */
+.c03 { perspective: 400px; }
+.c03 .frame {
+  position: relative;
+  width: 180px; height: 190px;
+  border: 1.5px solid var(--accent);
+  border-radius: 12px 12px 80px 80px;
+  overflow: hidden;
+  background: rgba(255, 107, 26, 0.03);
+}
+.c03 .bumper {
+  position: absolute;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: rgba(255, 107, 26, 0.08);
+  animation: bumpHit 2s ease-in-out infinite;
+}
+.c03 .bumper.b1 { top: 40px; left: 20px; }
+.c03 .bumper.b2 { top: 40px; right: 20px; animation-delay: 1s; }
+.c03 .bumper.b3 { top: 90px; left: 50%; margin-left: -15px; animation-delay: 0.5s; background: rgba(139, 92, 246, 0.1); border-color: var(--violet); }
+@keyframes bumpHit {
+  0%, 45%, 100% { transform: scale(1); box-shadow: none; }
+  50% { transform: scale(1.25); box-shadow: 0 0 14px var(--accent-glow); background: rgba(255,107,26,0.2); }
+}
+.c03 .ball {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.6);
+  animation: pinball 4s ease-in-out infinite;
+}
+@keyframes pinball {
+  0% { top: 15px; left: 50%; margin-left: -5px; }
+  25% { top: 45px; left: 30px; }
+  50% { top: 95px; left: 50%; margin-left: -5px; }
+  75% { top: 45px; right: 30px; left: auto; }
+  100% { top: 15px; left: 50%; margin-left: -5px; }
+}
+
+/* ================================================================
+   04 · COMPASS — orient + settle
+   ================================================================ */
+.c04 svg { width: 180px; }
+.c04 .ring { fill: none; stroke: var(--border2); stroke-width: 1; }
+.c04 .tick { stroke: var(--muted); stroke-width: 1; }
+.c04 .tick.major { stroke: var(--accent); stroke-width: 2; }
+.c04 .card-lbl { fill: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+.c04 .needle {
+  transform-origin: 90px 90px;
+  animation: compassSearch 5s ease-in-out infinite;
+}
+@keyframes compassSearch {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(200deg); }
+  25% { transform: rotate(120deg); }
+  40% { transform: rotate(240deg); }
+  55% { transform: rotate(160deg); }
+  75%, 100% { transform: rotate(180deg); }
+}
+.c04 .n-point { fill: var(--accent); }
+.c04 .n-tail { fill: var(--text-dim); }
+.c04 .hub { fill: var(--accent); }
+
+/* ================================================================
+   05 · VINYL — continuous play
+   ================================================================ */
+.c05 { padding: 0; }
+.c05 .disc {
+  position: relative;
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%,
+    #141418 0%, #141418 18%,
+    #0a0a0a 19%, #0a0a0a 24%,
+    #141418 25%, #141418 30%,
+    #0a0a0a 31%, #0a0a0a 36%,
+    #141418 37%, #141418 42%,
+    #0a0a0a 43%, #0a0a0a 48%,
+    #141418 49%);
+  border: 1px solid var(--accent);
+  animation: discSpin 4s linear infinite;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.c05 .disc::before {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%,-50%);
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.15);
+}
+.c05 .disc::after {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #000;
+  transform: translate(-50%,-50%);
+}
+@keyframes discSpin { to { transform: rotate(360deg); } }
+.c05 .arm {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 90px; height: 5px;
+  background: var(--text-dim);
+  border-radius: 3px;
+  transform-origin: right center;
+  transform: rotate(-30deg);
+}
+.c05 .arm::before {
+  content: ''; position: absolute;
+  left: -4px; top: -3px;
+  width: 14px; height: 11px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ================================================================
+   06 · BREATHING HEX — identity / heartbeat
+   ================================================================ */
+.c06 svg { width: 120px; overflow: visible; }
+.c06 .outer { fill: none; stroke: var(--accent); stroke-width: 1.5; animation: hexBreath 2.4s ease-in-out infinite; transform-origin: center; }
+.c06 .inner { fill: none; stroke: var(--accent); stroke-width: 2; animation: hexBreath 2.4s ease-in-out infinite; transform-origin: center; animation-delay: 0.3s; }
+.c06 .core { fill: var(--accent); animation: hexCore 2.4s ease-in-out infinite; transform-origin: center; }
+@keyframes hexBreath {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px var(--accent-glow)); }
+}
+@keyframes hexCore {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+  50% { transform: scale(1.2); filter: drop-shadow(0 0 16px var(--accent)); }
+}
+
+/* ================================================================
+   07 · MATRIX RAIN — data ingestion
+   ================================================================ */
+.c07 { padding: 0; overflow: hidden; }
+.c07 .col {
+  position: absolute;
+  top: -60%;
+  width: 10px;
+  display: flex; flex-direction: column;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1.2;
+  animation: rainFall linear infinite;
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+.c07 .col span { opacity: 0; }
+.c07 .col span:nth-last-child(-n+3) { opacity: 1; }
+.c07 .col span:nth-last-child(1) { color: #fff; text-shadow: 0 0 10px var(--accent); }
+.c07 .col span:nth-last-child(4) { opacity: 0.7; }
+.c07 .col span:nth-last-child(5) { opacity: 0.5; }
+.c07 .col span:nth-last-child(6) { opacity: 0.3; }
+@keyframes rainFall { to { top: 120%; } }
+.c07 .c1 { left: 12%; animation-duration: 3.4s; }
+.c07 .c2 { left: 26%; animation-duration: 4.2s; animation-delay: -1s; }
+.c07 .c3 { left: 40%; animation-duration: 3s; animation-delay: -2s; }
+.c07 .c4 { left: 54%; animation-duration: 5s; animation-delay: -0.5s; }
+.c07 .c5 { left: 68%; animation-duration: 3.6s; animation-delay: -1.5s; }
+.c07 .c6 { left: 82%; animation-duration: 4.6s; animation-delay: -2.5s; }
+
+/* ================================================================
+   08 · SPROUT — growth / learning
+   ================================================================ */
+.c08 svg { width: 140px; overflow: visible; }
+.c08 .soil { fill: #2a2a36; }
+.c08 .stem {
+  fill: none; stroke: var(--green); stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 180;
+  stroke-dashoffset: 180;
+  animation: stemGrow 5s ease infinite;
+}
+@keyframes stemGrow {
+  0% { stroke-dashoffset: 180; }
+  60%, 95% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 180; }
+}
+.c08 .leaf {
+  fill: var(--green);
+  opacity: 0;
+  transform-origin: center bottom;
+  animation: leafPop 5s ease infinite;
+}
+.c08 .leaf.l1 { animation-delay: 1.5s; }
+.c08 .leaf.l2 { animation-delay: 2.2s; }
+.c08 .leaf.l3 { animation-delay: 2.9s; }
+@keyframes leafPop {
+  0%, 25% { opacity: 0; transform: scale(0); }
+  40% { opacity: 1; transform: scale(1.1); }
+  50%, 95% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.c08 .bud { fill: var(--accent); opacity: 0; animation: budBloom 5s ease infinite; filter: drop-shadow(0 0 8px var(--accent-glow)); }
+@keyframes budBloom {
+  0%, 50% { opacity: 0; transform: scale(0); }
+  70% { opacity: 1; transform: scale(1.2); }
+  95% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; }
+}
+
+/* ================================================================
+   09 · FINGERPRINT — identity / authentication
+   ================================================================ */
+.c09 { position: relative; }
+.c09 svg { width: 130px; overflow: visible; }
+.c09 .fp {
+  fill: none; stroke: var(--accent); stroke-width: 1.2;
+  stroke-linecap: round;
+  animation: fpFade 3s ease infinite;
+}
+@keyframes fpFade {
+  0%, 10% { opacity: 0.15; }
+  50% { opacity: 1; filter: drop-shadow(0 0 4px var(--accent-glow)); }
+  100% { opacity: 0.15; }
+}
+.c09 .scan {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 130px; height: 2px;
+  margin-left: -65px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: scanSweep 3s ease-in-out infinite;
+}
+@keyframes scanSweep {
+  0% { transform: translateY(-70px); }
+  50% { transform: translateY(70px); }
+  100% { transform: translateY(-70px); }
+}
+.c09 .verify {
+  position: absolute;
+  bottom: 14px; left: 50%; transform: translateX(-50%);
+  padding: 3px 10px;
+  background: rgba(76,168,121,0.12);
+  border: 1px solid var(--green);
+  border-radius: 100px;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: verifyOK 3s ease infinite;
+}
+@keyframes verifyOK {
+  0%, 70% { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  80%, 95% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(0); }
+}
+
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Components lab · nine out-of-left-field experiments</div>
+  <h1>Ten unusual <em>metaphors</em> to steal.</h1>
+  <p class="subtitle">A gallery of component directions I haven't used yet. Paper typography holds. Dark + orange holds. But the metaphor space pushes wide — organic, mechanical, cultural, informational. Tell me which ones spark something and I'll make variants for real concepts.</p>
+</header>
+
+<div class="grid">
+
+  <!-- 01 · THERMAL BLOOM -->
+  <div class="card">
+    <span class="num">01</span>
+    <div class="stage c01">
+      <div class="bloom b1"></div>
+      <div class="bloom b2"></div>
+      <div class="bloom b3"></div>
+    </div>
+    <div class="name">Thermal bloom</div>
+    <div class="uses"><span class="tag">use for</span>where work is happening · agent activity · attention heat · focus zones. Hotspots pulse in and out; the grid suggests a map.</div>
+  </div>
+
+  <!-- 02 · SEISMOGRAPH -->
+  <div class="card">
+    <span class="num">02</span>
+    <div class="stage c02">
+      <svg viewBox="0 0 280 140">
+        <line class="base" x1="10" y1="70" x2="270" y2="70"/>
+        <g class="trace">
+          <path d="M 10 70 L 40 70 L 45 40 L 50 95 L 55 55 L 60 70 L 95 70 L 100 30 L 104 100 L 108 60 L 112 70 L 160 70 L 165 45 L 170 90 L 175 70 L 225 70 L 230 25 L 236 105 L 242 70 L 270 70"/>
+        </g>
+        <circle class="pulse" cx="108" cy="60" r="4"/>
+        <text class="lbl" x="10" y="130">EVENT TRACE · LIVE</text>
+      </svg>
+    </div>
+    <div class="name">Seismograph</div>
+    <div class="uses"><span class="tag">use for</span>events · alerts · spikes in activity · anomaly detection · "something just happened." Trace scrolls left; spikes mark events.</div>
+  </div>
+
+  <!-- 03 · PINBALL -->
+  <div class="card">
+    <span class="num">03</span>
+    <div class="stage c03">
+      <div class="frame">
+        <div class="bumper b1"></div>
+        <div class="bumper b2"></div>
+        <div class="bumper b3"></div>
+        <div class="ball"></div>
+      </div>
+    </div>
+    <div class="name">Pinball routing</div>
+    <div class="uses"><span class="tag">use for</span>routing decisions · A/B/C branches · state machines · stochastic paths. Ball bounces between bumpers; each hit lights up.</div>
+  </div>
+
+  <!-- 04 · COMPASS -->
+  <div class="card">
+    <span class="num">04</span>
+    <div class="stage c04">
+      <svg viewBox="0 0 180 180">
+        <circle class="ring" cx="90" cy="90" r="74"/>
+        <circle class="ring" cx="90" cy="90" r="60"/>
+        <!-- cardinal ticks -->
+        <line class="tick major" x1="90" y1="10" x2="90" y2="24"/>
+        <line class="tick major" x1="90" y1="156" x2="90" y2="170"/>
+        <line class="tick major" x1="10" y1="90" x2="24" y2="90"/>
+        <line class="tick major" x1="156" y1="90" x2="170" y2="90"/>
+        <text class="card-lbl" x="86" y="8" text-anchor="middle">N</text>
+        <text class="card-lbl" x="86" y="178" text-anchor="middle">S</text>
+        <text class="card-lbl" x="4" y="94">W</text>
+        <text class="card-lbl" x="172" y="94">E</text>
+        <!-- needle -->
+        <g class="needle">
+          <polygon class="n-point" points="90,22 84,90 96,90"/>
+          <polygon class="n-tail" points="90,158 84,90 96,90"/>
+        </g>
+        <circle class="hub" cx="90" cy="90" r="5"/>
+      </svg>
+    </div>
+    <div class="name">Compass</div>
+    <div class="uses"><span class="tag">use for</span>search · direction · orient-and-settle · finding north. Needle spins searching, then locks onto target.</div>
+  </div>
+
+  <!-- 05 · VINYL -->
+  <div class="card">
+    <span class="num">05</span>
+    <div class="stage c05">
+      <div class="disc"></div>
+      <div class="arm"></div>
+    </div>
+    <div class="name">Vinyl spin</div>
+    <div class="uses"><span class="tag">use for</span>continuous play · iteration · "keeps running" · cron jobs · playlists of tasks. Orange disc rotates; arm sits on the outer edge.</div>
+  </div>
+
+  <!-- 06 · BREATHING HEX -->
+  <div class="card">
+    <span class="num">06</span>
+    <div class="stage c06">
+      <svg viewBox="0 0 120 120">
+        <path class="outer" d="M60 12 L104 36 L104 84 L60 108 L16 84 L16 36 Z"/>
+        <path class="inner" d="M60 32 L87 48 L87 72 L60 88 L33 72 L33 48 Z"/>
+        <circle class="core" cx="60" cy="60" r="8"/>
+      </svg>
+    </div>
+    <div class="name">Breathing hexagon</div>
+    <div class="uses"><span class="tag">use for</span>identity · single-agent status · heartbeat · "I'm alive" · minimalist presence. The hex mark breathing.</div>
+  </div>
+
+  <!-- 07 · MATRIX RAIN -->
+  <div class="card">
+    <span class="num">07</span>
+    <div class="stage c07">
+      <div class="col c1"><span>0</span><span>1</span><span>0</span><span>1</span><span>A</span><span>F</span><span>3</span><span>9</span><span>X</span><span>$</span></div>
+      <div class="col c2"><span>1</span><span>0</span><span>B</span><span>C</span><span>2</span><span>7</span><span>E</span><span>1</span><span>0</span><span>Z</span></div>
+      <div class="col c3"><span>D</span><span>4</span><span>2</span><span>1</span><span>8</span><span>F</span><span>9</span><span>0</span><span>C</span><span>A</span></div>
+      <div class="col c4"><span>5</span><span>1</span><span>E</span><span>3</span><span>0</span><span>7</span><span>B</span><span>2</span><span>9</span><span>F</span></div>
+      <div class="col c5"><span>A</span><span>1</span><span>0</span><span>D</span><span>3</span><span>8</span><span>2</span><span>E</span><span>1</span><span>7</span></div>
+      <div class="col c6"><span>0</span><span>F</span><span>C</span><span>2</span><span>1</span><span>B</span><span>4</span><span>9</span><span>0</span><span>5</span></div>
+    </div>
+    <div class="name">Matrix rain</div>
+    <div class="uses"><span class="tag">use for</span>data ingestion · overwhelming throughput · "there's a lot happening" · token streams · logs. Falling glyphs of hex/binary in orange.</div>
+  </div>
+
+  <!-- 08 · SPROUT -->
+  <div class="card">
+    <span class="num">08</span>
+    <div class="stage c08">
+      <svg viewBox="0 0 180 180">
+        <ellipse class="soil" cx="90" cy="158" rx="60" ry="8"/>
+        <rect x="30" y="154" width="120" height="18" fill="#1a1a24"/>
+        <path class="stem" d="M 90 154 Q 88 130, 92 110 Q 96 85, 90 60 Q 86 45, 90 28"/>
+        <path class="leaf l1" d="M 90 110 Q 105 108, 112 118 Q 100 122, 90 115 Z" transform="translate(0 0)"/>
+        <path class="leaf l2" d="M 90 85 Q 75 82, 68 92 Q 82 96, 90 90 Z"/>
+        <path class="leaf l3" d="M 90 58 Q 104 55, 110 66 Q 98 70, 90 64 Z"/>
+        <circle class="bud" cx="90" cy="26" r="6"/>
+      </svg>
+    </div>
+    <div class="name">Sprout</div>
+    <div class="uses"><span class="tag">use for</span>learning · growth over time · "gets better" · skills accumulating · knowledge trees. Stem grows, leaves pop, bud blooms.</div>
+  </div>
+
+  <!-- 09 · FINGERPRINT -->
+  <div class="card">
+    <span class="num">09</span>
+    <div class="stage c09">
+      <svg viewBox="0 0 130 130">
+        <path class="fp" d="M 65 15 C 35 15, 18 40, 22 70 C 24 90, 34 108, 50 115"/>
+        <path class="fp" d="M 65 25 C 40 25, 28 45, 32 70 C 34 88, 42 102, 55 108"/>
+        <path class="fp" d="M 65 35 C 45 35, 36 52, 40 70 C 42 84, 50 96, 60 102"/>
+        <path class="fp" d="M 65 45 C 52 45, 48 58, 50 70 C 52 80, 56 90, 65 95"/>
+        <path class="fp" d="M 65 55 C 60 55, 58 62, 58 70 C 58 78, 62 85, 70 88"/>
+        <path class="fp" d="M 65 15 C 95 15, 112 40, 108 70 C 106 90, 96 108, 80 115"/>
+        <path class="fp" d="M 65 25 C 90 25, 102 45, 98 70 C 96 88, 88 102, 75 108"/>
+        <path class="fp" d="M 65 35 C 85 35, 94 52, 90 70 C 88 84, 80 96, 70 102"/>
+        <path class="fp" d="M 65 45 C 78 45, 82 58, 80 70 C 78 80, 74 90, 65 95"/>
+      </svg>
+      <div class="scan"></div>
+      <div class="verify">Verified</div>
+    </div>
+    <div class="name">Fingerprint scan</div>
+    <div class="uses"><span class="tag">use for</span>authentication · identity verification · trust check · permission gate. Scan line sweeps, "Verified" chip appears.</div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>What this is:</strong> nine component experiments outside my usual playbook. Each is live, each is on-brand, each could power a concept slide I haven't built yet. <br><br>
+  <strong>How to use these:</strong> if any spark an idea, tell me the number plus where you'd want it. Examples: <code>04 for M3 reverse-prompting (search-then-settle)</code>, <code>07 for token streams</code>, <code>08 for the self-modifying slide instead of the recursive file-box</code>. I'll build the real variant against an actual concept. <br><br>
+  <strong>What's NOT here:</strong> things I've already used (iso cubes, orbiting rings, hub+spoke, sparkline, gauge, donut, pipeline). This sheet is intentionally left of those.
+</footer>
+
+</div>
+</body>
+</html>

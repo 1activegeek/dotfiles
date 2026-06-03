@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Bento (Data Grid) — Cinematic Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --surface:#111118;
+    --surface2:#15151d;
+    --surface3:#1a1a24;
+    --text:#eae7e2;
+    --muted:#6a6a78;
+    --muted2:#3e3e48;
+    --accent:#ff6b1a;
+    --accent-soft:rgba(255,107,26,.12);
+    --green:#22c55e;
+    --red:#ef4444;
+    --amber:#f5a623;
+    --gray-data:#3a3a44;
+    --border:#1e1e28;
+    --border2:#2a2a36;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,107,26,.05),transparent 60%);pointer-events:none;z-index:0}
+
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ─── Hero ─── */
+  .hero{position:relative;z-index:1;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 20px}
+  .hero-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;line-height:1.08;max-width:780px;letter-spacing:-.03em}
+  .hero h1 span{color:var(--accent)}
+  .hero p{margin-top:16px;max-width:600px;color:var(--muted);font-size:16px;line-height:1.5}
+
+  /* ─── Grid ─── */
+  .grid{position:relative;z-index:1;max-width:1240px;margin:40px auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 20px 24px;min-height:340px;display:flex;flex-direction:column;overflow:hidden;transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+  .card:hover{transform:translateY(-3px);border-color:var(--border2)}
+  .card.featured{border-color:rgba(255,107,26,.4);box-shadow:0 0 0 1px rgba(255,107,26,.15),0 20px 60px -20px rgba(255,107,26,.3)}
+  .card.featured::after{content:'';position:absolute;inset:-1px;border-radius:18px;padding:1px;background:linear-gradient(135deg,rgba(255,107,26,.6),transparent 40%,transparent 60%,rgba(255,107,26,.35));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderPulse 3.5s ease infinite}
+  @keyframes borderPulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+  /* Card header */
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative;z-index:2}
+  .card-num{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;color:var(--muted)}
+  .card-num .n{color:var(--accent);margin-right:6px}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:100px;color:var(--accent);border:1px solid rgba(255,107,26,.4);background:rgba(255,107,26,.08)}
+
+  /* Chart area */
+  .chart{flex:1;position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;min-height:170px;padding:14px 14px 10px;display:flex;flex-direction:column;gap:8px}
+  .chart-head{display:flex;align-items:baseline;justify-content:space-between}
+  .chart-metric{font-size:22px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .chart-metric .unit{font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}
+  .chart-delta{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.05em;padding:2px 6px;border-radius:4px}
+  .chart-delta.up{background:rgba(34,197,94,.12);color:var(--green)}
+  .chart-delta.down{background:rgba(239,68,68,.12);color:var(--red)}
+  .chart-axis{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);display:flex;justify-content:space-between}
+
+  /* Card footer */
+  .card-title{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px;position:relative;z-index:2}
+  .card-sub{font-size:13.5px;color:var(--muted);line-height:1.5;position:relative;z-index:2}
+
+  /* ═══ 01 — Sparkline ═══ */
+  .spark-wrap{flex:1;position:relative}
+  .spark-wrap svg{width:100%;height:100%;overflow:visible}
+  .spark-base{stroke:var(--gray-data);stroke-width:1.2;fill:none;stroke-dasharray:2 3}
+  .spark-line{stroke:var(--accent);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:300;stroke-dashoffset:300;animation:sparkDraw 4s cubic-bezier(.22,1,.36,1) infinite;filter:drop-shadow(0 0 6px rgba(255,107,26,.35))}
+  @keyframes sparkDraw{0%{stroke-dashoffset:300}40%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:-300}}
+  .spark-fill{fill:url(#sparkGrad);opacity:0;animation:fillIn 4s ease infinite;animation-delay:.3s}
+  @keyframes fillIn{0%,20%{opacity:0}40%,80%{opacity:.55}100%{opacity:0}}
+  .spark-dot{fill:var(--accent);filter:drop-shadow(0 0 4px var(--accent));opacity:0;animation:dotAppear 4s ease infinite}
+  @keyframes dotAppear{0%,35%{opacity:0}40%,80%{opacity:1}100%{opacity:0}}
+
+  /* ═══ 02 — Bar chart ═══ */
+  .bars{flex:1;display:flex;align-items:flex-end;gap:8px;padding:6px 0}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+  .bar-rect{width:100%;border-radius:3px 3px 0 0;background:var(--gray-data);position:relative;transition:height 1.2s cubic-bezier(.22,1,.36,1);height:20%}
+  .bar-rect.lead{background:linear-gradient(180deg,var(--accent) 0%,#ffa070 100%);box-shadow:0 0 10px rgba(255,107,26,.4)}
+  .bar-rect.lead::after{content:'';position:absolute;inset:0;border-radius:3px 3px 0 0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 50%);pointer-events:none}
+  .bar-val{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--muted);font-weight:500}
+  .bar-col.lead .bar-val{color:var(--accent)}
+  .bar-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--muted2);text-transform:uppercase}
+  .bars.animate .bar-rect{animation:barGrow 4s ease infinite}
+  .bars.animate .bar-col:nth-child(1) .bar-rect{animation-delay:0s;--h:35%}
+  .bars.animate .bar-col:nth-child(2) .bar-rect{animation-delay:.15s;--h:55%}
+  .bars.animate .bar-col:nth-child(3) .bar-rect{animation-delay:.3s;--h:45%}
+  .bars.animate .bar-col:nth-child(4) .bar-rect{animation-delay:.45s;--h:70%}
+  .bars.animate .bar-col:nth-child(5) .bar-rect{animation-delay:.6s;--h:90%}
+  @keyframes barGrow{0%{height:10%}40%,80%{height:var(--h)}100%{height:10%}}
+
+  /* ═══ 03 — Donut ═══ */
+  .donut-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+  .donut-wrap svg{width:130px;height:130px}
+  .donut-track{fill:none;stroke:var(--gray-data);stroke-width:14}
+  .donut-fill{fill:none;stroke:var(--accent);stroke-width:14;stroke-linecap:round;stroke-dasharray:339;stroke-dashoffset:339;animation:donutFill 4s cubic-bezier(.22,1,.36,1) infinite;filter:drop-shadow(0 0 6px rgba(255,107,26,.3))}
+  @keyframes donutFill{0%{stroke-dashoffset:339}45%,85%{stroke-dashoffset:61}100%{stroke-dashoffset:339}}
+  .donut-center{position:absolute;text-align:center}
+  .donut-num{font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--accent);font-variant-numeric:tabular-nums}
+  .donut-num .pct{font-size:14px;color:var(--muted);font-weight:500;margin-left:1px}
+  .donut-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+  /* ═══ 04 — Heatmap ═══ */
+  .heat{flex:1;display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(7,1fr);gap:2px;padding:4px 0}
+  .heat-cell{background:var(--surface3);border-radius:2px;transition:background .8s}
+  .heat-cell.h1{background:rgba(255,107,26,.15)}
+  .heat-cell.h2{background:rgba(255,107,26,.35)}
+  .heat-cell.h3{background:rgba(255,107,26,.6)}
+  .heat-cell.h4{background:rgba(255,107,26,.9);box-shadow:0 0 6px rgba(255,107,26,.5)}
+  .heat-cell.live{animation:heatBlink 3s ease infinite}
+  @keyframes heatBlink{0%,100%{opacity:.7}50%{opacity:1}}
+
+  /* ═══ 05 — Scatter ═══ */
+  .scatter{flex:1;position:relative}
+  .scatter svg{width:100%;height:100%}
+  .scatter-axis{stroke:var(--muted2);stroke-width:.8}
+  .scatter-grid{stroke:var(--muted2);stroke-width:.4;opacity:.3}
+  .scatter-trend{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3;fill:none;opacity:.6;animation:trendFade 3s ease infinite}
+  @keyframes trendFade{0%,100%{opacity:.3}50%{opacity:.8}}
+  .scatter-dot{fill:var(--accent);opacity:0;animation:dotPop 4s ease infinite}
+  .scatter-dot.g{fill:var(--green)}
+  .scatter-dot.m{fill:var(--gray-data)}
+  @keyframes dotPop{0%,5%{opacity:0;transform:scale(0)}15%,85%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(0)}}
+
+  /* ═══ 06 — Network flow ═══ */
+  .net{flex:1;position:relative;padding:4px}
+  .net svg{width:100%;height:100%;overflow:visible}
+  .net-edge{stroke:var(--gray-data);stroke-width:1;fill:none}
+  .net-edge-live{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-dasharray:3 5;animation:netFlow 1.8s linear infinite}
+  @keyframes netFlow{0%{stroke-dashoffset:16}100%{stroke-dashoffset:0}}
+  .net-node{fill:var(--surface3);stroke:var(--border2);stroke-width:1.2}
+  .net-node.hub{fill:var(--accent);stroke:var(--accent);filter:drop-shadow(0 0 6px rgba(255,107,26,.5))}
+  .net-node.lit{fill:rgba(255,107,26,.3);stroke:var(--accent)}
+  .net-particle{fill:var(--accent);filter:drop-shadow(0 0 4px var(--accent))}
+
+  /* ─── Explain ─── */
+  .explain{position:relative;z-index:1;padding:100px 24px;text-align:center;max-width:680px;margin:0 auto;border-top:1px solid #1a1a1d}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,107,26,.3);padding:4px 12px;border-radius:100px;margin-bottom:20px}
+  .explain h2{font-size:clamp(24px,4vw,38px);font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+  .explain p{font-size:17px;color:var(--muted);line-height:1.6}
+  footer{position:relative;z-index:1;border-top:1px solid #1a1a1d;padding:24px;text-align:center;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">Module — Animated Bento (Data Grid)</div>
+  <h1>Six charts. Six <span>outcomes</span>. Live.</h1>
+  <p>Dashboard bento. Each card is a mini-viz that breathes — sparklines, bars, donut, heatmap, scatter, network flow. Real axes, real scales.</p>
+</section>
+
+<section class="grid">
+
+  <!-- ═══ 01 — Sparkline ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">01</span> THROUGHPUT</div>
+    </div>
+    <div class="chart">
+      <div class="chart-head">
+        <div class="chart-metric">1,284<span class="unit">tasks/wk</span></div>
+        <div class="chart-delta up">+48%</div>
+      </div>
+      <div class="spark-wrap">
+        <svg viewBox="0 0 200 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff6b1a" stop-opacity=".4"/>
+              <stop offset="100%" stop-color="#ff6b1a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line class="spark-base" x1="0" y1="40" x2="200" y2="40"/>
+          <path class="spark-fill" d="M0,60 L20,55 L40,58 L60,48 L80,50 L100,42 L120,38 L140,30 L160,28 L180,18 L200,12 L200,80 L0,80 Z"/>
+          <path class="spark-line" d="M0,60 L20,55 L40,58 L60,48 L80,50 L100,42 L120,38 L140,30 L160,28 L180,18 L200,12"/>
+          <circle class="spark-dot" cx="200" cy="12" r="3.5"/>
+        </svg>
+      </div>
+      <div class="chart-axis"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span></div>
+    </div>
+    <div class="card-title">Up and to the right</div>
+    <div class="card-sub">Tasks shipped per week. Baseline before the agent, climb after.</div>
+  </div>
+
+  <!-- ═══ 02 — Bar chart (FEATURED) ═══ -->
+  <div class="card featured">
+    <div class="card-head">
+      <div class="card-num"><span class="n">02</span> TIME SAVED</div>
+      <div class="pill">THE UNLOCK</div>
+    </div>
+    <div class="chart">
+      <div class="chart-head">
+        <div class="chart-metric">9.4<span class="unit">h / day</span></div>
+        <div class="chart-delta up">+5.2h</div>
+      </div>
+      <div class="bars animate">
+        <div class="bar-col"><div class="bar-rect"></div><div class="bar-val">3.1</div><div class="bar-label">M1</div></div>
+        <div class="bar-col"><div class="bar-rect"></div><div class="bar-val">4.8</div><div class="bar-label">M2</div></div>
+        <div class="bar-col"><div class="bar-rect"></div><div class="bar-val">4.2</div><div class="bar-label">M3</div></div>
+        <div class="bar-col"><div class="bar-rect"></div><div class="bar-val">6.5</div><div class="bar-label">M4</div></div>
+        <div class="bar-col lead"><div class="bar-rect lead"></div><div class="bar-val">9.4</div><div class="bar-label">M5</div></div>
+      </div>
+    </div>
+    <div class="card-title">Hours back every day</div>
+    <div class="card-sub">Month over month. The last bar is the one you feel.</div>
+  </div>
+
+  <!-- ═══ 03 — Donut ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">03</span> AUTONOMY</div>
+    </div>
+    <div class="chart" style="justify-content:center">
+      <div class="donut-wrap">
+        <svg viewBox="0 0 120 120">
+          <circle class="donut-track" cx="60" cy="60" r="54"/>
+          <circle class="donut-fill" cx="60" cy="60" r="54" transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="donut-center">
+          <div class="donut-num">82<span class="pct">%</span></div>
+          <div class="donut-label">AUTO</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Runs without you</div>
+    <div class="card-sub">Eight in ten tasks ship unassisted. The rest ask first.</div>
+  </div>
+
+  <!-- ═══ 04 — Heatmap ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">04</span> ACTIVITY</div>
+    </div>
+    <div class="chart">
+      <div class="chart-head">
+        <div class="chart-metric">7<span class="unit">weeks</span></div>
+        <div class="chart-delta up">streak</div>
+      </div>
+      <div class="heat" id="heatGrid"></div>
+      <div class="chart-axis"><span>W-7</span><span>W-4</span><span>NOW</span></div>
+    </div>
+    <div class="card-title">Every day, another ship</div>
+    <div class="card-sub">Activity map. Dark is quiet, bright is shipped.</div>
+  </div>
+
+  <!-- ═══ 05 — Scatter ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">05</span> CORRELATION</div>
+    </div>
+    <div class="chart">
+      <div class="chart-head">
+        <div class="chart-metric">r = 0.87</div>
+        <div class="chart-delta up">strong</div>
+      </div>
+      <div class="scatter">
+        <svg viewBox="0 0 200 100" preserveAspectRatio="none">
+          <line class="scatter-axis" x1="0" y1="98" x2="200" y2="98"/>
+          <line class="scatter-axis" x1="2" y1="0" x2="2" y2="100"/>
+          <line class="scatter-grid" x1="0" y1="70" x2="200" y2="70"/>
+          <line class="scatter-grid" x1="0" y1="40" x2="200" y2="40"/>
+          <line class="scatter-grid" x1="70" y1="0" x2="70" y2="100"/>
+          <line class="scatter-grid" x1="140" y1="0" x2="140" y2="100"/>
+          <line class="scatter-trend" x1="10" y1="90" x2="195" y2="18"/>
+          <circle class="scatter-dot m" cx="20" cy="85" r="2.5" style="animation-delay:0s"/>
+          <circle class="scatter-dot m" cx="38" cy="78" r="2.5" style="animation-delay:.1s"/>
+          <circle class="scatter-dot" cx="52" cy="70" r="3" style="animation-delay:.2s"/>
+          <circle class="scatter-dot" cx="70" cy="60" r="3" style="animation-delay:.3s"/>
+          <circle class="scatter-dot" cx="90" cy="55" r="3" style="animation-delay:.4s"/>
+          <circle class="scatter-dot g" cx="110" cy="42" r="3.5" style="animation-delay:.5s"/>
+          <circle class="scatter-dot g" cx="130" cy="35" r="3.5" style="animation-delay:.6s"/>
+          <circle class="scatter-dot g" cx="150" cy="28" r="3.5" style="animation-delay:.7s"/>
+          <circle class="scatter-dot g" cx="170" cy="22" r="4" style="animation-delay:.8s"/>
+          <circle class="scatter-dot g" cx="188" cy="15" r="4" style="animation-delay:.9s"/>
+        </svg>
+      </div>
+      <div class="chart-axis"><span>ADOPTION</span><span>&rarr; OUTPUT</span></div>
+    </div>
+    <div class="card-title">The more they use it, the more ships</div>
+    <div class="card-sub">Adoption on X, output on Y. Dots climb the trendline.</div>
+  </div>
+
+  <!-- ═══ 06 — Network ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">06</span> FLOW</div>
+    </div>
+    <div class="chart">
+      <div class="chart-head">
+        <div class="chart-metric">27<span class="unit">services</span></div>
+        <div class="chart-delta up">online</div>
+      </div>
+      <div class="net">
+        <svg viewBox="0 0 200 130" preserveAspectRatio="none">
+          <path class="net-edge-live" d="M100,65 L30,22"/>
+          <path class="net-edge-live" d="M100,65 L170,22" style="animation-delay:.3s"/>
+          <path class="net-edge-live" d="M100,65 L15,65" style="animation-delay:.6s"/>
+          <path class="net-edge-live" d="M100,65 L185,65" style="animation-delay:.9s"/>
+          <path class="net-edge-live" d="M100,65 L30,108" style="animation-delay:1.2s"/>
+          <path class="net-edge-live" d="M100,65 L170,108" style="animation-delay:1.5s"/>
+          <circle class="net-node" cx="30" cy="22" r="5"/>
+          <circle class="net-node" cx="170" cy="22" r="5"/>
+          <circle class="net-node" cx="15" cy="65" r="5"/>
+          <circle class="net-node" cx="185" cy="65" r="5"/>
+          <circle class="net-node" cx="30" cy="108" r="5"/>
+          <circle class="net-node" cx="170" cy="108" r="5"/>
+          <circle class="net-node hub" cx="100" cy="65" r="8"/>
+        </svg>
+      </div>
+      <div class="chart-axis"><span>IN</span><span>HUB</span><span>OUT</span></div>
+    </div>
+    <div class="card-title">Data flows through one brain</div>
+    <div class="card-sub">Every tool reports to the hub. Orange lines pulse where traffic lives.</div>
+  </div>
+
+</section>
+
+<section class="explain">
+  <div class="tag">Why it works</div>
+  <h2>Charts earn trust that logos can&rsquo;t</h2>
+  <p>A screenshot of a graph tells the viewer this is a measured thing, not a pitch. Animate the draw and the number becomes a story.</p>
+</section>
+
+<footer>Cinematic Module — Animated Bento (Data Grid)</footer>
+
+<script>
+(function(){
+  // Heatmap — generate 14x7 cells with varied intensity + occasional re-rolls
+  var grid=document.getElementById('heatGrid');
+  if(grid){
+    var total=14*7,cells=[];
+    function intensity(){
+      var r=Math.random();
+      if(r<.45)return '';
+      if(r<.7)return 'h1';
+      if(r<.85)return 'h2';
+      if(r<.95)return 'h3';
+      return 'h4';
+    }
+    for(var i=0;i<total;i++){
+      var d=document.createElement('div');
+      d.className='heat-cell '+intensity();
+      if(i>total-8)d.classList.add('live');
+      cells.push(d);grid.appendChild(d);
+    }
+    // Periodic re-roll of ~8 random cells
+    setInterval(function(){
+      for(var j=0;j<10;j++){
+        var idx=Math.floor(Math.random()*total);
+        cells[idx].className='heat-cell '+intensity();
+      }
+    },1600);
+  }
+})();
+</script>
+
+</body>
+</html>

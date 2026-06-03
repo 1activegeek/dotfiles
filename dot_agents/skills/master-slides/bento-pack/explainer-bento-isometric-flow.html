@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Bento (Isometric Flow) — Cinematic Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#07070c;--bg2:#0c0c14;--surface:#11111a;--text:#eae7e2;--muted:#6a6a78;--accent:#ff6b1a;--accent-2:#ffa26b;--teal:#5ed0c5;--purple:#a26bff;--border:#1a1a24;--border2:#242430;--o-top:#ff8c4a;--o-left:#d85715;--o-right:#b3440c;--g-top:#2a2a36;--g-left:#1a1a24;--g-right:#111119;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh;position:relative}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,107,26,.08),transparent 55%),radial-gradient(ellipse at 80% 60%,rgba(162,107,255,.05),transparent 50%);pointer-events:none;z-index:0}
+  .hero{position:relative;z-index:2;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 20px}
+  .hero-label{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:inline-flex;align-items:center;gap:8px}
+  .hero-label svg{width:14px;height:14px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;line-height:1.08;max-width:820px;letter-spacing:-.03em}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin-top:16px;max-width:600px;color:var(--muted);font-size:16px;line-height:1.5}
+  .grid{position:relative;z-index:2;max-width:1240px;margin:40px auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 24px;min-height:360px;display:flex;flex-direction:column;overflow:hidden;transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+  .card:hover{transform:translateY(-3px);border-color:var(--border2)}
+  .card.featured{border-color:rgba(255,107,26,.45);box-shadow:0 0 0 1px rgba(255,107,26,.15),0 20px 60px -20px rgba(255,107,26,.35)}
+  .card.featured::after{content:'';position:absolute;inset:-1px;border-radius:14px;padding:1px;background:conic-gradient(from 0deg,rgba(255,107,26,.8),transparent 30%,transparent 70%,rgba(255,107,26,.8));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:sheen 6s linear infinite}
+  @keyframes sheen{to{transform:rotate(360deg)}}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative;z-index:2}
+  .card-num{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;color:var(--muted)}
+  .card-num .n{color:var(--accent);margin-right:6px}
+  .pill{font-family:'Space Mono',monospace;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:4px 9px;border-radius:999px;color:var(--accent);border:1px solid rgba(255,107,26,.4);background:rgba(255,107,26,.08)}
+  .iso-stage{flex:1;position:relative;background:radial-gradient(ellipse at 50% 40%,#1a1a26 0%,var(--bg2) 70%);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;min-height:200px;perspective:800px}
+  .card-title{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px;position:relative;z-index:2}
+  .card-sub{font-size:13.5px;color:var(--muted);line-height:1.5;position:relative;z-index:2}
+  .card-sub strong{color:var(--text);font-weight:600}
+
+  /* 01 Pipeline arrows */
+  .pline{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .pline-rig{position:relative;width:220px;height:140px;transform:rotateX(54.7deg) rotateZ(45deg);transform-style:preserve-3d}
+  .pbox{position:absolute;width:40px;height:30px;background:linear-gradient(135deg,#2a2a36,#1a1a24);border:1px solid #3a3a46;border-radius:3px}
+  .pbox.accent{background:linear-gradient(135deg,var(--o-top),var(--o-left));border-color:var(--o-top);box-shadow:0 0 10px rgba(255,107,26,.3)}
+  .parrow{position:absolute;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 4px var(--accent);animation:pArrow 2.5s ease-in-out infinite}
+  @keyframes pArrow{0%{transform:scaleX(0);transform-origin:left}50%{transform:scaleX(1);transform-origin:left}51%{transform:scaleX(1);transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
+
+  /* 02 Funnel FEATURED */
+  .funnel{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .funnel-svg{width:180px;height:180px;transform:rotateX(10deg)}
+  .fn-drop{fill:var(--accent);filter:drop-shadow(0 0 4px rgba(255,107,26,.6))}
+
+  /* 03 Pipes with fluid */
+  .fpipe{position:relative;width:100%;height:100%}
+  .fpipe svg{position:absolute;inset:0;width:100%;height:100%}
+  .pipe-shell{stroke:#2a2a36;stroke-width:10;fill:none;stroke-linecap:round}
+  .pipe-inner{stroke:#0c0c14;stroke-width:6;fill:none;stroke-linecap:round}
+  .pipe-fluid{stroke:var(--accent);stroke-width:4;fill:none;stroke-linecap:round;stroke-dasharray:16 80;filter:drop-shadow(0 0 4px rgba(255,107,26,.6));animation:fluidGo 3s linear infinite}
+  @keyframes fluidGo{to{stroke-dashoffset:-96}}
+
+  /* 04 Alt conveyor with chute */
+  .chute{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .chute-rig{position:relative;width:180px;height:160px;transform:rotateX(60deg) rotateZ(-30deg);transform-style:preserve-3d}
+  .chute-slope{position:absolute;left:20px;top:30px;width:140px;height:12px;background:linear-gradient(90deg,#2a2a36,#3a3a46);border:1px solid #3a3a46;border-radius:2px;transform:rotateZ(15deg);transform-origin:left center}
+  .chute-bin{position:absolute;left:20px;top:120px;width:140px;height:20px;background:linear-gradient(90deg,#1a1a24,#2a2a36);border:1px solid #3a3a46;border-radius:2px}
+  .chute-ball{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:ballRoll 3s ease-in infinite}
+  .chute-ball.b2{background:#5ed0c5;box-shadow:0 0 6px #5ed0c5;animation-delay:1s}
+  .chute-ball.b3{background:#a26bff;box-shadow:0 0 6px #a26bff;animation-delay:2s}
+  @keyframes ballRoll{0%{left:20px;top:14px;opacity:1}60%{left:150px;top:60px;opacity:1}80%{left:150px;top:120px;opacity:1}100%{left:150px;top:140px;opacity:0}}
+
+  /* 05 Planes with particles */
+  .pplane{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .pp-a,.pp-b{position:absolute;width:140px;height:90px;transform-style:preserve-3d;border-radius:6px}
+  .pp-a{transform:rotateX(54.7deg) rotateZ(45deg) translateZ(35px);background:linear-gradient(135deg,rgba(255,107,26,.1),rgba(20,20,28,.8));border:1px solid rgba(255,107,26,.3);backdrop-filter:blur(2px)}
+  .pp-b{transform:rotateX(54.7deg) rotateZ(45deg) translateZ(-35px);background:linear-gradient(135deg,#1a1a24,#0c0c14);border:1px solid #262632}
+  .particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 4px var(--accent)}
+
+  /* 06 Stepped pyramid liquid */
+  .pyr{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d}
+  .pyr-rig{position:relative;width:160px;height:160px;transform:rotateX(54.7deg) rotateZ(45deg);transform-style:preserve-3d}
+  .step{position:absolute;left:50%;background:linear-gradient(180deg,#2a2a36,#1a1a24);border:1px solid #3a3a46;border-radius:2px}
+  .step.s1{width:120px;height:12px;margin-left:-60px;top:120px}
+  .step.s2{width:90px;height:12px;margin-left:-45px;top:90px}
+  .step.s3{width:60px;height:12px;margin-left:-30px;top:60px}
+  .step.s4{width:30px;height:12px;margin-left:-15px;top:30px}
+  .step-liq{position:absolute;left:50%;width:2px;margin-left:-1px;background:linear-gradient(180deg,var(--accent),transparent);box-shadow:0 0 6px var(--accent);animation:liqFall 2.5s ease-in infinite}
+  .step-liq.l1{top:42px;height:20px;animation-delay:0s}
+  .step-liq.l2{top:72px;height:20px;animation-delay:.5s}
+  .step-liq.l3{top:102px;height:20px;animation-delay:1s}
+  @keyframes liqFall{0%,15%{opacity:0;transform:scaleY(0)}25%,75%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(0)}}
+
+  .outro{position:relative;z-index:2;padding:80px 24px 120px;text-align:center;max-width:640px;margin:40px auto 0;border-top:1px solid var(--border)}
+  .outro h2{font-size:clamp(24px,4vw,40px);font-weight:600;letter-spacing:-.02em}
+  .outro h2 em{font-style:normal;color:var(--accent)}
+  .outro p{margin-top:14px;color:var(--muted);font-size:15px;line-height:1.5}
+  .outro .cta{display:inline-flex;align-items:center;gap:8px;margin-top:26px;padding:12px 22px;background:var(--accent);color:#0c0c14;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;border-radius:8px;text-decoration:none;transition:transform .3s;font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l9 5.2v9.6L12 22l-9-5.2V7.2L12 2z" stroke="#ff6b1a" stroke-width="1.5"/></svg>
+    Bento / Flow
+  </div>
+  <h1>Data wants to <em>move</em>.</h1>
+  <p>Funnels, pipes, chutes — six ways to show things going somewhere.</p>
+</section>
+
+<div class="grid">
+
+  <!-- 01 Pipeline -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">01</span>PIPELINE</div></div>
+    <div class="iso-stage">
+      <div class="pline">
+        <div class="pline-rig">
+          <div class="pbox" style="left:0;top:55px"></div>
+          <div class="pbox" style="left:60px;top:55px"></div>
+          <div class="pbox accent" style="left:120px;top:55px"></div>
+          <div class="pbox" style="left:180px;top:55px"></div>
+          <div class="parrow" style="left:40px;top:70px;width:20px;animation-delay:0s"></div>
+          <div class="parrow" style="left:100px;top:70px;width:20px;animation-delay:.6s"></div>
+          <div class="parrow" style="left:160px;top:70px;width:20px;animation-delay:1.2s"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Pipeline</div>
+    <div class="card-sub">Boxes linked by arrows. Work <strong>advances one stage</strong> at a time.</div>
+  </div>
+
+  <!-- 02 Funnel FEATURED -->
+  <div class="card featured">
+    <div class="card-head"><div class="card-num"><span class="n">02</span>FUNNEL</div><div class="pill">Convert</div></div>
+    <div class="iso-stage">
+      <div class="funnel">
+        <svg class="funnel-svg" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="fg" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#2a2a36"/>
+              <stop offset="1" stop-color="#1a1a24"/>
+            </linearGradient>
+          </defs>
+          <path d="M15,20 L85,20 L60,55 L60,80 L40,80 L40,55 Z" fill="url(#fg)" stroke="#3a3a46" stroke-width=".5"/>
+          <path d="M15,20 L85,20 L60,55 L40,55 Z" fill="rgba(255,107,26,.08)"/>
+          <ellipse cx="50" cy="20" rx="35" ry="5" fill="#1a1a24" stroke="#3a3a46" stroke-width=".5"/>
+          <circle class="fn-drop" r="2.5" cx="50" cy="20"><animate attributeName="cy" values="15;55;55;15" keyTimes="0;.45;.55;1" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.45;.5;.9;1" dur="3s" repeatCount="indefinite"/></circle>
+          <circle class="fn-drop" r="2" cx="50" cy="20" opacity="0"><animate attributeName="cy" values="15;55;55;15" keyTimes="0;.45;.55;1" dur="3s" begin="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.45;.5;.9;1" dur="3s" begin="1s" repeatCount="indefinite"/></circle>
+          <circle class="fn-drop" r="1.8" cx="50" cy="85"><animate attributeName="cy" values="55;95" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1s" repeatCount="indefinite"/></circle>
+        </svg>
+      </div>
+    </div>
+    <div class="card-title">Funnel Drops</div>
+    <div class="card-sub">Items <strong>fall through the cone</strong> — capture at the top, conversion at the bottom.</div>
+  </div>
+
+  <!-- 03 Fluid pipes -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">03</span>FLUID</div></div>
+    <div class="iso-stage">
+      <div class="fpipe">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path class="pipe-shell" d="M10,50 L40,50 Q50,50 50,40 L50,20 Q50,10 60,10 L90,10"/>
+          <path class="pipe-inner" d="M10,50 L40,50 Q50,50 50,40 L50,20 Q50,10 60,10 L90,10"/>
+          <path class="pipe-fluid" d="M10,50 L40,50 Q50,50 50,40 L50,20 Q50,10 60,10 L90,10"/>
+          <path class="pipe-shell" d="M10,90 L40,90 Q55,90 55,75 L55,55 Q55,40 70,40 L90,40"/>
+          <path class="pipe-inner" d="M10,90 L40,90 Q55,90 55,75 L55,55 Q55,40 70,40 L90,40"/>
+          <path class="pipe-fluid" d="M10,90 L40,90 Q55,90 55,75 L55,55 Q55,40 70,40 L90,40" style="animation-delay:1.5s"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card-title">Fluid Pipes</div>
+    <div class="card-sub">Glowing liquid <strong>snakes through pipework</strong> — state moving between services.</div>
+  </div>
+
+  <!-- 04 Chute -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">04</span>CHUTE</div></div>
+    <div class="iso-stage">
+      <div class="chute">
+        <div class="chute-rig">
+          <div class="chute-slope"></div>
+          <div class="chute-bin"></div>
+          <div class="chute-ball"></div>
+          <div class="chute-ball b2"></div>
+          <div class="chute-ball b3"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Chute Drop</div>
+    <div class="card-sub">Balls <strong>slide and collect</strong> — events queueing up in a sink.</div>
+  </div>
+
+  <!-- 05 Particles between planes -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">05</span>LAYERS</div></div>
+    <div class="iso-stage">
+      <div class="pplane" id="pplane">
+        <div class="pp-a"></div>
+        <div class="pp-b"></div>
+      </div>
+    </div>
+    <div class="card-title">Layered Planes</div>
+    <div class="card-sub">Particles <strong>drift between layers</strong> — translucent strata, live traffic.</div>
+  </div>
+
+  <!-- 06 Pyramid liquid -->
+  <div class="card">
+    <div class="card-head"><div class="card-num"><span class="n">06</span>PYRAMID</div></div>
+    <div class="iso-stage">
+      <div class="pyr">
+        <div class="pyr-rig">
+          <div class="step s4"></div><div class="step s3"></div><div class="step s2"></div><div class="step s1"></div>
+          <div class="step-liq l1"></div>
+          <div class="step-liq l2"></div>
+          <div class="step-liq l3"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Stepped Pyramid</div>
+    <div class="card-sub">Liquid <strong>cascades step by step</strong> — tiered fallthrough made visible.</div>
+  </div>
+
+</div>
+
+<section class="outro">
+  <h2>Nothing sits still. Everything <em>routes</em>.</h2>
+  <p>Flow is the feature.</p>
+  <a href="index.html" class="cta">◀ back to modules</a>
+</section>
+
+<script>
+  // Particles between planes
+  const pp = document.getElementById('pplane');
+  if(pp){
+    for(let i=0;i<10;i++){
+      const p = document.createElement('div');
+      p.className='particle';
+      const d = 3 + Math.random()*2;
+      p.style.left = (30 + Math.random()*100)+'px';
+      p.style.top = '50%';
+      p.style.animation = `partFloat${i%3} ${d}s ease-in-out ${Math.random()*2}s infinite`;
+      pp.appendChild(p);
+    }
+    const sheet = document.createElement('style');
+    sheet.textContent=`
+      @keyframes partFloat0{0%,100%{transform:translateY(-30px);opacity:.2}50%{transform:translateY(30px);opacity:1}}
+      @keyframes partFloat1{0%,100%{transform:translateY(20px) translateX(-10px);opacity:.3}50%{transform:translateY(-25px) translateX(15px);opacity:1}}
+      @keyframes partFloat2{0%,100%{transform:translate(15px,15px);opacity:.2}50%{transform:translate(-15px,-20px);opacity:1}}`;
+    document.head.appendChild(sheet);
+  }
+</script>
+</body>
+</html>

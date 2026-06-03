@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Bento (Concept Grid) — Cinematic Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --surface:#111118;
+    --surface2:#15151d;
+    --surface3:#1a1a24;
+    --text:#eae7e2;
+    --muted:#6a6a78;
+    --muted2:#4a4a56;
+    --accent:#ff6b1a;
+    --accent2:#f5a623;
+    --red:#ef4444;
+    --red-soft:rgba(239,68,68,.12);
+    --green:#22c55e;
+    --green-soft:rgba(34,197,94,.12);
+    --border:#1e1e28;
+    --border2:#2a2a36;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,107,26,.05),transparent 60%),radial-gradient(ellipse at 20% 110%,rgba(239,68,68,.04),transparent 50%);pointer-events:none;z-index:0}
+
+  /* ─── Hero ─── */
+  .hero{position:relative;z-index:1;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 20px}
+  .hero-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;line-height:1.08;max-width:780px;letter-spacing:-.03em}
+  .hero h1 .hl{background:linear-gradient(120deg,rgba(255,107,26,.35),rgba(255,107,26,.15));padding:0 8px;border-radius:4px;color:var(--text)}
+  .hero p{margin-top:16px;max-width:620px;color:var(--muted);font-size:16px;line-height:1.5}
+  .hero p code{font-family:'JetBrains Mono',monospace;font-size:.88em;padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent)}
+
+  /* ─── Grid ─── */
+  .grid{position:relative;z-index:1;max-width:1240px;margin:40px auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 22px 26px;min-height:340px;display:flex;flex-direction:column;overflow:hidden;transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+  .card:hover{transform:translateY(-3px);border-color:var(--border2)}
+
+  .card.featured{border-color:rgba(255,107,26,.35);box-shadow:0 0 0 1px rgba(255,107,26,.15),0 20px 60px -20px rgba(255,107,26,.3),inset 0 1px 0 rgba(255,255,255,.03)}
+  .card.featured::after{content:'';position:absolute;inset:-1px;border-radius:20px;padding:1px;background:linear-gradient(135deg,rgba(255,107,26,.6),transparent 40%,transparent 60%,rgba(255,107,26,.35));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderPulse 3.5s ease infinite}
+  @keyframes borderPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* Card header */
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:2}
+  .card-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;font-weight:500;text-transform:uppercase;color:var(--muted)}
+  .card-num .n{color:var(--accent);margin-right:4px}
+  .card-num.red .n{color:var(--red)}
+  .card-num.green .n{color:var(--green)}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:100px;color:var(--accent);border:1px solid rgba(255,107,26,.4);background:rgba(255,107,26,.06);box-shadow:0 0 20px rgba(255,107,26,.18),inset 0 0 12px rgba(255,107,26,.05)}
+  .pill .plus{color:var(--accent);font-weight:400}
+
+  /* Diagram area */
+  .diagram{flex:1;position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;min-height:170px;display:flex;align-items:center;justify-content:center}
+
+  /* Card footer */
+  .card-title{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px;position:relative;z-index:2}
+  .card-title .sel{background:rgba(255,107,26,.22);color:var(--text);padding:0 4px;border-radius:3px}
+  .card-title .sel-red{background:rgba(239,68,68,.2);color:var(--text);padding:0 4px;border-radius:3px}
+  .card-sub{font-size:13.5px;color:var(--muted);line-height:1.5;position:relative;z-index:2}
+  .card-sub code{font-family:'JetBrains Mono',monospace;font-size:.88em;padding:1px 7px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;color:var(--text)}
+
+  /* ═══ DIAGRAM 1 — Fresh / Empty (two containers + ghost) ═══ */
+  .d-fresh{display:flex;align-items:center;gap:16px;padding:20px}
+  .d-fresh .box{width:72px;height:80px;border-radius:10px;display:flex;flex-direction:column;gap:6px;padding:10px;position:relative}
+  .d-fresh .box-a{background:rgba(255,107,26,.08);border:1.5px solid var(--accent);box-shadow:0 0 16px rgba(255,107,26,.25);animation:freshPulse 2.4s ease infinite}
+  .d-fresh .box-b{background:var(--surface3);border:1.5px dashed var(--border2)}
+  .d-fresh .box-b::after{content:'EMPTY';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.14em;color:var(--muted2)}
+  @keyframes freshPulse{0%,100%{box-shadow:0 0 16px rgba(255,107,26,.25)}50%{box-shadow:0 0 28px rgba(255,107,26,.45)}}
+  .d-fresh .box-a .line{height:5px;background:rgba(255,107,26,.35);border-radius:2px}
+  .d-fresh .box-a .line:nth-child(1){width:80%}
+  .d-fresh .box-a .line:nth-child(2){width:60%}
+  .d-fresh .box-a .line:nth-child(3){width:70%}
+  .d-fresh .arrow{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:14px;opacity:.5;animation:arrowFade 2.4s ease infinite}
+  @keyframes arrowFade{0%,100%{opacity:.3;transform:translateX(-2px)}50%{opacity:.8;transform:translateX(2px)}}
+  .d-fresh .ghost{width:40px;height:40px;border-radius:8px;border:1.5px dashed var(--border2);opacity:.5;animation:ghostPulse 2.4s ease infinite}
+  @keyframes ghostPulse{0%,100%{opacity:.3;transform:scale(.95)}50%{opacity:.6;transform:scale(1)}}
+
+  /* ═══ DIAGRAM 2 — Air-gap (barrier) ═══ */
+  .d-gap{display:flex;align-items:center;gap:0;width:100%;padding:20px 24px;justify-content:space-between}
+  .d-gap .side{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+  .d-gap .ent{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--surface3);border:1.5px solid var(--border2);position:relative}
+  .d-gap .side-local .ent{border-color:var(--accent);background:rgba(255,107,26,.08);box-shadow:0 0 12px rgba(255,107,26,.2)}
+  .d-gap .side-cloud .ent{border-color:var(--muted2)}
+  .d-gap .ent svg{width:24px;height:24px;stroke-width:1.8;fill:none}
+  .d-gap .side-local .ent svg{stroke:var(--accent)}
+  .d-gap .side-cloud .ent svg{stroke:var(--muted)}
+  .d-gap .lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .d-gap .side-local .lbl{color:var(--accent)}
+  .d-gap .barrier{flex:1;height:80px;position:relative;margin:0 8px;display:flex;align-items:center;justify-content:center}
+  .d-gap .barrier svg{position:absolute;inset:0;width:100%;height:100%}
+  .d-gap .dashes{stroke:var(--red);stroke-width:1.5;stroke-dasharray:4 4;fill:none;animation:gapFlow 1.6s linear infinite;opacity:.7}
+  @keyframes gapFlow{0%{stroke-dashoffset:8}100%{stroke-dashoffset:0}}
+  .d-gap .xbadge{position:relative;z-index:2;width:26px;height:26px;border-radius:50%;background:var(--red-soft);border:1.5px solid var(--red);color:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;animation:xPulse 1.6s ease infinite}
+  @keyframes xPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{transform:scale(1.08);box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+
+  /* ═══ DIAGRAM 3 — Blocked / X slash ═══ */
+  .d-block{position:relative;width:140px;height:110px}
+  .d-block .frame{position:absolute;inset:0;border:1.5px solid var(--border2);border-radius:12px;background:var(--surface3);display:flex;flex-direction:column;gap:8px;padding:14px}
+  .d-block .frame .ln{height:5px;background:var(--border2);border-radius:2px}
+  .d-block .frame .ln:nth-child(1){width:80%}
+  .d-block .frame .ln:nth-child(2){width:60%}
+  .d-block .frame .ln:nth-child(3){width:70%}
+  .d-block .frame .ln:nth-child(4){width:45%}
+  .d-block svg.slash{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);z-index:2;overflow:visible}
+  .d-block .slash-line{stroke:var(--red);stroke-width:4;stroke-linecap:round;fill:none;stroke-dasharray:220;stroke-dashoffset:220;animation:slashDraw 3s ease infinite;filter:drop-shadow(0 0 6px rgba(239,68,68,.5))}
+  .d-block .slash-line.l2{animation-delay:.3s}
+  @keyframes slashDraw{0%{stroke-dashoffset:220}30%,70%{stroke-dashoffset:0}100%{stroke-dashoffset:-220}}
+
+  /* ═══ DIAGRAM 4 — Flow breakdown (chain) ═══ */
+  .d-chain{display:flex;align-items:center;gap:0;width:100%;padding:16px}
+  .d-chain .node{padding:7px 10px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.1em;white-space:nowrap;flex-shrink:0}
+  .d-chain .n-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:var(--green)}
+  .d-chain .n-ok.pulse{animation:okPulse 2s ease infinite}
+  @keyframes okPulse{0%,100%{box-shadow:0 0 8px rgba(34,197,94,.2)}50%{box-shadow:0 0 16px rgba(34,197,94,.45)}}
+  .d-chain .n-broken{background:rgba(239,68,68,.08);border:1px dashed rgba(239,68,68,.5);color:var(--red)}
+  .d-chain .c{flex:1;height:2px;position:relative;min-width:14px}
+  .d-chain .c-solid{background:rgba(34,197,94,.5)}
+  .d-chain .c-dashed{background:transparent;border-top:2px dashed rgba(239,68,68,.45);animation:chainFlow 1.2s linear infinite}
+  @keyframes chainFlow{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
+  .d-chain .c-dashed::after{content:'';position:absolute;right:-4px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700}
+  .d-chain .x-end{width:18px;height:18px;border-radius:50%;background:var(--red-soft);border:1.5px solid var(--red);color:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;margin-left:4px;animation:xPulse 1.6s ease infinite}
+  .d-chain-labels{display:flex;justify-content:space-between;padding:0 16px;margin-top:-4px}
+  .d-chain-labels span{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .d-chain-labels .lbl-ok{color:var(--green)}
+  .d-chain-labels .lbl-bad{color:var(--red)}
+
+  /* ═══ DIAGRAM 5 — Gauge / Ceiling ═══ */
+  .d-gauge{position:relative;width:170px;height:110px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:4px}
+  .d-gauge svg{width:170px;height:95px;overflow:visible}
+  .gauge-track{stroke:var(--border2);stroke-width:6;fill:none;stroke-linecap:round}
+  .gauge-fill{stroke:url(#gaugeGrad);stroke-width:6;fill:none;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;animation:gaugeSweep 3s cubic-bezier(.22,1,.36,1) infinite}
+  @keyframes gaugeSweep{0%{stroke-dashoffset:220}40%,80%{stroke-dashoffset:55}100%{stroke-dashoffset:220}}
+  .gauge-tick{stroke:var(--muted2);stroke-width:1.2}
+  .gauge-num{font-family:'JetBrains Mono',monospace;font-size:8px;fill:var(--muted);font-weight:500}
+  .gauge-needle{stroke:var(--accent);stroke-width:2;stroke-linecap:round;transform-origin:85px 85px;animation:needleSweep 3s cubic-bezier(.22,1,.36,1) infinite;filter:drop-shadow(0 0 4px rgba(255,107,26,.6))}
+  @keyframes needleSweep{0%{transform:rotate(-90deg)}40%,80%{transform:rotate(60deg)}100%{transform:rotate(-90deg)}}
+  .gauge-hub{fill:var(--accent)}
+  .gauge-cap{margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .gauge-cap b{color:var(--accent);font-weight:600}
+
+  /* ═══ DIAGRAM 6 — Comparison (solid vs fan) ═══ */
+  .d-compare{display:flex;width:100%;padding:16px;gap:12px;align-items:stretch}
+  .d-compare .half{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border-radius:10px;position:relative}
+  .d-compare .half-ok{background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.2)}
+  .d-compare .half-bad{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.2)}
+  .d-compare svg{width:100%;height:60px;overflow:visible}
+  .line-solid{stroke:var(--green);stroke-width:2.5;fill:none;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(34,197,94,.4))}
+  .fan-line{stroke:var(--red);stroke-width:1.5;stroke-linecap:round;fill:none;opacity:.7;stroke-dasharray:50;stroke-dashoffset:50;animation:fanDraw 2.2s ease infinite}
+  .fan-line:nth-child(1){animation-delay:0s}
+  .fan-line:nth-child(2){animation-delay:.15s}
+  .fan-line:nth-child(3){animation-delay:.3s}
+  .fan-line:nth-child(4){animation-delay:.45s}
+  .fan-line:nth-child(5){animation-delay:.6s}
+  @keyframes fanDraw{0%{stroke-dashoffset:50;opacity:0}30%,70%{stroke-dashoffset:0;opacity:.8}100%{stroke-dashoffset:-50;opacity:0}}
+  .cmp-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+  .cmp-lbl.ok{color:var(--green)}
+  .cmp-lbl.bad{color:var(--red)}
+
+  /* ─── Explain ─── */
+  .explain{position:relative;z-index:1;padding:100px 24px;text-align:center;max-width:680px;margin:0 auto;border-top:1px solid #1a1a1d}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,107,26,.3);padding:4px 12px;border-radius:100px;margin-bottom:20px;font-family:'JetBrains Mono',monospace}
+  .explain h2{font-size:clamp(24px,4vw,38px);font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+  .explain p{font-size:17px;color:var(--muted);line-height:1.6}
+  footer{position:relative;z-index:1;border-top:1px solid #1a1a1d;padding:24px;text-align:center;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">Module — Animated Bento (Concept Grid)</div>
+  <h1>Six constraints. Six <span class="hl">reasons</span> the old way breaks.</h1>
+  <p>Concept-first bento. Each card ships a unique iconic diagram, not a repeating wireframe. Use for teardowns, constraint walks, and <code>before-and-why</code> explainers.</p>
+</section>
+
+<section class="grid">
+
+  <!-- ═══ 01 — Fresh / Empty State (two containers + ghost) ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">01</span> Fresh start</div>
+    </div>
+    <div class="diagram">
+      <div class="d-fresh">
+        <div class="box box-a"><div class="line"></div><div class="line"></div><div class="line"></div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="box box-b"></div>
+        <div class="arrow">&rarr;</div>
+        <div class="ghost"></div>
+      </div>
+    </div>
+    <div class="card-title">Every run starts <span class="sel">empty</span></div>
+    <div class="card-sub">New session, blank context. What you learned yesterday doesn&rsquo;t carry.</div>
+  </div>
+
+  <!-- ═══ 02 — Air-gap (barrier) ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num red"><span class="n">02</span> Air-gap</div>
+    </div>
+    <div class="diagram">
+      <div class="d-gap">
+        <div class="side side-local">
+          <div class="ent"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 19 L17 19"/></svg></div>
+          <div class="lbl">LOCAL</div>
+        </div>
+        <div class="barrier">
+          <svg viewBox="0 0 100 80" preserveAspectRatio="none">
+            <line class="dashes" x1="10" y1="40" x2="90" y2="40"/>
+          </svg>
+          <div class="xbadge">&times;</div>
+        </div>
+        <div class="side side-cloud">
+          <div class="ent"><svg viewBox="0 0 24 24"><path d="M7 18 Q3 18 3 14 Q3 10 7 10 Q8 6 13 6 Q18 6 19 10 Q22 10 22 14 Q22 18 18 18 Z"/></svg></div>
+          <div class="lbl">CLOUD</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Nothing crosses the <span class="sel-red">line</span></div>
+    <div class="card-sub">Local agents can&rsquo;t reach cloud state. No sync, no shared memory.</div>
+  </div>
+
+  <!-- ═══ 03 — Blocked / X slash ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num red"><span class="n">03</span> Blocked</div>
+    </div>
+    <div class="diagram">
+      <div class="d-block">
+        <div class="frame">
+          <div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>
+        </div>
+        <svg class="slash" viewBox="0 0 156 126" preserveAspectRatio="none">
+          <line class="slash-line l1" x1="8" y1="8" x2="148" y2="118"/>
+          <line class="slash-line l2" x1="148" y1="8" x2="8" y2="118"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card-title">Not available on this <span class="sel-red">surface</span></div>
+    <div class="card-sub">The feature exists — just not here. <code>cli-only</code> or <code>desktop-only</code> limits bite fast.</div>
+  </div>
+
+  <!-- ═══ 04 — Flow breakdown (chain) ═══ -->
+  <div class="card featured">
+    <div class="card-head">
+      <div class="card-num"><span class="n">04</span> Flow break</div>
+      <div class="pill"><span class="plus">+</span> THE UNLOCK</div>
+    </div>
+    <div class="diagram">
+      <div style="width:100%">
+        <div class="d-chain">
+          <div class="node n-ok pulse">READ</div>
+          <div class="c c-solid"></div>
+          <div class="node n-ok pulse">PLAN</div>
+          <div class="c c-dashed"></div>
+          <div class="node n-broken">WRITE</div>
+          <div class="x-end">&times;</div>
+        </div>
+        <div class="d-chain-labels"><span class="lbl-ok">WORKING</span><span class="lbl-bad">BROKEN</span></div>
+      </div>
+    </div>
+    <div class="card-title">Reads fine. <span class="sel-red">Writes fail.</span></div>
+    <div class="card-sub">Permissions cut the chain between intent and action. Agent plans, agent stalls.</div>
+  </div>
+
+  <!-- ═══ 05 — Gauge / Ceiling ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">05</span> Ceiling</div>
+    </div>
+    <div class="diagram">
+      <div class="d-gauge">
+        <svg viewBox="0 0 170 95">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="60%" stop-color="#f5a623"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <path class="gauge-track" d="M15,85 A70,70 0 0,1 155,85"/>
+          <path class="gauge-fill" d="M15,85 A70,70 0 0,1 155,85"/>
+          <line class="gauge-tick" x1="15" y1="85" x2="20" y2="80"/>
+          <line class="gauge-tick" x1="85" y1="15" x2="85" y2="22"/>
+          <line class="gauge-tick" x1="155" y1="85" x2="150" y2="80"/>
+          <text class="gauge-num" x="8" y="93">0</text>
+          <text class="gauge-num" x="79" y="11">5K</text>
+          <text class="gauge-num" x="146" y="93">10K</text>
+          <line class="gauge-needle" x1="85" y1="85" x2="85" y2="30"/>
+          <circle class="gauge-hub" cx="85" cy="85" r="4"/>
+        </svg>
+        <div class="gauge-cap">TOKENS &middot; <b>7,240 / 10K</b></div>
+      </div>
+    </div>
+    <div class="card-title">Every window has a <span class="sel">ceiling</span></div>
+    <div class="card-sub">Context fills, costs climb, output drifts. The needle always hits the wall.</div>
+  </div>
+
+  <!-- ═══ 06 — Comparison (solid vs fan) ═══ -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num"><span class="n">06</span> Drift</div>
+    </div>
+    <div class="diagram">
+      <div class="d-compare">
+        <div class="half half-ok">
+          <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+            <path class="line-solid" d="M8,30 L92,30"/>
+          </svg>
+          <div class="cmp-lbl ok">DETERMINISTIC</div>
+        </div>
+        <div class="half half-bad">
+          <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+            <path class="fan-line" d="M8,30 L92,10"/>
+            <path class="fan-line" d="M8,30 L92,20"/>
+            <path class="fan-line" d="M8,30 L92,30"/>
+            <path class="fan-line" d="M8,30 L92,40"/>
+            <path class="fan-line" d="M8,30 L92,50"/>
+          </svg>
+          <div class="cmp-lbl bad">DRIFTS</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title">Same prompt, <span class="sel-red">different answers</span></div>
+    <div class="card-sub">Deterministic code draws one line. Models fan out every run. Test once ≠ works once.</div>
+  </div>
+
+</section>
+
+<section class="explain">
+  <div class="tag">Why it works</div>
+  <h2>One concept per card, one diagram per concept</h2>
+  <p>Feature grids sell what something does. Concept grids teach why something breaks. Each diagram here is iconic on its own — the viewer doesn&rsquo;t need the title to get the idea.</p>
+</section>
+
+<footer>Cinematic Module — Animated Bento (Concept Grid)</footer>
+
+</body>
+</html>

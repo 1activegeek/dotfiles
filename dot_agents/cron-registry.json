@@ -1,0 +1,19 @@
+{
+  "description": "Cron registry - read on session restart to recreate all scheduled jobs. All times are in your local timezone.",
+  "crons": [
+    {
+      "id": "keepalive",
+      "name": "Keep-alive ping",
+      "cron": "*/20 * * * *",
+      "prompt": "Check channel connection is active. Process pending messages if any.",
+      "enabled": true
+    },
+    {
+      "id": "morning-summary",
+      "name": "Morning summary",
+      "cron": "57 8 * * *",
+      "prompt": "Send a brief morning summary of pending tasks and today's schedule to the messaging channel.",
+      "enabled": false
+    }
+  ]
+}
