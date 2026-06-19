@@ -73,16 +73,14 @@ alias oc='opencode'
 alias ch='chezmoi'
 alias chstatus='chezmoi cd && git status --short && cd -'
 
-# agentOS — launch Claude Code with LifeOS vault as project root from any directory.
-# Reconciles the skill library to its manifest (skill_manager.py sync) before launching.
-# (Renamed from ori* — "Ori" was the orchestrator's old name, now Jarvis; the launcher
-#  starts an agentOS session, so it's named for the OS. Sync uses `;` so a sync hiccup
-#  never blocks launch.)
-agentos_s() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_s --model opusplan "$@"); }
-agentos_h() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_h --model haiku "$@"); }
-agentos() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --model opusplan "$@"); }
-# backward-compat: old muscle-memory names still work (delete once you've adjusted)
-alias ori='agentos'; alias ori_s='agentos_s'; alias ori_h='agentos_h'
+# agentOS — launch Claude Code with the LifeOS vault as project root from any directory.
+# Reconciles the skill library to its manifest (skill_manager.py sync) before launching;
+# `;` (not `&&`) so a sync hiccup never blocks launch. ("agentos" = the OS; Ori→Jarvis was
+#  the old orchestrator persona.)
+#   agentos     — everyday launch, default model
+#   agentos_qc  — opusplan + remote-control (the old jarvis()/opusplan+rc launcher)
+agentos() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --model default "$@"); }
+agentos_qc() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_qc --model opusplan "$@"); }
 
 # ============================================
 # Quick edit common config files
