@@ -1,0 +1,18 @@
+#!/bin/bash
+# run_after_13-agentos-skill-sync.sh
+# DRAFT (LifeOS Convergence P1 — skill-library). Apply by copying into the chezmoi
+# source dir alongside run_after_12-link-claude-skills.sh, then `chezmoi apply`.
+#
+# Reconciles the agentOS skill library to its manifest on every chezmoi apply:
+# moves lifeos skills to the right place, refreshes global symlinks, regenerates
+# the catalog. Idempotent and offline. Runs AFTER run_after_12 so global skill
+# links exist first. No-op if the vault or the manager script is absent.
+set -euo pipefail
+
+VAULT="${HOME}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS"
+MGR="${VAULT}/agentOS/scripts/skill_manager.py"
+
+[[ -f "$MGR" ]] || { echo "    (no skill_manager.py — skipping agentOS skill sync)"; exit 0; }
+
+echo "==> agentOS skill library sync"
+python3 "$MGR" sync --quiet || echo "    (skill sync reported an issue — non-fatal)"
