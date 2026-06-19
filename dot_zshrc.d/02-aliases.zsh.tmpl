@@ -73,10 +73,16 @@ alias oc='opencode'
 alias ch='chezmoi'
 alias chstatus='chezmoi cd && git status --short && cd -'
 
-# agentOS — launch Claude Code with LifeOS vault as project root from any directory
-ori_s() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && cy --remote-control agentOS_Ori_s --model opusplan "$@"); }
-ori_h() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && cy --remote-control agentOS_Ori_h --model haiku "$@"); }
-ori() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && cy --model opusplan "$@"); }
+# agentOS — launch Claude Code with LifeOS vault as project root from any directory.
+# Reconciles the skill library to its manifest (skill_manager.py sync) before launching.
+# (Renamed from ori* — "Ori" was the orchestrator's old name, now Jarvis; the launcher
+#  starts an agentOS session, so it's named for the OS. Sync uses `;` so a sync hiccup
+#  never blocks launch.)
+agentos_s() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_s --model opusplan "$@"); }
+agentos_h() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_h --model haiku "$@"); }
+agentos() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --model opusplan "$@"); }
+# backward-compat: old muscle-memory names still work (delete once you've adjusted)
+alias ori='agentos'; alias ori_s='agentos_s'; alias ori_h='agentos_h'
 
 # ============================================
 # Quick edit common config files
