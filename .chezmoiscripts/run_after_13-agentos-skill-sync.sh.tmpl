@@ -10,7 +10,7 @@
 set -euo pipefail
 
 VAULT="${HOME}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS"
-MGR="${VAULT}/agentOS/scripts/skill_manager.py"
+MGR="$HOME/.agentos/scripts/skill_manager.py"
 
 [[ -f "$MGR" ]] || { echo "    (no skill_manager.py — skipping agentOS skill sync)"; exit 0; }
 

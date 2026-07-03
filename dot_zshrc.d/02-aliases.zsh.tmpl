@@ -79,8 +79,8 @@ alias chstatus='chezmoi cd && git status --short && cd -'
 #  the old orchestrator persona.)
 #   agentos     — everyday launch, default model, opens agents-mode view (spin up / see running agents)
 #   agentos_qc  — opusplan + remote-control (the old jarvis()/opusplan+rc launcher)
-agentos() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --model default agents "$@"); }
-agentos_qc() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 agentOS/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_qc --model opusplan "$@"); }
+agentos() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 ~/.agentos/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --model default agents "$@"); }
+agentos_qc() { (cd "{{ .chezmoi.homeDir }}/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS" && python3 ~/.agentos/scripts/skill_manager.py sync --quiet 2>/dev/null; cy --remote-control agentOS_qc --model opusplan "$@"); }
 
 # ============================================
 # Quick edit common config files
