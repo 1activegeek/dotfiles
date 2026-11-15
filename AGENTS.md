@@ -115,7 +115,7 @@ to a note in the `Private` vault. Each source template calls
 
 ### Secret Sync Functions
 
-The `07-1password.zsh` file provides two functions for pushing local edits back to 1Password:
+The `07-1password.zsh` file provides three functions for pushing local edits back to 1Password. All of them send the content to `op` on stdin (never as a command argument):
 
 | Function | What it syncs |
 |----------|---------------|
@@ -123,13 +123,15 @@ The `07-1password.zsh` file provides two functions for pushing local edits back 
 | `op-sync-kube` | `~/.kube/config` → 1Password "Kube Config" Secure Note |
 | `op-sync-private` | Files in `.chezmoidata/private_notes.yaml` → their "Dotfiles - …" Secure Notes (creates missing ones) |
 
-**Workflow:** Edit the file locally → run `op-sync-{ssh,kube}` → the 1Password vault item is updated → next `chezmoi apply` on any machine pulls the new version.
+**Workflow:** Edit the file locally → run `op-sync-{ssh,kube,private}` → the 1Password vault item is updated → next `chezmoi apply` on any machine pulls the new version. Run the sync BEFORE `chezmoi apply`, or apply replaces your edit with the 1Password copy.
 
 ### Config Templates
 
+The machine config `~/.config/chezmoi/chezmoi.toml` is written by `bootstrap.sh`
+(profile, name, email, `privateNotes`); it is not a template in this repo.
+
 | File | Purpose |
 |------|---------|
-| `dot_chezmoi.toml.tmpl` | chezmoi config (profile, git identity, editor) |
 | `dot_gitconfig.tmpl` | Git config (name, email, aliases, merge settings) |
 
 ### Shell Configuration
@@ -144,7 +146,7 @@ The `07-1password.zsh` file provides two functions for pushing local edits back 
 | `04-brew.zsh` | Homebrew helpers |
 | `05-macos.zsh` | macOS functions (lock, hidden files, etc.) |
 | `06-docker.zsh` | Docker shortcuts |
-| `07-1password.zsh` | 1Password CLI integration, SSH agent, sync functions (`op-sync-ssh`, `op-sync-kube`) |
+| `07-1password.zsh` | 1Password CLI integration, SSH agent, sync functions (`op-sync-ssh`, `op-sync-kube`, `op-sync-private`) |
 | `08-extract.zsh` | Universal archive extraction |
 | `09-colorize.zsh` | Colored output for less, grep, diff, man |
 | `10-kubectl.zsh` | Kubernetes aliases |
@@ -208,9 +210,10 @@ When a recoverable failure occurs, scripts:
 
 ### Skip propagation
 
-If user skips 1Password auth → `SKIP_1PASSWORD=true` → chezmoi runs with
-`--exclude=encrypted` → secrets are not deployed → user must re-run bootstrap
-later to deploy them.
+If user skips 1Password auth → `SKIP_1PASSWORD=true` → bootstrap exports
+`DOTFILES_SKIP_1PASSWORD=1` → `.chezmoiignore` skips every 1Password-backed file
+(ssh/kube config, age key, private notes) and the atuin sync block → user must
+re-run bootstrap later to deploy them.
 
 ---
 
@@ -266,8 +269,8 @@ skip secrets and continue with everything else.
 **Cause:** Templates like `private_dot_ssh/private_config.tmpl` call
 `onepasswordRead` which fails if CLI isn't authenticated.
 
-**Fix:** Bootstrap retries up to 2x. On skip, uses `--exclude=encrypted` to
-skip all 1Password-backed templates.
+**Fix:** Bootstrap retries up to 2x. On skip, it sets `DOTFILES_SKIP_1PASSWORD=1`,
+and `.chezmoiignore` then skips all 1Password-backed files.
 
 ### macOS defaults didn't apply / need to re-apply
 
