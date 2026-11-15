@@ -1,0 +1,116 @@
+#!/bin/bash
+# setup stage: packages
+# Renders a Brewfile from .chezmoidata/packages.yaml (setup/Brewfile.tmpl) and
+# runs brew bundle install. Run by setup/setup.sh only (never by chezmoi apply).
+#
+# It only ADDS packages. Removing packages that are not in packages.yaml happens
+# only with `setup.sh --only packages --prune`, and asks before it removes anything.
+
+set -euo pipefail
+
+[[ "$(uname)" == "Darwin" ]] || exit 0
+
+# MAS-installed Xcode can require license acceptance before brew works
+if command -v xcodebuild &>/dev/null && ! xcodebuild -license status &>/dev/null 2>&1; then
+  echo "==> Accepting Xcode license..."
+  sudo xcodebuild -license accept
+fi
+
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# Bypass Gatekeeper for cask installs (same as dot_zprofile)
+export HOMEBREW_CASK_OPTS="--no-quarantine"
+
+# Pre-authenticate sudo so pkg-based cask installs don't stall mid-run
+echo "  Some packages require administrator access."
+echo "  Enter your password now to reduce interruptions during install."
+echo "  Note: App Store apps and apps with system extensions will still"
+echo "  prompt individually — that is a macOS security requirement."
+sudo -v
+# Refresh sudo every 50s for the lifetime of this script
+( while true; do sudo -n true 2>/dev/null; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
+SUDO_KEEPALIVE=$!
+_HEARTBEAT_PID=""
+
+BREWFILE="$(mktemp)"
+trap 'kill "$SUDO_KEEPALIVE" ${_HEARTBEAT_PID:+"$_HEARTBEAT_PID"} 2>/dev/null; rm -f "$BREWFILE"' EXIT
+
+render "$SETUP_DIR/Brewfile.tmpl" > "$BREWFILE" || { echo "    ✗ Could not render the Brewfile"; exit 1; }
+PROFILE="$(chezmoi --source "$SOURCE_DIR" execute-template '{{ .profile }}')"
+
+LOG_DIR="${HOME}/.local/log"
+mkdir -p "$LOG_DIR"
+BUNDLE_LOG="${LOG_DIR}/dotfiles-brew-bundle.log"
+
+echo "==> Running brew bundle install (profile: $PROFILE)..."
+echo "    This may take a while — a status line will appear every 60s."
+_INSTALL_START=$(date +%s)
+( while true; do
+    sleep 60
+    _elapsed=$(( $(date +%s) - _INSTALL_START ))
+    printf "    ⏳ Still installing... (%dm %ds elapsed)\n" \
+      $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+  done ) &
+_HEARTBEAT_PID=$!
+
+brew bundle install --file="$BREWFILE" 2>&1 | tee "$BUNDLE_LOG" || true
+
+kill "$_HEARTBEAT_PID" 2>/dev/null
+_elapsed=$(( $(date +%s) - _INSTALL_START ))
+printf "    ✓ Bundle install finished in %dm %ds\n" \
+  $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+
+# If packages failed due to Xcode license, accept and retry once
+if grep -qi "Xcode license" "$BUNDLE_LOG" 2>/dev/null; then
+  echo ""
+  echo "    ⚠ Some packages failed due to Xcode license"
+  echo "    Attempting to accept Xcode license and retry..."
+  sudo xcodebuild -license accept 2>/dev/null
+  _INSTALL_START=$(date +%s)
+  ( while true; do
+      sleep 60
+      _elapsed=$(( $(date +%s) - _INSTALL_START ))
+      printf "    ⏳ Still installing... (%dm %ds elapsed)\n" \
+        $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+    done ) &
+  _HEARTBEAT_PID=$!
+  brew bundle install --file="$BREWFILE" 2>&1 | tee "$BUNDLE_LOG" || true
+  kill "$_HEARTBEAT_PID" 2>/dev/null
+  _elapsed=$(( $(date +%s) - _INSTALL_START ))
+  printf "    ✓ Retry finished in %dm %ds\n" \
+    $(( _elapsed / 60 )) $(( _elapsed % 60 ))
+fi
+
+# Optional prune: remove formulae/casks/taps/mas apps NOT in the Brewfile.
+# Off by default — a normal setup run never uninstalls anything.
+if [[ "${DOTFILES_PRUNE:-false}" == true ]]; then
+  echo "==> Packages installed but not in packages.yaml (profile: $PROFILE):"
+  PRUNE_LIST="$(brew bundle cleanup --file="$BREWFILE" 2>/dev/null || true)"
+  if [[ -z "$PRUNE_LIST" ]]; then
+    echo "    none"
+  else
+    echo "$PRUNE_LIST" | sed 's/^/    /'
+    read -r -p "    Remove ALL of the packages above? [y/N] " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      brew bundle cleanup --file="$BREWFILE" --force 2>&1 | tee -a "$BUNDLE_LOG" || true
+    else
+      echo "    Skipped prune."
+    fi
+  fi
+fi
+
+echo "==> Cleaning up..."
+brew cleanup --prune=all -q 2>/dev/null || true
+
+if grep -qiE "has failed!$" "$BUNDLE_LOG" 2>/dev/null; then
+  FAIL_COUNT=$(grep -ciE "has failed!$" "$BUNDLE_LOG" 2>/dev/null || echo "?")
+  echo "    ⚠ Some packages had errors — details in $BUNDLE_LOG"
+  echo "==> Brew bundle: ${FAIL_COUNT} package(s) failed"
+else
+  echo "==> Brew bundle: OK"
+fi
+

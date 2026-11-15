@@ -6,7 +6,7 @@
 # ============================================
 alias bi='brew install'
 alias bic='brew install --cask'
-alias bu='brew update && brew upgrade'
+alias bu='brew update && brew upgrade -y'
 alias buu='brew update && brew upgrade --greedy'
 alias bs='brew search'
 alias bl='brew list'

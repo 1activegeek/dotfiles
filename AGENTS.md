@@ -32,41 +32,46 @@ interactive retry loops for recoverable failures.
 5. chezmoi                     ← Install via brew
 6. 1Password                   ← Install app + CLI, interactive auth loop
 7. Machine configuration       ← Profile (personal/work), hostname, git identity
-8. chezmoi apply               ← Retry loop (max 2), skip option on failure
-9. Dock retry check            ← Detects partial dock failure via stamp file
-10. Post-install report        ← Package status, manual tasks, app notes
+8. chezmoi apply               ← Dotfiles ONLY. Retry loop (max 2), skip option
+9. setup/setup.sh              ← One-time machine setup stages (skips stamped ones)
+10. setup.sh --report          ← Package status, manual tasks, app notes
 11. Shell reload               ← exec zsh -l
 ```
 
-### chezmoi script execution order
+### `chezmoi apply` runs no scripts
 
-chezmoi runs `before` scripts first (alphabetically), then applies dotfiles,
-then runs `after` scripts (alphabetically).
+There is no `.chezmoiscripts/` directory. `chezmoi apply` / `chezmoi update` only
+deploy files, so they are always safe to run on any machine. Do not add
+`run_*` scripts back; put machine setup in `setup/stages/` instead.
 
-| Order | Script | Type | Runs when |
-|-------|--------|------|-----------|
-| 01 | `run_once_before_01-install-homebrew.sh.tmpl` | once | First run only |
-| 02 | `run_once_before_02-install-core.sh.tmpl` | once | First run only |
-| 03 | `run_onchange_before_03-brew-bundle.sh.tmpl` | onchange | `packages.yaml` changes |
-| — | *dotfiles applied here* | — | — |
-| 10 | `run_once_after_10-macos-defaults.sh` | once | First run only |
-| 11 | `run_onchange_after_11-dock.sh` | onchange | Script content changes |
+### setup/setup.sh (one-time machine setup)
 
-**Naming convention:** `run_{once,onchange}_{before,after}_{NN}-{name}.{sh,sh.tmpl}`
+`setup/` is in `.chezmoiignore`, so chezmoi never deploys or runs it.
+`bootstrap.sh` calls it after `chezmoi apply`; you can also run it by hand.
 
-- `once` = chezmoi tracks completion in its state DB, never re-runs
-- `onchange` = chezmoi hashes template output, re-runs when hash changes
-- `before` = runs before dotfile deployment
-- `after` = runs after dotfile deployment
-- `.tmpl` = chezmoi renders Go templates before execution
+| Order | Stage | What it does |
+|-------|-------|--------------|
+| 10 | `homebrew` | Xcode CLT + Homebrew, analytics off, `brew update` |
+| 20 | `core` | 1Password, 1Password CLI, Brave, Ghostty, Raycast, chezmoi, gh, mas |
+| 30 | `packages` | Renders `setup/Brewfile.tmpl` from `packages.yaml` + profile, `brew bundle install`. Removes unlisted packages ONLY with `--prune`, after a prompt. |
+| 40 | `macos-defaults` | ~100 `defaults write` commands, restarts Dock/Finder/SystemUIServer |
+| 50 | `dock` | Wipes and rebuilds the Dock with dockutil |
+| 60 | `claude-skills` | Symlinks `~/.agents/skills/*` into `~/.claude/skills/` |
 
-### Forcing script re-runs
+**Stamps:** `~/.local/state/dotfiles/setup/<stage>.done`, written only on success.
+A stamped stage never runs again unless you ask:
 
 ```bash
-# Reset all run_once state (forces every script to re-run)
-chezmoi state delete-bucket --bucket=scriptState
-chezmoi apply
+setup/setup.sh --list                    # status of every stage
+setup/setup.sh --only dock               # re-run one stage (comma list allowed)
+setup/setup.sh --only packages --prune   # also offer to remove unlisted packages
+setup/setup.sh --force                   # re-run everything
+setup/setup.sh --mark-done               # stamp all stages without running (existing machine)
 ```
+
+**Warning for agents:** these stages change the real machine (install apps,
+rewrite preferences, wipe the Dock). Never run them to "test". To test the runner,
+build a tree that holds only dummy stages.
 
 ---
 
@@ -77,12 +82,10 @@ chezmoi apply
 | File | Purpose |
 |------|---------|
 | `bootstrap.sh` | Main entry point. Not managed by chezmoi (in `.chezmoiignore`). |
-| `.chezmoiscripts/run_once_before_01-*` | Installs Xcode CLT + Homebrew |
-| `.chezmoiscripts/run_once_before_02-*` | Installs core packages (chezmoi, gh, mas, 1password, etc.) |
-| `.chezmoiscripts/run_onchange_before_03-*` | Generates Brewfile from `packages.yaml`, runs `brew bundle` |
-| `.chezmoiscripts/run_once_after_10-*` | ~100 `defaults write` commands for macOS prefs |
-| `.chezmoiscripts/run_onchange_after_11-*` | Dock layout via dockutil |
-| `post-install-report.sh.tmpl` | Final report (rendered by bootstrap, not a chezmoi script) |
+| `setup/setup.sh` | Stage runner with stamps. Not managed by chezmoi. |
+| `setup/stages/10..60-*.sh` | Homebrew, core apps, packages, macOS defaults, Dock, Claude skill links |
+| `setup/Brewfile.tmpl` | Brewfile template rendered from `packages.yaml` + profile |
+| `setup/report.sh.tmpl` | Post-install report (`setup.sh --report`) |
 
 ### Data Files
 
@@ -98,7 +101,17 @@ chezmoi apply
 |------|---------------------|
 | `private_dot_ssh/private_config.tmpl` | `op://Private/SSH Config/notesPlain` |
 | `private_dot_kube/private_config.tmpl` | `op://Private/Kube Config/notesPlain` |
-| `dot_config/private_sops/private_age/private_home-ops.key.tmpl` | `op://Private/Age Encryption Key/private key` |
+| `dot_config/private_sops/private_age/private_home-ops.key.tmpl` | `op://Private/SOPS Age Key - home-ops/private key` |
+| `dot_config/atuin/config.toml.tmpl` (sync block only) | `op://Private/Dotfiles - atuin sync address/notesPlain` (personal + `privateNotes`) |
+
+### Private files (1Password Secure Notes)
+
+`.chezmoidata/private_notes.yaml` maps each private file (accounts.yaml, CLAUDE.md,
+Claude settings.json, scheduled tasks, jarvis-git, op-session, homarr-mcp-headers)
+to a note in the `Private` vault. Each source template calls
+`.chezmoitemplates/private-note`. `.chezmoiignore` skips them unless
+`profile == personal` and `[data] privateNotes = true`. Push edits with
+`op-sync-private`. Never commit these files' content to this public repo.
 
 ### Secret Sync Functions
 
@@ -108,6 +121,7 @@ The `07-1password.zsh` file provides two functions for pushing local edits back 
 |----------|---------------|
 | `op-sync-ssh` | `~/.ssh/config` → 1Password "SSH Config" Secure Note |
 | `op-sync-kube` | `~/.kube/config` → 1Password "Kube Config" Secure Note |
+| `op-sync-private` | Files in `.chezmoidata/private_notes.yaml` → their "Dotfiles - …" Secure Notes (creates missing ones) |
 
 **Workflow:** Edit the file locally → run `op-sync-{ssh,kube}` → the 1Password vault item is updated → next `chezmoi apply` on any machine pulls the new version.
 
@@ -140,7 +154,8 @@ The `07-1password.zsh` file provides two functions for pushing local edits back 
 | `14-fzf.zsh` | Fuzzy finder bindings |
 | `15-zoxide.zsh` | Smart directory nav (z/zi) |
 | `16-carapace.zsh` | Completion engine |
-| `17-brew-helpers.zsh` | brew-export, brew-sync functions |
+| `17-brew-helpers.zsh` | brew-export, brew-sync (runs the `packages` setup stage), brew-diff |
+| `19-lifeos.zsh` | LifeOS vault paths and tools on PATH |
 
 ---
 
@@ -162,7 +177,7 @@ Two profiles: **personal** and **work**. Stored in `~/.config/chezmoi/chezmoi.to
 |------|---------|
 | `~/.config/chezmoi/chezmoi.toml` | Machine config (profile, identity) |
 | `~/.local/share/chezmoi/` | chezmoi source dir (clone of this repo) |
-| `~/.local/state/dotfiles/dock-configured` | Dock script success stamp (contains script hash) |
+| `~/.local/state/dotfiles/setup/<stage>.done` | Setup stage success stamps (date) |
 | `~/.local/log/dotfiles-brew-bundle.log` | Last brew bundle output |
 
 ---
@@ -173,14 +188,14 @@ Two profiles: **personal** and **work**. Stored in `~/.config/chezmoi/chezmoi.to
 
 | Failure | Mechanism | Location |
 |---------|-----------|----------|
-| Xcode license not accepted | Auto-accept before brew bundle + retry if license errors in log | `03-brew-bundle.sh.tmpl` |
+| Xcode license not accepted | Auto-accept before brew bundle + retry if license errors in log | `setup/stages/30-packages.sh` |
 | `brew`/`op` not in PATH on re-run | Source brew shellenv at top of bootstrap | `bootstrap.sh` lines 18-25 |
 | Homebrew re-installs unnecessarily | Early PATH sourcing makes `command -v brew` succeed | `bootstrap.sh` lines 18-25 |
 | 1Password not authenticated | Interactive retry loop with skip option | `bootstrap.sh` lines 150-179 |
 | `chezmoi apply` fails | Retry up to 2x, detect 1Password errors specifically, skip option | `bootstrap.sh` lines 305-350 |
-| Dock script fails partway | Stamp file only written on success; bootstrap detects and offers retry | `11-dock.sh` + `bootstrap.sh` lines 352-371 |
-| `brew bundle` reports false "OK" | Checks log for `has failed!$` pattern, reports actual count | `03-brew-bundle.sh.tmpl` lines 125-131 |
-| Safari defaults fail (no container) | Already handled gracefully — cosmetic warnings only | `10-macos-defaults.sh` |
+| Any setup stage fails | No stamp is written; bootstrap offers a retry, and the next `setup.sh` run retries it | `setup/setup.sh` + `bootstrap.sh` |
+| `brew bundle` reports false "OK" | Checks log for `has failed!$` pattern, reports actual count | `setup/stages/30-packages.sh` |
+| Safari defaults fail (no container) | Already handled gracefully — cosmetic warnings only | `setup/stages/40-macos-defaults.sh` |
 
 ### Interactive retry pattern
 
@@ -206,7 +221,7 @@ later to deploy them.
 **Cause:** Xcode was installed by MAS but license wasn't accepted before
 `brew bundle` ran.
 
-**Fix (now automatic):** `03-brew-bundle.sh.tmpl` accepts the license before
+**Fix (now automatic):** `setup/stages/30-packages.sh` accepts the license before
 running and retries the full bundle if license errors appear in the log.
 
 **Manual fix:** `sudo xcodebuild -license accept` then re-run bootstrap.
@@ -231,19 +246,12 @@ PATH yet.
 
 ### Dock only partially configured
 
-**Cause:** `dockutil` failed partway through. Since the script is
-`run_onchange`, chezmoi won't re-run it unless the script content changes.
+**Cause:** `dockutil` failed partway through, or an app was not installed yet.
 
-**Fix (now automatic):** Stamp file `~/.local/state/dotfiles/dock-configured`
-is only written after full success. Bootstrap detects missing stamp and offers
-retry.
-
-**Manual fix:** `bash ~/.local/share/chezmoi/.chezmoiscripts/run_onchange_after_11-dock.sh`
-
-**Force chezmoi to re-run it:** Delete the stamp file:
+**Fix:** The `dock` stage has no stamp after a failure, so the next
+`setup/setup.sh` run (or bootstrap) retries it. To rebuild on purpose:
 ```bash
-rm ~/.local/state/dotfiles/dock-configured
-chezmoi apply
+~/.local/share/chezmoi/setup/setup.sh --only dock
 ```
 
 ### 1Password blocks the entire bootstrap
@@ -263,23 +271,14 @@ skip all 1Password-backed templates.
 
 ### macOS defaults didn't apply / need to re-apply
 
-**Cause:** `run_once_after_10-macos-defaults.sh` only runs once.
-
-**Fix:**
 ```bash
-chezmoi state delete-bucket --bucket=scriptState
-chezmoi apply
-```
-
-Or run the script directly:
-```bash
-bash ~/.local/share/chezmoi/.chezmoiscripts/run_once_after_10-macos-defaults.sh
+~/.local/share/chezmoi/setup/setup.sh --only macos-defaults
 ```
 
 ### Adding a new package
 
 1. Edit `.chezmoidata/packages.yaml` — add the entry to the correct section (`formulae`, `casks`, or `mas`) in alphabetical order. Use a bare string for simple entries, or flow-mapping (`{ name: ..., profiles: [...] }`) if profile-restricted.
-2. Run `chezmoi apply` — the brew bundle script auto-reruns (hash changed)
+2. Run `brew-sync` (or `setup/setup.sh --only packages`). `chezmoi apply` never installs packages.
 3. Optionally add post-install notes to `.chezmoidata/post_install_notes.yaml`
 
 ---
@@ -294,12 +293,13 @@ bash ~/.local/share/chezmoi/.chezmoiscripts/run_once_after_10-macos-defaults.sh
 
 ### Key design decisions
 
-- **chezmoi over bare git** — Templates, secrets integration, idempotent scripts.
+- **chezmoi over bare git** — Templates and secrets integration.
+- **Dotfiles and machine setup are separate (2026-11-15)** — `chezmoi apply` runs no scripts; `setup/setup.sh` runs one-time stages with stamps. Package prune is opt-in (`--prune`).
 - **1Password as secret store** — No encrypted files in repo; `onepasswordRead` at apply time.
 - **Single YAML for packages** — One file to edit, profile-filtered, generates Brewfile at runtime.
-- **Modular shell config** — 17 files in `dot_zshrc.d/` vs one monolithic `.zshrc`.
+- **Modular shell config** — 19 files in `dot_zshrc.d/` vs one monolithic `.zshrc`.
 - **Interactive retry over hard fail** — Bootstrap pauses for user action rather than exiting.
-- **Stamp files for non-idempotent scripts** — Dock script tracks its own success independently of chezmoi's `run_onchange` hash.
+- **Stamp files for every setup stage** — a stage runs once; re-run on purpose with `--only`.
 
 ### Fresh install experience (post-resilience fixes, 2026-03-18)
 

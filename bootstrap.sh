@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # bootstrap.sh — Bootstrap for a bare macOS machine.
-# Safe to re-run at any time — chezmoi is idempotent.
+# Safe to re-run at any time: chezmoi is idempotent, and setup/setup.sh skips
+# every stage that already succeeded (stamps in ~/.local/state/dotfiles/setup).
+#
+# Two separate parts:
+#   1. chezmoi apply      → dotfiles only (no scripts run)
+#   2. setup/setup.sh     → one-time machine setup: Homebrew, packages + MAS,
+#                           macOS defaults, Dock, Claude skill links
 #
 # Usage (first run or re-run to continue after errors):
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)"
@@ -231,12 +237,17 @@ else
     echo "  Email is required."
   done
 
+  # Private files from 1Password notes (.chezmoidata/private_notes.yaml): personal only
+  PRIVATE_NOTES=false
+  [[ "$PROFILE" == "personal" ]] && PRIVATE_NOTES=true
+
   mkdir -p "$(dirname "$CHEZMOI_CONFIG")"
   cat > "$CHEZMOI_CONFIG" << TOML
 [data]
   profile = "$PROFILE"
   name    = "$GIT_NAME"
   email   = "$GIT_EMAIL"
+  privateNotes = $PRIVATE_NOTES
 
 [onepassword]
   command = "op"
@@ -249,8 +260,8 @@ else
   pager = "less -R"
 
 [git]
-  autoCommit = true
-  autoPush = true
+  autoCommit = false
+  autoPush = false
 TOML
 
   echo ""
@@ -261,50 +272,53 @@ fi
 
 step "Applying dotfiles..."
 
-if [[ -d "$CHEZMOI_SOURCE" ]]; then
+if [[ -d "$CHEZMOI_SOURCE/.git" ]]; then
+  # Update the source dir WITHOUT discarding anything: fast-forward only.
+  # If there is local work (uncommitted changes, unpushed commits, another
+  # branch), stop and let you decide — never reset it away.
   git -C "$CHEZMOI_SOURCE" fetch origin 2>&1 \
     || fail "Failed to reach origin. Check your network connection and re-run."
 
-  # Warn before discarding any local state in the source dir
-  if ! git -C "$CHEZMOI_SOURCE" diff --quiet 2>/dev/null \
-      || ! git -C "$CHEZMOI_SOURCE" diff --cached --quiet 2>/dev/null \
-      || [[ -n "$(git -C "$CHEZMOI_SOURCE" ls-files --unmerged 2>/dev/null)" ]]; then
+  SRC_BRANCH="$(git -C "$CHEZMOI_SOURCE" rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  SRC_DIRTY="$(git -C "$CHEZMOI_SOURCE" status --porcelain 2>/dev/null)"
+  SRC_AHEAD="$(git -C "$CHEZMOI_SOURCE" rev-list --count origin/main..HEAD 2>/dev/null || echo 0)"
+
+  if [[ "$SRC_BRANCH" != "main" || -n "$SRC_DIRTY" || "$SRC_AHEAD" != "0" ]]; then
     echo ""
     echo "════════════════════════════════════════════════════"
-    echo "  WARNING — Local changes detected in source dir"
+    echo "  LOCAL WORK IN THE DOTFILES SOURCE DIR"
     echo "════════════════════════════════════════════════════"
     echo ""
     echo "  $CHEZMOI_SOURCE"
-    echo "  has uncommitted or conflicted changes:"
+    [[ "$SRC_BRANCH" != "main" ]] && echo "  - on branch '$SRC_BRANCH' (expected 'main')"
+    [[ "$SRC_AHEAD" != "0" ]] && echo "  - $SRC_AHEAD local commit(s) not on origin/main"
+    if [[ -n "$SRC_DIRTY" ]]; then
+      echo "  - uncommitted changes:"
+      echo "$SRC_DIRTY" | sed 's/^/      /'
+    fi
     echo ""
-    git -C "$CHEZMOI_SOURCE" status --short | sed 's/^/    /'
-    echo ""
-    echo "  This usually means a previous run failed mid-way."
-    echo "  Resetting will discard these local changes and sync"
-    echo "  the source dir to match origin/main exactly."
-    echo ""
-    echo "  If you have intentional changes here, press N and"
-    echo "  resolve them manually in:"
-    echo "    $CHEZMOI_SOURCE"
-    echo ""
-    read -r -p "  Reset source dir and continue? [y/N] " confirm
+    echo "  Bootstrap will not touch this work. Commit/push or move it aside, then re-run."
+    read -r -p "  Continue WITHOUT updating the source dir (apply what is there now)? [y/N] " confirm
     echo ""
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-      echo "  Aborted. Resolve the changes above, then re-run:"
+      echo "  Stopped. Resolve the items above, then re-run:"
       echo ""
       echo "    $BOOTSTRAP_CMD"
       echo ""
       exit 1
     fi
+  else
+    git -C "$CHEZMOI_SOURCE" merge --ff-only origin/main 2>&1 \
+      || fail "Could not fast-forward $CHEZMOI_SOURCE to origin/main."
   fi
-
-  git -C "$CHEZMOI_SOURCE" reset --hard origin/main 2>&1
 fi
 
 # Build chezmoi apply args
 CHEZMOI_APPLY_ARGS=()
 if [[ "$SKIP_1PASSWORD" == true ]]; then
-  CHEZMOI_APPLY_ARGS+=(--exclude=encrypted)
+  # .chezmoiignore skips every 1Password-backed file (ssh/kube config, age key,
+  # private notes) while this is set. Re-run bootstrap later to deploy them.
+  export DOTFILES_SKIP_1PASSWORD=1
 fi
 
 MAX_RETRIES=2
@@ -370,33 +384,32 @@ if [[ -d "$CHEZMOI_SOURCE/.git" ]]; then
   fi
 fi
 
-# ── Dock retry check ─────────────────────────────────────────────────────────
+# ── One-time machine setup ───────────────────────────────────────────────────
+# Packages, MAS apps, macOS defaults, Dock. Stages that already succeeded are
+# skipped, so a re-run only retries what failed.
 
-DOCK_STAMP="${HOME}/.local/state/dotfiles/dock-configured"
-DOCK_SCRIPT="${CHEZMOI_SOURCE}/.chezmoiscripts/run_onchange_after_11-dock.sh"
-if [[ -f "$DOCK_SCRIPT" ]] && [[ ! -f "$DOCK_STAMP" ]]; then
-  echo ""
-  echo "    ⚠ Dock configuration did not complete"
+step "Running machine setup stages..."
+SETUP_SCRIPT="$CHEZMOI_SOURCE/setup/setup.sh"
+if [[ -x "$SETUP_SCRIPT" ]]; then
   while true; do
-    read -r -p "    Retry dock configuration? [Y/n] " response
+    if "$SETUP_SCRIPT"; then
+      break
+    fi
+    echo ""
+    read -r -p "    Some setup stages failed. Retry them? [Y/n] " response
     response="${response:-y}"
     if [[ "$response" =~ ^[Nn]$ ]]; then
-      echo "    Skipping — run manually later: bash $DOCK_SCRIPT"
+      echo "    Skipping — retry later with: $SETUP_SCRIPT"
       break
     fi
-    if bash "$DOCK_SCRIPT"; then
-      break
-    fi
-    echo "    ⚠ Dock configuration failed again"
   done
+else
+  echo "    ⚠ $SETUP_SCRIPT not found — skipping machine setup"
 fi
 
 # ── Post-install report ───────────────────────────────────────────────────────
 
-REPORT_TMPL="$CHEZMOI_SOURCE/post-install-report.sh.tmpl"
-if [[ -f "$REPORT_TMPL" ]]; then
-  chezmoi execute-template < "$REPORT_TMPL" | bash || true
-fi
+[[ -x "$SETUP_SCRIPT" ]] && "$SETUP_SCRIPT" --report
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 

@@ -3,6 +3,13 @@
 Personal macOS setup managed by [chezmoi](https://www.chezmoi.io/).
 One command to set up a new Mac. One command to keep it in sync.
 
+The repo has two separate parts:
+
+| Part | Command | What it does | When it runs |
+|---|---|---|---|
+| Dotfiles | `chezmoi apply` / `chezmoi update` | Deploys config files only. **No scripts run.** | Any time — safe |
+| Machine setup | `~/.local/share/chezmoi/setup/setup.sh` | Homebrew, packages + MAS apps, macOS defaults, Dock, Claude skill links | Once, from `bootstrap.sh` on a new machine. Each stage leaves a stamp and never re-runs by itself. |
+
 ## Quick Start
 
 ### Set up a new machine
@@ -11,7 +18,24 @@ One command to set up a new Mac. One command to keep it in sync.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/1activegeek/dotfiles/main/bootstrap.sh)"
 ```
 
-This installs Xcode CLI Tools, Homebrew, and chezmoi, then applies all dotfiles, packages, and system preferences automatically. The bootstrap script clones via HTTPS initially (SSH keys aren't available yet), then **automatically switches the remote to SSH** after dotfiles are applied so that `autoCommit` and `autoPush` work going forward.
+This installs Xcode CLI Tools, Homebrew, chezmoi and 1Password, applies the dotfiles, and then runs the one-time machine setup (`setup/setup.sh`). The bootstrap script clones via HTTPS first (SSH keys aren't available yet) and switches the remote to SSH after the dotfiles are applied. `autoCommit` and `autoPush` are **off** — this repo is public, so review and push by hand.
+
+### Machine setup stages
+
+```bash
+S=~/.local/share/chezmoi/setup/setup.sh
+$S --list                 # which stages are done
+$S --only dock            # re-run one stage on purpose (comma list allowed)
+$S --only packages --prune  # install packages.yaml, then offer to remove unlisted packages
+$S --force                # re-run every stage
+$S --mark-done            # existing, already set-up machine: stamp all stages, run nothing
+$S --report               # post-install report only
+```
+
+Stages: `homebrew`, `core`, `packages`, `macos-defaults`, `dock`, `claude-skills`.
+Stamps live in `~/.local/state/dotfiles/setup/`. A failed stage has no stamp, so the next run retries it.
+
+**Existing machine, first time on this version:** run `$S --mark-done` once, so a later bootstrap does not re-apply defaults or rebuild the Dock.
 
 ### Use chezmoi directly on an existing machine
 
@@ -29,7 +53,7 @@ Do **not** use the shorthand `chezmoi init 1activegeek` — it defaults to HTTPS
 chezmoi update && brew-sync
 ```
 
-Pulls the latest dotfiles and applies them. `brew-sync` installs any missing packages and optionally removes packages not in the catalog (with confirmation prompt).
+Pulls the latest dotfiles and applies them. `brew-sync` runs the `packages` setup stage: it installs missing packages, then lists packages not in the catalog and asks before it removes them.
 
 ### Sync dotfiles only
 
@@ -63,7 +87,7 @@ chezmoi apply
 
 ## Managing Packages
 
-**Add a package:** Edit `.chezmoidata/packages.yaml`, add the entry, then run `chezmoi apply` — the brew bundle script re-runs automatically when the package list changes.
+**Add a package:** Edit `.chezmoidata/packages.yaml`, add the entry, then run `brew-sync` (or `setup.sh --only packages`). `chezmoi apply` never installs packages.
 
 **Remove a package:** Remove from `packages.yaml`, then run `brew-sync` to uninstall it.
 
@@ -169,6 +193,29 @@ cp ~/.ssh/config.bak ~/.ssh/config
 
 On a fresh machine, `chezmoi apply` handles this automatically once 1Password CLI is authenticated. No manual step needed — the config will be deployed along with everything else.
 
+## Private Files (1Password notes)
+
+This repo is public. Files with private details (agent identity map, global
+`CLAUDE.md`, Claude `settings.json`, scheduled-task prompts, a few scripts in
+`~/.local/bin`) are stored as 1Password Secure Notes in the `Private` vault. The
+repo holds only the list of note names: `.chezmoidata/private_notes.yaml`.
+
+- They deploy only on **personal** machines with `privateNotes = true` under
+  `[data]` in `~/.config/chezmoi/chezmoi.toml`. Bootstrap sets it for personal machines.
+- After you edit one of these files, push it back before the next `chezmoi apply`:
+
+```bash
+op-sync-private                         # every listed file (creates missing notes)
+op-sync-private .claude/settings.json   # one file
+```
+
+- The atuin sync address also comes from a note (`Dotfiles - atuin sync address`),
+  so the homelab domain is not in this repo. Without the opt-in, atuin gets no sync block.
+- If you skip 1Password during bootstrap, `DOTFILES_SKIP_1PASSWORD=1` makes chezmoi
+  skip every 1Password-backed file. Re-run bootstrap later to deploy them.
+- To add a file: add an entry to `private_notes.yaml` and a source template
+  that calls `{{ template "private-note" (dict "target" "<path>" "notes" .private_notes) }}`.
+
 ## Syncing Secrets Back to 1Password
 
 If you edit `~/.ssh/config` or `~/.kube/config` locally and want to push the changes back to 1Password (so the next `chezmoi apply` on another machine picks them up):
@@ -189,19 +236,20 @@ dotfiles/
 ├── dot_chezmoiignore                # Files excluded from home directory deployment
 ├── .chezmoidata/
 │   └── packages.yaml                # All packages: taps, formulae, casks, mas (sorted alphabetically)
-├── .chezmoiscripts/
-│   ├── run_once_before_01-*         # Installs Homebrew (runs once)
-│   ├── run_once_before_02-*         # Installs core packages (runs once)
-│   ├── run_onchange_before_03-*     # Runs brew bundle (re-runs when packages change)
-│   ├── run_once_after_10-*          # Applies macOS defaults (runs once)
-│   ├── run_once_after_11-*          # Configures Dock (runs once)
-│   └── run_once_after_12-*          # Post-install checklist (runs once)
+├── setup/                           # One-time machine setup (NOT run by chezmoi apply)
+│   ├── setup.sh                     # Stage runner with stamps (--list/--only/--force/--mark-done)
+│   ├── Brewfile.tmpl                # Brewfile rendered from packages.yaml + profile
+│   ├── report.sh.tmpl               # Post-install report
+│   └── stages/                      # 10-homebrew, 20-core, 30-packages, 40-macos-defaults, 50-dock, 60-claude-skills
 ├── dot_zshrc                        # → ~/.zshrc
 ├── dot_zshrc.d/                     # → ~/.zshrc.d/ (modular ZSH config)
 ├── dot_zprofile                     # → ~/.zprofile
 ├── dot_zshenv                       # → ~/.zshenv
 ├── dot_gitconfig                    # → ~/.gitconfig
-├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, SOPS age key, etc.)
+├── dot_config/                      # → ~/.config/ (starship, ghostty, atuin, nvim, zed, SOPS age key, etc.)
+├── dot_agents/                      # → ~/.agents/ (agent skills + skill lock)
+├── dot_claude/                      # → ~/.claude/ (keybindings, status line, output styles, context-meter mod)
+├── dot_local/bin/                   # → ~/.local/bin/ (agent-git, claude-sa, helper scripts)
 ├── private_dot_kube/                 # → ~/.kube/ (kube config via 1Password)
 └── private_dot_ssh/                 # → ~/.ssh/ (SSH config + keys via 1Password)
 ```
@@ -215,21 +263,16 @@ Individual package failures during `brew bundle install` are **non-fatal** — t
 Common causes:
 - **MAS packages** — require being signed into the Mac App Store. If not signed in, all `mas` installs will silently fail. Sign in via the App Store app, then re-run bootstrap.
 - **Cask name mismatch** — if a cask was renamed upstream, brew will error on that entry only. Update the name in `.chezmoidata/packages.yaml` and re-run.
-- **Network / rate limiting** — transient failures. Re-running bootstrap will re-attempt the brew bundle since `run_onchange_` re-runs whenever packages.yaml changes.
+- **Network / rate limiting** — transient failures. Re-run `setup.sh --only packages` (or bootstrap; a failed stage has no stamp and runs again).
 
-### Forcing `run_once_` scripts to re-run
+### Re-running a setup stage
 
-chezmoi marks `run_once_` scripts as done after their first successful execution and never re-runs them, even if you fix a bug in them. To force a re-run:
+Setup stages never re-run by themselves. Run one on purpose:
 
 ```bash
-# Reset all run_once script state (they will all re-run on next apply)
-chezmoi state delete-bucket --bucket=scriptState
-
-# Then re-apply
-chezmoi apply
+~/.local/share/chezmoi/setup/setup.sh --only macos-defaults
+~/.local/share/chezmoi/setup/setup.sh --only dock
 ```
-
-To reset a single script, you can delete just its state entry by name using `chezmoi state` — run `chezmoi state dump` to see the current entries.
 
 ### bootstrap.sh re-run
 

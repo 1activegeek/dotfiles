@@ -1,0 +1,17 @@
+#!/opt/homebrew/bin/bash
+# LifeOS job shim. DailyLogProcessor.app (which has Full Disk Access, so it can
+# reach iCloud) runs this script; launchd starts the app with `open --env`.
+#   LIFEOS_JOB=capture (default)  -> the capture processor
+#   LIFEOS_JOB=backup              -> the 30-minute backup commit and push
+# The legacy capture script is archived in ~/.local/share/lifeos-retired/bin/.
+# Replace with a dedicated app once Shawn grants it Full Disk Access.
+export LIFEOS_VAULT="${LIFEOS_VAULT:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/lifeOS}"
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+tools="$LIFEOS_VAULT/.lifeos/tools"
+case "${LIFEOS_JOB:-capture}" in
+  backup)  exec /usr/bin/python3 -B "$tools/backup/backup.py" >> "$HOME/Library/Logs/lifeos-backup.log" 2>&1 ;;
+  capture) # File captures, then refresh the generated indexes so lint stays clean.
+           { /usr/bin/python3 -B "$tools/capture/capture.py" --wait
+             /usr/bin/python3 -B "$tools/lifeos" index --vault "$LIFEOS_VAULT"; } >> "$HOME/Library/Logs/lifeos-capture.log" 2>&1 ;;
+  *)       echo "$(date) unknown LIFEOS_JOB=$LIFEOS_JOB" >> "$HOME/Library/Logs/lifeos-capture.log"; exit 2 ;;
+esac

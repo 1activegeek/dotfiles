@@ -1,0 +1,29 @@
+# private_notes.yaml — private files kept OUT of this public repo.
+#
+# Each file's content lives in a 1Password Secure Note (vault: Private, field:
+# notesPlain). chezmoi renders it at apply time; the repo only holds the note name.
+#
+# Active only when the machine profile is "personal" AND [data] privateNotes = true
+# in ~/.config/chezmoi/chezmoi.toml (see .chezmoiignore). Work machines never get them.
+#
+# Push local edits to 1Password:   op-sync-private            (all files)
+#                                  op-sync-private <target>   (one file)
+# The first op-sync-private run creates any missing notes.
+#
+# To add a file: add an entry here AND a source template that calls
+# {{ template "private-note" (dict "target" "<target>" "notes" .private_notes) }}
+# Note names must not contain "/" or parentheses (op:// references reject them).
+private_notes:
+  - { target: ".agents/identity/accounts.yaml", item: "Dotfiles - agents accounts.yaml" }
+  - { target: ".claude/CLAUDE.md", item: "Dotfiles - claude CLAUDE.md" }
+  - { target: ".claude/settings.json", item: "Dotfiles - claude settings.json" }
+  - { target: ".claude/scheduled-tasks/cnpg-migration-health-and-cleanup/SKILL.md", item: "Dotfiles - claude task cnpg-migration-health-and-cleanup" }
+  - { target: ".claude/scheduled-tasks/inbox-triage-proposals/SKILL.md", item: "Dotfiles - claude task inbox-triage-proposals" }
+  - { target: ".claude/scheduled-tasks/morning-brief/SKILL.md", item: "Dotfiles - claude task morning-brief" }
+  - { target: ".claude/scheduled-tasks/overnight-backlog-pr/SKILL.md", item: "Dotfiles - claude task overnight-backlog-pr" }
+  - { target: ".claude/scheduled-tasks/synology-healthcheck-backup-cleanup/SKILL.md", item: "Dotfiles - claude task synology-healthcheck-backup-cleanup" }
+  - { target: ".claude/scheduled-tasks/unifi-status-report-2026-10-14/SKILL.md", item: "Dotfiles - claude task unifi-status-report-2026-10-14" }
+  - { target: ".claude/scheduled-tasks/weekly-review-pack/SKILL.md", item: "Dotfiles - claude task weekly-review-pack" }
+  - { target: ".local/bin/homarr-mcp-headers", item: "Dotfiles - bin homarr-mcp-headers" }
+  - { target: ".local/bin/jarvis-git", item: "Dotfiles - bin jarvis-git" }
+  - { target: ".local/bin/op-session", item: "Dotfiles - bin op-session" }

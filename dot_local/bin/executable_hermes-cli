@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# hermes-cli — exec into the running hermes-agent pod and run the Hermes CLI.
+#
+# The hermes-agent image ships its CLI at /opt/hermes/.venv/bin/hermes, which is
+# NOT on the container's default PATH. This wrapper prepends it so `hermes`
+# resolves whether or not the in-cluster PATH fix has reconciled yet.
+#
+# Usage:
+#   hermes-cli                 # interactive shell inside the pod (PATH fixed)
+#   hermes-cli shell           # same as above (explicit)
+#   hermes-cli <args...>       # run: hermes <args...>  inside the pod
+#   hermes-cli --version       # e.g. run the hermes CLI with any flags/subcommands
+#
+# Env overrides:
+#   HERMES_NS         namespace   (default: ai)
+#   HERMES_CONTAINER  container   (default: gateway)
+set -euo pipefail
+
+NS="${HERMES_NS:-ai}"
+CONTAINER="${HERMES_CONTAINER:-gateway}"
+SELECTOR="app.kubernetes.io/name=hermes-agent,app.kubernetes.io/controller=main"
+VENV_BIN="/opt/hermes/.venv/bin"
+
+pod="$(kubectl -n "$NS" get pods -l "$SELECTOR" \
+  --field-selector=status.phase=Running \
+  -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+
+if [[ -z "$pod" ]]; then
+  echo "hermes-cli: no Running hermes-agent pod in namespace '$NS'" >&2
+  exit 1
+fi
+
+# Interactive shell when no args (or 'shell'/'sh').
+if [[ $# -eq 0 || "${1:-}" == "shell" || "${1:-}" == "sh" ]]; then
+  echo "hermes-cli: exec into $NS/$pod [$CONTAINER] (hermes on PATH)" >&2
+  exec kubectl -n "$NS" exec -it "$pod" -c "$CONTAINER" -- \
+    bash -lc "export PATH=${VENV_BIN}:\$PATH; exec bash -i"
+fi
+
+# Otherwise run the hermes CLI with the passed args (PATH set so hermes'
+# own sub-invocations of `hermes` also resolve).
+# -t only when both stdin/stdout are a TTY, so it stays pipe/script friendly.
+tty_flag="-i"
+[[ -t 0 && -t 1 ]] && tty_flag="-it"
+exec kubectl -n "$NS" exec $tty_flag "$pod" -c "$CONTAINER" -- \
+  bash -lc "export PATH=${VENV_BIN}:\$PATH; exec hermes \"\$@\"" _ "$@"

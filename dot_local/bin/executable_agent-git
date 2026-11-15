@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# agent-git — run git/gh as an AI agent, attributed to that agent, via the agent account.
+#
+# Generalizes jarvis-git. Identity values come from the agent identity map
+# (AGENT_IDENTITY_FILE, default ~/.agents/identity/accounts.yaml), so this script
+# holds no account data of its own.
+#
+# Attribution layers, each overridden per-command and nowhere else:
+#   commit -> git -c user.name="<agent> (agent)" -c user.email=<agent account email>
+#   push   -> SSH alias for the agent account (forgejo-jarvis / github-jarvis)
+#   gh     -> GH_CONFIG_DIR of the agent account
+# Plain git/gh stay Shawn's. Requires: yq (mikefarah v4).
+
+set -euo pipefail
+
+MAP="${AGENT_IDENTITY_FILE:-$HOME/.agents/identity/accounts.yaml}"
+AGENT="${AGENT_NAME:-}"
+MODEL="${AGENT_MODEL:-}"
+
+usage() {
+  cat <<'EOF'
+agent-git — git/gh as an AI agent (author "<agent> (agent)", pushed via the agent account)
+
+  agent-git [--agent NAME] [--model ID] commit [git-commit-args...]
+  agent-git [--agent NAME] [--model ID] git    [git-args...]
+  agent-git push [git-push-args...]        push through the agent account's SSH alias
+  agent-git gh   [gh-args...]              gh as the agent account (GitHub)
+  agent-git whoami | doctor
+
+  NAME  named agent (librarian, router, ...) or harness (claude-code). Env: AGENT_NAME.
+  ID    model id (claude-opus-5-5). Env: AGENT_MODEL. Added as trailers on commit.
+EOF
+}
+
+get() { yq -r "$1 // \"\"" "$MAP"; }
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --agent) AGENT="$2"; shift 2 ;;
+    --model) MODEL="$2"; shift 2 ;;
+    *) break ;;
+  esac
+done
+cmd="${1:-}"; shift || true
+
+[ -f "$MAP" ] || { echo "agent-git: identity map not found: $MAP" >&2; exit 2; }
+EMAIL="$(get '.agent_account.email')"
+NAME="${AGENT:+$AGENT (agent)}"
+
+need_agent() {
+  [ -n "$AGENT" ] || { echo "agent-git: set --agent NAME (or AGENT_NAME) so the commit names its author" >&2; exit 2; }
+}
+
+# Map any human-account remote URL to the agent account's SSH alias for this push only.
+push_rewrites() {
+  local args=() svc
+  for svc in forgejo github; do
+    local alias human
+    alias="$(get ".services.$svc.ssh_host")"; human="$(get ".services.$svc.host")"
+    [ -n "$alias" ] && [ -n "$human" ] && args+=(-c "url.git@${alias}:.insteadOf=git@${human}:")
+  done
+  printf '%s\n' "${args[@]}"
+}
+
+case "$cmd" in
+  commit)
+    need_agent
+    trailers=(--trailer "Agent: $AGENT")
+    [ -n "$MODEL" ] && trailers+=(--trailer "Model: $MODEL")
+    trailers+=(--trailer "On-behalf-of: $(get '.human.actor')")
+    exec git -c user.name="$NAME" -c user.email="$EMAIL" commit "${trailers[@]}" "$@"
+    ;;
+  git)
+    need_agent
+    exec git -c user.name="$NAME" -c user.email="$EMAIL" "$@"
+    ;;
+  push)
+    rw=()
+    while IFS= read -r line; do [ -n "$line" ] && rw+=("$line"); done < <(push_rewrites)
+    exec git ${rw[@]+"${rw[@]}"} push "$@"
+    ;;
+  gh)
+    exec env GH_CONFIG_DIR="$(eval echo "$(get '.services.github.gh_config_dir')")" gh "$@"
+    ;;
+  whoami)
+    echo "identity map: $MAP"
+    echo "commit name:  ${NAME:-<set --agent>}"
+    echo "commit email: $EMAIL"
+    echo "forgejo:      $(get '.services.forgejo.account') via $(get '.services.forgejo.ssh_host')"
+    echo "github:       $(get '.services.github.account') via $(get '.services.github.ssh_host')"
+    ;;
+  doctor)
+    ok=0; bad=0
+    check() { if eval "$2" >/dev/null 2>&1; then echo "✓ $1"; ok=$((ok+1)); else echo "✗ $1"; bad=$((bad+1)); fi; }
+    check "yq available" "command -v yq"
+    check "agent email set" "[ -n '$EMAIL' ]"
+    for svc in forgejo github; do
+      alias="$(get ".services.$svc.ssh_host")"
+      check "$svc ssh auth via $alias" "(ssh -o BatchMode=yes -o ConnectTimeout=5 -T git@$alias 2>&1 || true) | grep -qiE 'successfully authenticated|welcome'"
+    done
+    check "gh auth (agent account)" "GH_CONFIG_DIR=$(eval echo "$(get '.services.github.gh_config_dir')") gh auth status"
+    echo "-- $ok ok, $bad failing --"; [ "$bad" -eq 0 ]
+    ;;
+  ""|-h|--help|help) usage ;;
+  *) echo "agent-git: unknown command: $cmd" >&2; usage; exit 2 ;;
+esac
