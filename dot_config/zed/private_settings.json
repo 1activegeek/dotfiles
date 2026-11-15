@@ -1,0 +1,86 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "preview_tabs": {
+    
+  },
+  "project_panel": {
+    "hide_hidden": false
+  },
+  "git_panel": {
+    "tree_view": false
+  },
+  "ssh_connections": [
+    {
+      "host": "atlantis",
+      "args": [],
+      "projects": []
+    }
+  ],
+  "proxy": "",
+  "terminal": {
+    "shell": "system"
+  },
+  "bottom_dock_layout": "contained",
+  "close_on_file_delete": false,
+  "prettier": {
+    "allowed": false
+  },
+  "inlay_hints": {
+    
+  },
+  "toolbar": {
+    "code_actions": false,
+    "quick_actions": true,
+    "breadcrumbs": true
+  },
+  "relative_line_numbers": "disabled",
+  "gutter": {
+    "line_numbers": true
+  },
+  "ui_font_weight": 400.0,
+  "ui_font_family": "JetBrainsMono Nerd Font",
+  "buffer_line_height": "standard",
+  "buffer_font_weight": 400.0,
+  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "use_system_path_prompts": true,
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "session": {
+    "trust_all_worktrees": true
+  },
+  "agent_servers": {
+    "opencode": {
+      "type": "registry"
+    },
+    "gemini": {
+      "type": "registry"
+    },
+    "codex-acp": {
+      "type": "registry"
+    },
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
+  "icon_theme": {
+    "mode": "system",
+    "light": "Catppuccin Macchiato",
+    "dark": "Catppuccin Mocha"
+  },
+  "ui_font_size": 15.0,
+  "buffer_font_size": 13.0,
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Macchiato (blue)",
+    "dark": "Catppuccin Mocha (blue)",
+  },
+}

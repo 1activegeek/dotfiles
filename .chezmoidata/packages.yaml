@@ -5,9 +5,10 @@
 # profiles: [personal] = personal/homelab only
 # profiles: [work]     = work machines only
 #
-# This catalog is kept as a strict mirror of the gold machine's
-# installed-on-request set. `brew bundle cleanup --force` (run by
-# 03-brew-bundle) removes anything NOT listed here on apply.
+# This catalog mirrors the gold machine's installed-on-request set.
+# setup/stages/30-packages.sh installs it (never on `chezmoi apply`).
+# Packages NOT listed here are removed only by `setup.sh --only packages --prune`
+# (or `brew-sync`), which asks first. Update this file with `brew-diff`.
 
 taps:
   - alexstrnik/browserino
@@ -27,50 +28,61 @@ formulae:
   - azure-cli
   - bat
   - bat-extras
+  - { name: binwalk, profiles: [personal] }
+  - { name: bkcrack, profiles: [personal] }
   - carapace
   - chezmoi
   - chroma
   - direnv
   - dockutil
   - duti
+  - exiftool
   - eza
   - fastfetch
   - fd
   - ffmpeg
   - fluxcd/tap/flux
+  - { name: frotz, profiles: [personal] }
   - fzf
   - gh
   - git-filter-repo
   - go
-  - go-task/tap/go-task
   - googleworkspace-cli
   - hashicorp/tap/terraform
   - helm
+  - herdr
   - ipcalc
   - jq
   - k9s
   - kube-ps1
+  - kubeconform
   - kubectx
   - kubernetes-cli
   - kustomize
+  - { name: librtlsdr, profiles: [personal] }
   - marp-cli
   - mas
+  - { name: mhash, profiles: [personal] }
   - mise
   - mole
   - mosquitto
   - neovim
   - oven-sh/bun/bun
+  - { name: picotool, profiles: [personal] }
   - playwright-cli
   - poppler
   - pre-commit
   - pygments
+  - ripgrep
   - sops
+  - { name: sox, profiles: [personal] }
   - starship
   - steipete/tap/remindctl
   - switchaudio-osx
   - talosctl
   - uv
   - watch
+  - { name: whisper.cpp, profiles: [personal] }
   - yamllint
   - yq
   - yt-dlp
@@ -100,11 +112,13 @@ casks:
   - discord
   - disk-inventory-x
   - docker-desktop
+  - { name: element, profiles: [personal] }
   - fluidvoice
   - flux-app
   - font-jetbrains-mono-nerd-font
   - gcloud-cli
   - ghostty
+  - go-task/tap/go-task
   - google-chrome
   - handbrake-app
   - headlamp
@@ -115,6 +129,7 @@ casks:
   - knockknock
   - lm-studio
   - lulu
+  - { name: macparakeet, profiles: [personal] }
   - mactracker
   - microsoft-teams
   - obs
@@ -122,17 +137,16 @@ casks:
   - ollama-app
   - opencode-desktop
   - { name: openscad@snapshot, profiles: [personal] }
-  # - orbstack
   - { name: orcaslicer, profiles: [personal] }
   - { name: prusaslicer, profiles: [personal] }
   - raycast
   - { name: shapr3d, profiles: [personal] }
   - shottr
   - slack
-  # - superwhisper
   - syncthing-app
   - tailscale-app
   - taskexplorer
+  - { name: telegram, profiles: [personal] }
   - the-unarchiver
   - { name: thumbhost3mf, profiles: [personal] }
   - tor-browser
@@ -141,6 +155,8 @@ casks:
   - yaak
   - zed
   - zoom
+  # - orbstack
+  # - superwhisper
 
 mas:
   - { id: "1569813296", name: "1Password for Safari" }

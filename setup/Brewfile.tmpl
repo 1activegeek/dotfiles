@@ -1,0 +1,36 @@
+# Auto-generated Brewfile — profile: {{ .profile }}
+# Source: .chezmoidata/packages.yaml (rendered by setup/stages/30-packages.sh)
+
+# Taps
+{{- range .taps }}
+{{- if kindIs "string" . }}
+tap "{{ . }}"
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+tap "{{ .name }}"
+{{- end }}
+{{- end }}
+
+# Mac App Store (installed first to surface auth prompts early)
+{{- range .mas }}
+{{- if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+mas "{{ .name }}", id: {{ .id }}
+{{- end }}
+{{- end }}
+
+# Casks
+{{- range .casks }}
+{{- if kindIs "string" . }}
+cask "{{ . }}"
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+cask "{{ .name }}"
+{{- end }}
+{{- end }}
+
+# Formulae
+{{- range .formulae }}
+{{- if kindIs "string" . }}
+brew "{{ . }}"
+{{- else if or (not (hasKey . "profiles")) (has $.profile .profiles) }}
+brew "{{ .name }}"
+{{- end }}
+{{- end }}

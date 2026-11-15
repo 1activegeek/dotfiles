@@ -1,0 +1,44 @@
+#!/bin/bash
+# setup stage: homebrew
+# Ensures Xcode CLI Tools and Homebrew are present and up to date.
+# Run by setup/setup.sh only (never by chezmoi apply).
+
+set -euo pipefail
+
+[[ "$(uname)" == "Darwin" ]] || exit 0
+
+# Resolve brew regardless of architecture (Apple Silicon vs Intel)
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# Xcode Command Line Tools
+if ! xcode-select -p &>/dev/null; then
+  echo "==> Installing Xcode Command Line Tools..."
+  xcode-select --install
+  until xcode-select -p &>/dev/null; do sleep 5; done
+fi
+echo "==> Xcode CLI Tools: OK"
+
+# Homebrew
+if ! command -v brew &>/dev/null; then
+  echo "==> Installing Homebrew..."
+  NONINTERACTIVE=1 /bin/bash -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+
+echo "==> Disabling Homebrew analytics..."
+brew analytics off
+
+echo "==> Updating Homebrew..."
+brew update --quiet
+
+echo "==> Homebrew: OK"
+

@@ -1,0 +1,6 @@
+{{- /* Renders the 1Password note mapped to .target in .chezmoidata/private_notes.yaml */ -}}
+{{- $target := .target -}}
+{{- $item := "" -}}
+{{- range .notes }}{{ if eq .target $target }}{{ $item = .item }}{{ end }}{{ end -}}
+{{- if not $item }}{{ fail (printf "private-note: %s is not listed in .chezmoidata/private_notes.yaml" $target) }}{{ end -}}
+{{- onepasswordRead (printf "op://Private/%s/notesPlain" $item) -}}

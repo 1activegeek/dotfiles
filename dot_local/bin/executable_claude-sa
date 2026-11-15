@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# claude-sa — gated access to the 1Password service account (homeops vault) for Claude Code sessions.
+#
+#   claude-sa unlock            Pull SA token from macOS Keychain into a per-session cache.
+#                               Gated by an "ask" rule in ~/.claude/settings.json (user approval).
+#   claude-sa run -- CMD...     Run CMD with OP_SERVICE_ACCOUNT_TOKEN set (requires prior unlock).
+#   claude-sa read op://...     Shortcut for `claude-sa run -- op read op://...`.
+#   claude-sa status            Show whether this session is unlocked (never prints the token).
+#   claude-sa lock [--all]      Remove this session's cached token (or all sessions').
+set -euo pipefail
+
+KEYCHAIN_SERVICE="claude-op-sa-homeops"
+CACHE_DIR="$HOME/.cache/claude-sa"
+TTL_SECONDS=$((12 * 60 * 60))
+
+session_id() {
+  local id="${CLAUDE_CODE_SESSION_ID:-}"
+  if [[ -z "$id" ]]; then
+    echo "claude-sa: CLAUDE_CODE_SESSION_ID not set; only usable inside a Claude Code session" >&2
+    exit 2
+  fi
+  echo "${id//[^A-Za-z0-9_-]/}"
+}
+
+cache_file() { echo "$CACHE_DIR/$(session_id).token"; }
+
+load_token() {
+  local f; f="$(cache_file)"
+  if [[ ! -f "$f" ]]; then
+    echo "claude-sa: locked for this session. Run 'claude-sa unlock' (requires user approval)." >&2
+    exit 3
+  fi
+  local age=$(( $(date +%s) - $(stat -f %m "$f") ))
+  if (( age > TTL_SECONDS )); then
+    rm -f "$f"
+    echo "claude-sa: cached token expired (${TTL_SECONDS}s TTL). Run 'claude-sa unlock' again." >&2
+    exit 3
+  fi
+  cat "$f"
+}
+
+cmd="${1:-status}"; shift || true
+case "$cmd" in
+  unlock)
+    umask 077
+    mkdir -p "$CACHE_DIR"; chmod 700 "$CACHE_DIR"
+    token="$(security find-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w)" || {
+      echo "claude-sa: no Keychain item '$KEYCHAIN_SERVICE' found" >&2; exit 4; }
+    printf '%s' "$token" > "$(cache_file)"
+    # Prune stale caches from other sessions.
+    find "$CACHE_DIR" -name '*.token' -mmin +$((TTL_SECONDS / 60)) -delete 2>/dev/null || true
+    OP_SERVICE_ACCOUNT_TOKEN="$token" op whoami >/dev/null 2>&1 \
+      && echo "claude-sa: unlocked for session $(session_id) (expires in $((TTL_SECONDS / 3600))h)" \
+      || { echo "claude-sa: token cached but 'op whoami' failed — check the service account" >&2; exit 5; }
+    ;;
+  run)
+    [[ "${1:-}" == "--" ]] && shift
+    [[ $# -gt 0 ]] || { echo "usage: claude-sa run -- CMD..." >&2; exit 1; }
+    OP_SERVICE_ACCOUNT_TOKEN="$(load_token)"
+    export OP_SERVICE_ACCOUNT_TOKEN
+    exec "$@"
+    ;;
+  read)
+    [[ $# -eq 1 ]] || { echo "usage: claude-sa read op://vault/item/field" >&2; exit 1; }
+    # Load the token as its own statement: an assignment prefix on `exec` would
+    # ignore load_token's failure and run `op` with an empty token, which falls
+    # back to the desktop-app integration (full personal-account prompt).
+    token="$(load_token)"
+    OP_SERVICE_ACCOUNT_TOKEN="$token" exec op read "$1"
+    ;;
+  status)
+    f="$(cache_file)"
+    if [[ -f "$f" ]]; then
+      echo "unlocked (cached $(( ($(date +%s) - $(stat -f %m "$f")) / 60 ))m ago, TTL $((TTL_SECONDS / 3600))h)"
+    else
+      echo "locked"
+    fi
+    ;;
+  lock)
+    if [[ "${1:-}" == "--all" ]]; then rm -f "$CACHE_DIR"/*.token; echo "claude-sa: all sessions locked"
+    else rm -f "$(cache_file)"; echo "claude-sa: locked"; fi
+    ;;
+  *)
+    sed -n '2,10p' "$0" >&2; exit 1 ;;
+esac

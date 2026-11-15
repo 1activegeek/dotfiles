@@ -11,6 +11,9 @@ docs/
 TODO.md
 Brewfile.current
 AGENTS.md
+# One-time machine setup — run by bootstrap.sh / setup/setup.sh, never deployed
+setup
+setup/**
 
 # Exclude non-macOS files on non-macOS
 {{- if ne .chezmoi.os "darwin" }}
@@ -37,3 +40,24 @@ dot_config/ghostty/
 # This repo is PUBLIC — never publish context here. Back it up privately instead.
 .agents/context
 .agents/context/**
+
+# Private files rendered from 1Password notes (.chezmoidata/private_notes.yaml).
+# Only on personal machines that opted in with [data] privateNotes = true.
+{{- if not (and (eq .profile "personal") (hasKey . "privateNotes") .privateNotes) }}
+.agents/identity
+.claude/scheduled-tasks
+{{- range .private_notes }}
+{{ .target }}
+{{- end }}
+{{- end }}
+
+# 1Password skipped during bootstrap (DOTFILES_SKIP_1PASSWORD=1): skip every
+# file whose template calls onepasswordRead, so apply can finish without it.
+{{- if env "DOTFILES_SKIP_1PASSWORD" }}
+.ssh/config
+.kube/config
+.config/sops/age/home-ops.key
+{{- range .private_notes }}
+{{ .target }}
+{{- end }}
+{{- end }}

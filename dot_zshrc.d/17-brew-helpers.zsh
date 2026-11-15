@@ -9,41 +9,10 @@ brew-export() {
   echo "Done. Compare with .chezmoidata/packages.yaml to see drift."
 }
 
-# Sync installed packages with the chezmoi-managed package list
+# Install everything in packages.yaml, then offer to remove what is not listed.
+# Runs the setup "packages" stage on purpose (chezmoi apply never installs packages).
 brew-sync() {
-  local brewfile
-  brewfile="$(mktemp)"
-  trap 'rm -f "$brewfile"' INT TERM HUP
-
-  # Re-apply the brew bundle script to get latest Brewfile
-  echo "==> Applying brew bundle (this may take a moment)..."
-  chezmoi apply --include=scripts 2>/dev/null || {
-    echo "    Note: chezmoi apply returned non-zero (some scripts may have been skipped)"
-  }
-
-  # Check for packages not in chezmoi's Brewfile
-  echo "==> Generating current Brewfile for comparison..."
-  brew bundle dump --file="$brewfile" --force 2>/dev/null
-
-  echo "==> Checking for untracked packages..."
-  local cleanup_output
-  cleanup_output="$(brew bundle cleanup --file="$brewfile" 2>/dev/null || true)"
-
-  if [[ -n "$cleanup_output" ]]; then
-    echo ""
-    echo "The following packages are installed but not in your package list:"
-    echo "$cleanup_output"
-    echo ""
-    read -r "confirm?Remove these packages? [y/N]: "
-    if [[ "$(echo "${confirm:-n}" | tr '[:upper:]' '[:lower:]')" == "y" ]]; then
-      brew bundle cleanup --file="$brewfile" --force
-      echo "==> Cleanup complete."
-    else
-      echo "==> Skipped cleanup."
-    fi
-  else
-    echo "==> All packages accounted for."
-  fi
+  "$(chezmoi source-path)/setup/setup.sh" --only packages --prune
 }
 
 # Interactive diff & merge between Homebrew state and packages.yaml
@@ -488,12 +457,8 @@ brew-diff() {
       cd "$chezmoi_src" || { echo "Error: cannot cd to $chezmoi_src" >&2; return 1; }
       git add .chezmoidata/packages.yaml
       if git commit -m "brew-diff: update packages.yaml"; then
-        echo "${green}✓ Committed.${reset}"
-        if git push; then
-          echo "${green}✓ Pushed.${reset}"
-        else
-          echo "${yellow}⚠ Push failed — commit is local. Push manually when ready.${reset}"
-        fi
+        # No automatic push (2026-11-11): the dotfiles repo is public. Push by hand after review.
+        echo "${green}✓ Committed locally.${reset} Review, then push by hand: git -C \"$chezmoi_src\" push"
       else
         echo "${yellow}⚠ Commit failed — check git status in $chezmoi_src${reset}"
       fi

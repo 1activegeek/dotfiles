@@ -30,7 +30,7 @@ export VISUAL="$EDITOR"
 # Bun
 # ============================================
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$PATH:$BUN_INSTALL/bin"
 # Bun shell completions
 [[ -s "$BUN_INSTALL/_bun" ]] && source "$BUN_INSTALL/_bun"
 
@@ -40,13 +40,13 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 if command -v brew &>/dev/null && brew --prefix go &>/dev/null 2>&1; then
   export GOROOT="$(brew --prefix go)/libexec"
   export GOPATH="$HOME/go"
-  export PATH="$GOPATH/bin:$GOROOT/bin:$PATH"
+  export PATH="$PATH:$GOPATH/bin:$GOROOT/bin"
 fi
 
 # ============================================
 # opencode
 # ============================================
-export PATH="$HOME/.opencode/bin:$PATH"
+export PATH="$PATH:$HOME/.opencode/bin"
 
 # ============================================
 # LM Studio CLI (lms)

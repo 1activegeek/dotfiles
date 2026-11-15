@@ -1,0 +1,28 @@
+#!/bin/zsh
+# Flags if the latest commit on the Forgejo vault backup remote is older than MAX_HOURS.
+# Uses a shallow fetch into a scratch bare repo, so it reflects what actually reached the remote.
+REMOTE_URL="${VAULT_REMOTE_URL:-git@forgejo-jarvis:shawnmix/vault-lifeOS.git}"
+BRANCH="${VAULT_BRANCH:-main}"
+MAX_HOURS="${MAX_HOURS:-24}"
+LOG="$HOME/Library/Logs/vault-backup-check.log"
+CACHE="$HOME/.local/share/vault-backup-check/repo-lifeos.git"
+export PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=20"
+
+log() { print -r -- "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"; print -r -- "$*"; }
+alert() {
+  log "ALERT: $1"
+  osascript -e "display notification \"$1\" with title \"Vault backup check\" sound name \"Basso\"" >/dev/null 2>&1
+  exit 1
+}
+
+[[ -d $CACHE ]] || git init -q --bare "$CACHE" || alert "cannot init cache repo"
+out=$(git --git-dir="$CACHE" fetch -q --depth=1 "$REMOTE_URL" "$BRANCH" 2>&1) \
+  || alert "fetch from Forgejo failed: ${out//\"/\'}"
+ts=$(git --git-dir="$CACHE" log -1 --format=%ct FETCH_HEAD) || alert "could not read remote commit"
+sha=$(git --git-dir="$CACHE" log -1 --format=%h FETCH_HEAD)
+age_m=$(( ( $(date +%s) - ts ) / 60 )); age_h=$(( age_m / 60 ))
+if (( age_m > MAX_HOURS * 60 )); then
+  alert "Latest vault commit $sha is ${age_h}h old (> ${MAX_HOURS}h). Backups may have stopped."
+fi
+log "OK: latest vault commit $sha is ${age_m}m old"

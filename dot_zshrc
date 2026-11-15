@@ -54,5 +54,12 @@ if command -v starship &>/dev/null; then
 fi
 
 # Added by Antigravity
-export PATH="/Users/shawnmix/.antigravity/antigravity/bin:$PATH"
+export PATH="$PATH:$HOME/.antigravity/antigravity/bin"
 
+
+# ~/.local/bin stays FIRST on purpose: its node/npm/npx (Hermes, v22) must win
+# over Homebrew node (v26), and claude/agent-git/claude-sa live here.
+export PATH="$HOME/.local/bin:$PATH"
+
+# Drop duplicate PATH entries (.zprofile and .zshrc both add some folders)
+typeset -U path PATH
