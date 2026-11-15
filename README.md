@@ -232,8 +232,9 @@ These functions are available when 1Password CLI is installed (defined in `~/.zs
 ```
 dotfiles/
 ├── bootstrap.sh                     # One-line installer for bare machines
-├── dot_chezmoi.toml.tmpl            # chezmoi config + profile/name/email prompts
-├── dot_chezmoiignore                # Files excluded from home directory deployment
+├── .chezmoiignore                   # Files excluded from home directory deployment
+├── .chezmoidata/private_notes.yaml  # Private files → 1Password note names
+├── .chezmoitemplates/private-note   # Renders one private file from its 1Password note
 ├── .chezmoidata/
 │   └── packages.yaml                # All packages: taps, formulae, casks, mas (sorted alphabetically)
 ├── setup/                           # One-time machine setup (NOT run by chezmoi apply)
